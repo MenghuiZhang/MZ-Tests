@@ -1,0 +1,13 @@
+{
+  "builtin": "False",
+  "type": "extension",
+  "rocket_mode_compatible": "False",
+  "name": "PyRevitPlus",
+  "description": "Extensions for PyRevit",
+  "author": "Gui Talarico",
+  "author_profile": "https://github.com/MenghuiZhang",
+  "url": "https://github.com/MenghuiZhang/MZ-Tools.git",
+  "website": "https://github.com/MenghuiZhang/MZ-Tools",
+  "image": "",
+  "dependencies": []
+}
