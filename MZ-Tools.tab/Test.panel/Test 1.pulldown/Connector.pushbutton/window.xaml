@@ -1,0 +1,12 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Verbinden" Height="100" Width="200" Background="SkyBlue" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+
+            <DockPanel Margin="10">
+                <Button Content="verbinden" Height="20" Click="connect" Margin="10"/>
+            </DockPanel>
+
+    </Grid>
+</Window>

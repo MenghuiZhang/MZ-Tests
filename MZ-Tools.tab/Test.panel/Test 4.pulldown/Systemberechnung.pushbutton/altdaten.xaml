@@ -1,0 +1,41 @@
+<Window
+          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          Height="400" Width="400" Background="SkyBlue" ResizeMode="NoResize">
+      <Grid>
+          <ListView x:Name="listview" Background="LightBlue" ItemsSource="{Binding}" Grid.RowSpan="7" Margin="5,5,5,5" Grid.Row="1">
+              <ListView.Resources>
+                  <Style TargetType="GridViewColumnHeader">
+                      <Setter Property="FontWeight" Value="Bold"/>
+                      <Setter Property="FontSize" Value="10"/>
+                      <Setter Property="Height" Value="18"/>
+                  </Style>
+              </ListView.Resources>
+              <ListView.View>
+                  <GridView>
+                      <GridViewColumn Width="200" >
+                          <GridViewColumn.Header>
+                              <TextBlock Text="System" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname"/>
+                          </GridViewColumn.Header>
+                          <GridViewColumn.CellTemplate>
+                              <DataTemplate>
+                                  <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
+                              </DataTemplate>
+                          </GridViewColumn.CellTemplate>
+                      </GridViewColumn>
+                      <GridViewColumn Width="140" >
+                          <GridViewColumn.Header>
+                              <TextBlock Text="Berechnung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          </GridViewColumn.Header>
+                          <GridViewColumn.CellTemplate>
+                              <DataTemplate>
+                                  <TextBlock Text="{Binding berechnung}" TextWrapping="Wrap" />
+                              </DataTemplate>
+                          </GridViewColumn.CellTemplate>
+                      </GridViewColumn>
+                  </GridView>
+              </ListView.View>
+          </ListView>
+      </Grid>
+
+  </Window>
