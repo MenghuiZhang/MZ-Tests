@@ -1,0 +1,58 @@
+<Window 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kanalrechner" Height="300" Width="300" Background="#FFD2CEFF" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="80"/>
+            <ColumnDefinition Width="30"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="24"/>
+
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <GridSplitter Width="1" Background="#FFAFAAAA" Grid.RowSpan="8"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="1"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="2"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="3"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="4"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="5"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="6"/>
+        <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="7"/>
+        <TextBlock Text="Volumenstrom Vorgabe"    Grid.Row="0" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="Geschwindigkeit Vorgabe" Grid.Row="1" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="Querschnitt" Grid.Row="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="Breite" Grid.Row="3" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="Höhe" Grid.Row="4" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="Durchmesser" Grid.Row="5" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="rund Geschwindigkeit" Grid.Row="6" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBlock Text="eck Geschwidigkeit" Grid.Row="7" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBox x:Name="vol_vor" Grid.Column="1" Grid.Row="0" Height="24" KeyDown="Setkey" TextChanged="vol_vor_changed"  VerticalContentAlignment="Center"/>
+        <TextBox x:Name="sch_vor" Grid.Column="1" Grid.Row="1" Height="24" KeyDown="Setkey1" TextChanged="vol_vor_changed"  VerticalContentAlignment="Center"/>
+        <TextBox x:Name="quer" Grid.Column="1" Grid.Row="2" Height="24" IsReadOnly="True" Background="#FFDCDCB6" Text="0" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+        <ComboBox x:Name="breite" Grid.Column="1" Grid.Row="3" Height="24" KeyDown="Setkey" SelectionChanged="vol_vor_changed"/>
+        <ComboBox x:Name="Hoehe" Grid.Column="1" Grid.Row="4" Height="24"  KeyDown="Setkey" SelectionChanged="vol_vor_changed"/>
+        <ComboBox x:Name="Durchmesser" Grid.Column="1" Grid.Row="5" Height="24" KeyDown="Setkey" SelectionChanged="vol_vor_changed"/>
+        <TextBox Text="0" x:Name="rund_gesch" Grid.Column="1" Grid.Row="6" Height="24" IsReadOnly="True" Background="#FFDCDCB6"  VerticalContentAlignment="Center"/>
+        <TextBox Text="0" x:Name="eck_gesch" Grid.Column="1" Grid.Row="7" Height="24" IsReadOnly="True" Background="#FFDCDCB6"  VerticalContentAlignment="Center"/>
+        <TextBlock Text="m³/h"    Grid.Row="0" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="m/s" Grid.Row="1" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="m²" Grid.Row="2" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="mm" Grid.Row="3" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="mm" Grid.Row="4" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="mm" Grid.Row="5" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="m/s" Grid.Row="6" VerticalAlignment="Center" Grid.Column="2"/>
+        <TextBlock Text="m/s" Grid.Row="7" VerticalAlignment="Center" Grid.Column="2"/>
+        <Button Content="ausgewähle Kanäle anpassen" Grid.Row="8" Grid.ColumnSpan="3" Height="20" Margin="10,10,10,10" Click="start"/>
+    </Grid>
+</Window>

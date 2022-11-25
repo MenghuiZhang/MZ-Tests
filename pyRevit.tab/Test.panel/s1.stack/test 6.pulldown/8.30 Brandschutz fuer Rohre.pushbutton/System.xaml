@@ -1,0 +1,42 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Bauteiliste"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="800" Height="750" FontSize="22" >
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="35"/>
+            <RowDefinition />
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid x:Name="dataGrid" ItemsSource="{Binding}" AutoGenerateColumns="False" Grid.Row="1"   Grid.Column="0"  Background="LightBlue" RowBackground="WhiteSmoke" CanUserAddRows="True" CanUserDeleteRows="True" CanUserResizeRows="True" Grid.ColumnSpan="7" CanUserSortColumns="True" FontSize="16">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="FontSize" Value="16" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding checked}" Width="30"/>
+                <DataGridTextColumn Header="System" Binding="{Binding TypName}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Systeme Auswählen" Grid.Row="3" FontSize="18" FontWeight="Bold" Click="auswahl" Margin="25,0,25,5" Height="30" Grid.ColumnSpan="7"/>
+        <TextBox Margin="5,4,0,4" Text="Filter:"  Background="SkyBlue" IsReadOnly="True" FontWeight="Bold"  BorderThickness="0" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <TextBox x:Name="suche" TextWrapping="Wrap"  Grid.Column="1" BorderThickness="0" Margin="0,3,25,3" FontSize="16" Grid.ColumnSpan="6" />
+        <Button Content="Check All" Click="checkall" FontSize="18"  Margin="25,0" Background = "#FFCCD2D3" Grid.Row="2" Height="30" Grid.ColumnSpan="2" Width="170" />
+        <Button Content="Uncheck All" Grid.Row="2" Grid.Column="2"  Click="uncheckall" FontSize="18"  Margin="25,0" Background = "#FFCCD2D3" Height="30" Width="170" Grid.ColumnSpan="3" />
+        <Button Content="Toggle All" Grid.Row="2" Grid.Column="5"  Click="toggleall" FontSize="18" Margin="25,0" Background = "#FFCCD2D3" Height="30" Width="170" Grid.ColumnSpan="2" />
+    </Grid>
+</Window>

@@ -1,0 +1,88 @@
+<Window 
+          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="RV-Nummer aus HLS-Nummer anpassen und übertragen" Height="580" Width="500" Background="LightBlue" ResizeMode="CanMinimize" WindowStartupLocation ="CenterOwner">
+    <Grid>
+        <StackPanel Margin="5,15,5,5">
+            <Border CornerRadius="3" BorderThickness="1" BorderBrush="Gray">
+                <StackPanel>
+                    <TextBlock Text="Beispiel: " Margin="5,0,0,5" Height="16" Foreground="#FFCA0079" FontWeight="Bold"/>
+                    <StackPanel>
+                        <TextBlock Text="HK-Nummer: HK_100_101 und möchten THV_100_101 in Thermostatventil eintragen." TextWrapping="Wrap" Margin="5,0,0,5" Foreground="#FFCA0079" FontWeight="Bold"/>
+                        <TextBlock Text="1. Parameter auswählen;" Margin="5,0,0,5" Height="16" Foreground="Red" FontWeight="Bold"/>
+                        <TextBlock Text="2. Position auswählen. Hier für THV Vorlauf ausgewählt;" Margin="5,0,0,5" Height="16" Foreground="Red" FontWeight="Bold"/>
+                        <TextBlock Text="3. Stellen eingeben. Hier von 4 bis zum 10 oder von 4, bis zum nicht eintargen;" Margin="5,0,0,5" Height="16" Foreground="Red" FontWeight="Bold"/>
+                        <TextBlock Text="4. Format anpassen. Hier Präfix: THV_, Suffix nicht eintragen;" Margin="5,0,0,5" Height="16" Foreground="Red" FontWeight="Bold"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <Border CornerRadius="3" BorderThickness="1" BorderBrush="Gray">
+                <StackPanel>
+                    <TextBlock Text="Achtung: " Margin="5,0,0,5" Height="16" Foreground="#FFCA0079" FontWeight="Bold"/>
+                    <StackPanel>
+                        <TextBlock Text="es gilt nur in Bauteilliste Ansicht." TextWrapping="Wrap" Margin="5,0,0,5" Foreground="#FFCA0079" FontWeight="Bold"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+
+
+            <GroupBox Header="Einstellungen">
+                <StackPanel>
+                    <GroupBox Header="Parameter für Bauteilnummer:">
+                        <StackPanel>
+                            <DockPanel Margin="0,5,0,5">
+                                <TextBlock Text="HLS-Bauteile: " Width="80"/>
+                                <ComboBox x:Name="hlsbauteil" IsEditable="True" Margin="0,0,0,0" Height="20"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,5,0,5">
+                                <TextBlock Text="Regelventile: " Width="80"/>
+                                <ComboBox x:Name="regelventil" IsEditable="True" Margin="0,0,0,0" Height="20"/>
+                            </DockPanel>
+
+                        </StackPanel>
+
+                    </GroupBox>
+                    <GroupBox Header="RV-Familie">
+                        <ComboBox x:Name="rvfamilie" Margin="0,5,0,5" IsEditable="True" />
+
+                    </GroupBox>
+                    <GroupBox Header="Position des RVs:">
+                        <StackPanel>
+                            <DockPanel Margin="0,5,0,5">
+                                <RadioButton x:Name="vorlauf" IsChecked="True" Content="Vorlauf" Width="150" Margin="50,0,0,0"/>
+                                <RadioButton x:Name="ruecklauf" Content="Rücklauf" Width="100" HorizontalAlignment="Left"/>
+                            </DockPanel>
+                        </StackPanel>
+
+                    </GroupBox>
+                    <GroupBox Header="Stellen der HLS-Bauteilnummer (i.d.R. Fortlaufende Nummer ):">
+                        <StackPanel>
+                            <DockPanel Margin="0,5,0,5">
+                                <TextBlock Text="von" Margin="10,0,0,0"/>
+                                <TextBox x:Name="von" Text="1" Width="50" Margin="10,0,0,0" KeyDown="Setkey" InputMethod.IsInputMethodEnabled="False"/>
+                                <TextBlock Text="bis zum"  Margin="10,0,0,0"/>
+                                <TextBox x:Name="biszum" Width="50"  Margin="10,0,0,0" HorizontalAlignment="Left" KeyDown="Setkey" InputMethod.IsInputMethodEnabled="False"/>
+                            </DockPanel>
+                        </StackPanel>
+
+                    </GroupBox>
+                    <GroupBox Header="Format der RV-Nummer:">
+                        <StackPanel>
+                            <DockPanel Margin="0,5,0,5">
+                                <TextBlock Text="Präfix:" Margin="10,0,0,0"/>
+                                <TextBox x:Name="Praefix" Width="100" Margin="10,0,0,0"/>
+                                <TextBlock Text="Suffix:"  Margin="10,0,0,0"/>
+                                <TextBox x:Name="Suffix" Width="100"  Margin="10,0,0,0" HorizontalAlignment="Left"/>
+                            </DockPanel>
+                        </StackPanel>
+
+                    </GroupBox>
+
+
+                </StackPanel>
+            </GroupBox>
+            <Button Content="starten" Click="aktualisieren" Width="450" Height="24" Margin="0,10,0,5"/>
+        </StackPanel>
+    </Grid>
+</Window>

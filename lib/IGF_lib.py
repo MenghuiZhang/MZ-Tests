@@ -239,7 +239,7 @@ def CreateProjParam_2020(Name = None, Disziplin = None, Parametertyp = None, Inf
     File.Delete(tempFile)
 
     ParaCatSet = revit.app.Create.NewCategorySet()
-    ParCatList = Kategorien.Split(',')
+    ParCatList = Kategorien.split(',')
 
     for i in ParCatList:
         if i:
@@ -273,7 +273,7 @@ def CreateProjFromSharedParam_2020(ExternalDefinition = None, Gruppe = None, Kat
     if not ExternalDefinition:
         return
     ParaCatSet = app.Create.NewCategorySet()
-    ParCatList = Kategorien.Split(',')
+    ParCatList = Kategorien.split(',')
 
     for i in ParCatList:
         if i:
@@ -495,8 +495,6 @@ def CreateSharedParam_2022(Gruppe = 'TemporaryDefintionGroup', Name = None, Disz
     app = revit.app
     file = app.OpenSharedParameterFile()
     DefiCrea = CreateDefinition_2022(Name = Name, Disziplin = Disziplin, Typ = Typ, Info = Info, GUID = GUID)
-    print(DefiCrea.GUID)
-    print('True')
     try:
         sharedPara = file.Groups[Gruppe].Definitions.Create(DefiCrea)
         return sharedPara
@@ -518,7 +516,7 @@ def CreateProjParam_2022(Name = None, Disziplin = None, Parametertyp = None, Inf
     File.Delete(tempFile)
 
     ParaCatSet = app.Create.NewCategorySet()
-    ParCatList = Kategorien.Split(',')
+    ParCatList = Kategorien.split(',')
 
     for i in ParCatList:
         if i:
@@ -556,7 +554,7 @@ def CreateProjFromSharedParam_2022(ExternalDefinition = None, Gruppe = None, Kat
     if not ExternalDefinition:
         return
     ParaCatSet = app.Create.NewCategorySet()
-    ParCatList = Kategorien.Split(',')
+    ParCatList = Kategorien.split(',')
     
 
     for i in ParCatList:

@@ -1,0 +1,66 @@
+<Window 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+   mc:Ignorable="d"
+   Title="Einbauort der Rohrzubehör aus Endverbraucher übernehmen" MinHeight="500" MinWidth="450" Height="500" Width="450" Background="SkyBlue">
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="150"/>
+        </Grid.ColumnDefinitions>
+        <TreeView Margin="12" x:Name="treeView1" Background="LightBlue" >
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding expand, Mode=TwoWay}"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding children}">
+                    <CheckBox IsChecked="{Binding checked}" Click="checkedchanged">
+                        <TextBlock Text="{Binding name}"/>
+                    </CheckBox>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+
+        </TreeView>
+
+        <StackPanel Grid.Column="1" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <GroupBox Header="Rohrzubehör">
+                <StackPanel >
+                    <RadioButton x:Name="teil" IsChecked="True">
+                        <RadioButton.Content>
+                            <TextBlock Text="nur für keien MEP-Raum zugewiesenen Rohrzubehör" TextWrapping="Wrap"/>
+                        </RadioButton.Content>
+                    </RadioButton>
+                    <RadioButton x:Name="allebauteil" >
+                        <RadioButton.Content>
+                            <TextBlock Text="für alle Rohrzubehör" TextWrapping="Wrap"/>
+                        </RadioButton.Content>
+                    </RadioButton>
+                </StackPanel>
+
+            </GroupBox>
+
+            <GroupBox Header="Rohrzubehör">
+                <StackPanel>
+                    <CheckBox x:Name="vorlauf" IsChecked="True" Content="Vorlauf"/>
+                    <CheckBox x:Name="ruecklauf" IsChecked="True" Content="Rücklauf"/>
+                </StackPanel>
+
+            </GroupBox>
+
+
+
+            <Button Width="100" Height="24" Margin="0,10,0,0" Content="Alles ausklappen" Click="aus" Background="#FFFFC8C8"/>
+            <Button Width="100" Height="24" Margin="0,10" Content="Alles zuklappen" Click="zu" Background="#FFFFC8C8"/>
+            <Button Width="100" Height="24" Margin="0,20,0,0" Content="Alles auswählen" Click="all" Background="#FFFF9696"/>
+            <Button Width="100" Height="24" Margin="0,10" Content="Keine auswählen" Click="kein" Background="#FFFF9696"/>
+            <Button Width="100" Height="24" Margin="0,20,0,0" Content="Starten" Click="ok" Background="#FFFF6464"/>
+            <Button Width="100" Height="24" Margin="0,10" Content="Abbrechen" Click="ab"  Background="#FFFF6464"/>
+
+        </StackPanel>
+
+    </Grid>
+</Window>

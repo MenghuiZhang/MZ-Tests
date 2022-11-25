@@ -1,0 +1,218 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Zeichnungen" Height="557" Width="400" ResizeMode="NoResize" HorizontalAlignment="Center"  VerticalAlignment="Center" >
+    <Grid>
+        <StackPanel>
+            <GroupBox BorderThickness="2">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="Bold" Text="Grundeinstellung" Foreground="Blue"/>
+                </GroupBox.Header>
+                <DockPanel>
+                    <RadioButton  x:Name="loca" Content="Local" Click="Local" Margin="10,0,0,0" IsChecked="True" VerticalAlignment="Center"/>
+                    <RadioButton  x:Name="serv" Content="Server" Click="serve" Margin="10,0,0,0" VerticalAlignment="Center" />
+
+                    <Button x:Name="zuruck"  Width="100" Click="rueck"  Margin="50,0,0,0" ToolTip="Server-Konfiguration wird in local geschrieben. " Content="zurücksetzen" VerticalAlignment="Center" />
+
+                </DockPanel>
+            </GroupBox>
+            <TabControl>
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Text="Pläne" FontWeight="Bold"/>
+                    </TabItem.Header>
+                    <StackPanel Height="420">
+                        <GroupBox Header="Versatz von Beschriftungszuschnitt" BorderThickness="2">
+                            <StackPanel>
+                                <DockPanel Margin="0,2">
+                                    <TextBlock Text="Links:" Margin="20,0,0,0" VerticalAlignment="Center" Width="35" />
+                                    <TextBox x:Name="bz_l"  Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                    <TextBlock Text="Rechts:" Margin="30,0,0,0" Width="40"/>
+                                    <TextBox x:Name="bz_r"  Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                </DockPanel>
+                                <DockPanel Margin="0,2">
+                                    <TextBlock Text="Oben:" Margin="20,0,0,0" VerticalAlignment="Center" Width="35" />
+                                    <TextBox x:Name="bz_o"  Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                    <TextBlock Text="Unten:" Margin="30,0,0,0" Width="40"/>
+                                    <TextBox x:Name="bz_u"  Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                </DockPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Ansichtsfensterstyp"  BorderThickness="2">
+                            <StackPanel>
+                                <DockPanel >
+                                    <TextBlock Text="Hauptansicht:" Margin="2,0,0,0" VerticalAlignment="Center" Width="75"/>
+                                    <ComboBox x:Name="HA"  Margin="5,3,2,3" IsEditable="True" StaysOpenOnEdit="True" Height="20">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </DockPanel>
+                                <DockPanel >
+                                    <TextBlock Text="Legende:" VerticalAlignment="Center" Margin="2,0,0,0" Width="75" />
+                                    <ComboBox x:Name="LG"  Margin="5,3,2,3" IsEditable="True" StaysOpenOnEdit="True" Height="20" >
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </DockPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Plankopf"  BorderThickness="2">
+                            <StackPanel>
+                                <DockPanel Height="26">
+                                    <TextBlock Text="Plankopf:" VerticalAlignment="Center" Margin="2,0,0,0" Width="75" />
+                                    <ComboBox x:Name="plankopf" Margin="5,3,2,3" IsEditable="True" StaysOpenOnEdit="True" Height="20">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding name}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </DockPanel>
+
+                                <GroupBox Header="Rand">
+                                    <StackPanel>
+                                        <DockPanel  Margin="0,2">
+                                            <TextBlock Text="Links:" Margin="20,0,0,0" Width="35" VerticalAlignment="Center" />
+                                            <TextBox x:Name="pk_l" Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                            <TextBlock Text="Rechts:" Margin="30,0,0,0" Width="40" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="pk_r" Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2">
+                                            <TextBlock Text="Oben:" Margin="20,0,0,0" Width="35" VerticalAlignment="Center" />
+                                            <TextBox x:Name="pk_o" Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                            <TextBlock Text="Unten:" Margin="30,0,0,0" Width="40" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="pk_u" Width="50" HorizontalAlignment="Left" Margin="25,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="mm" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0" />
+                                        </DockPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Sonstige"  BorderThickness="2">
+                            <StackPanel Margin="10,0,0,0">
+                                <CheckBox x:Name="raster" VerticalAlignment="Center" Margin="0,5,0,0" Content="Raster anpassen"/>
+                                <CheckBox x:Name="Haupt" VerticalAlignment="Center" Margin="0,5,0,0" Content="Hauptansicht an der oberen linken Ecke anlegen"/>
+                                <CheckBox x:Name="legend" VerticalAlignment="Center" Margin="0,5" Content="Legend an der oberen rechten Ecke anlegen"/>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Planname"  BorderThickness="2">
+                            <DockPanel>
+                                <TextBlock Text="Gewerke:" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                <TextBox x:Name="gewerke" Margin="10,0,2,0"  TextWrapping="Wrap" MaxHeight="50" Height="50" />
+                            </DockPanel>
+                        </GroupBox>
+
+                    </StackPanel>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Text="Legende" FontWeight="Bold"/>
+                    </TabItem.Header>
+                    <StackPanel Height="420" >
+                        <StackPanel>
+                            <GroupBox BorderThickness="2" Header="Maßstab">
+                                <DockPanel Margin="0,2,0,0">
+                                    <RadioButton Content="Nach Ansicht" x:Name="ansicht" IsChecked="True" Margin="10,0,50,0" VerticalAlignment="Center" Click="Scaledeaktiv"/>
+                                    <RadioButton Content="Maßstabswert 1:" x:Name="manuell" VerticalAlignment="Center" Click="Scaleaktiv"/>
+                                    <TextBox InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" x:Name="Massstabmanuell" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Width="100" HorizontalAlignment="Left" Text="100" IsEnabled="False"/>
+                                </DockPanel>
+                            </GroupBox>
+                            <GroupBox  BorderThickness="2" Header="Symbol">
+                                <StackPanel>
+                                    <GroupBox Header="Ansichtsrichtung">
+                                        <DockPanel Margin="0,2,0,0" >
+                                            <RadioButton Content="Nach Ansicht" x:Name="comansicht" IsChecked="True" Click="richtungdeaktiv" Margin="5,0,50,0" VerticalAlignment="Center"/>
+                                            <RadioButton Content="Manuell" x:Name="commanuell" VerticalAlignment="Center" Click="richtungaktiv"/>
+                                            <ComboBox x:Name="comauswahlmanuell" Margin="5,0,10,0" VerticalAlignment="Center" IsEnabled="False" Height="20"/>
+                                        </DockPanel>
+                                    </GroupBox>
+                                    <GroupBox Header="Bauteile" Margin="0,2,0,0">
+                                        <DockPanel Margin="0,2,0,0">
+                                            <RadioButton x:Name="family"  Margin="5,0,50,0"  Content=" Familie" ToolTip="Für jede Familie ein Legendensymbol erstellen." IsChecked="True" Width="89"/>
+                                            <RadioButton x:Name="typ" Content=" Familietyp" ToolTip="Für jeden Typ ein Legendensymbol erstellen."/>
+                                        </DockPanel>
+
+                                    </GroupBox>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <GroupBox BorderThickness="2" Header="Form">
+
+                                <StackPanel Margin="10,2,0,0">
+                                    <DockPanel>
+                                        <CheckBox Content="äußere Linie: " x:Name="auline" VerticalAlignment="Center" IsChecked="True" Width="90"/>
+                                        <ComboBox x:Name="linie" Margin="5,0,10,2" Height="20" VerticalAlignment="Center" SelectedIndex="0"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <CheckBox Content="innere Linie: " x:Name="inline" VerticalAlignment="Center" IsChecked="True" Width="90"/>
+                                        <ComboBox x:Name="linie2" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" SelectedIndex="0"/>
+                                    </DockPanel>
+
+                                </StackPanel>
+
+                            </GroupBox>
+
+                        </StackPanel>
+
+                        <GroupBox BorderThickness="2" Header="Beschreibung">
+                            <StackPanel Margin="10,0,0,0">
+                                <DockPanel>
+                                    <TextBlock Text="Textstyp:" VerticalAlignment="Center" Width="90"/>
+                                    <ComboBox x:Name="tn" Margin="5,0,10,2" Height="20" VerticalAlignment="Center" SelectedIndex="0"/>
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="Beschreibung:" Height="20" VerticalAlignment="Center" Width="90"/>
+                                    <ComboBox x:Name="beschreibung" IsEditable="True" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Text="Familie"/>
+                                </DockPanel>
+                                <TextBlock Text="Vorschlag für Beschreibung: Familie, Typ, Familie and Typ..." TextWrapping="Wrap"  Foreground="#FFB20A0A" />
+                                <TextBlock Text="Hinweis: Die Beschreibungsparameter muss Typparemeter sein." TextWrapping="Wrap" Foreground="#FFB20A0A"/>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox BorderThickness="2" Header="Überschrift">
+                            <StackPanel Margin="10,0,0,0">
+                                <DockPanel>
+                                    <TextBlock Text="Textstyp:" VerticalAlignment="Center" Width="90"/>
+                                    <ComboBox x:Name="tit" Margin="5,0,10,2" Height="20" VerticalAlignment="Center" SelectedIndex="0"/>
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="Optionen:" Height="20" VerticalAlignment="Center" Width="90"/>
+                                    <TextBox x:Name="titel" Margin="5,0,10,0" Height="50" VerticalAlignment="Center" Text="Legende GA, Legende Lüftung, Legende Sanitär, Legende LB Medien, Legende Heizung/Kälte" TextWrapping="Wrap"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Text="Planschlüssel" FontWeight="Bold"/>
+                    </TabItem.Header>
+                    <StackPanel Height="420">
+
+                    </StackPanel>
+
+                </TabItem>
+
+
+            </TabControl>
+            <DockPanel Margin="0,5,0,0">
+                <Button Content="Abbrechen" Click="abbrechen" HorizontalAlignment="Right" Grid.Row="2" VerticalAlignment="Center" Width="75" Margin="30,0,10,0" DockPanel.Dock="Right"/>
+                <Button Content="OK" Click="ok" HorizontalAlignment="Right"  Grid.Row="2" VerticalAlignment="Center" Width="75" Margin="30,0,0,0" DockPanel.Dock="Right"/>
+            </DockPanel>
+        </StackPanel>
+
+    </Grid>
+</Window>

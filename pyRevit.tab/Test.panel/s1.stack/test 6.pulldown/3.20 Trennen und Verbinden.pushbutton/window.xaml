@@ -1,0 +1,13 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Übergangsstück" Height="150" Width="250" Background="LightBlue" ResizeMode="CanMinimize" WindowStartupLocation ="CenterOwner">
+<Grid>
+  <StackPanel Margin="5,5,5,5">
+
+      <Button Content="Trennen" Click="erstellen1" Width="150" Height="24" Margin="0,5,0,0"/>
+      <Button Content="Verbinden" Click="erstellen" Width="150" Height="24" Margin="0,5,0,0"/>
+      <Button Content="Rohr" Click="rohrerstellen" Width="150" Height="24" Margin="0,5,0,0"/>
+  </StackPanel>
+</Grid>
+</Window>

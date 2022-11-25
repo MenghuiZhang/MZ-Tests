@@ -1,0 +1,96 @@
+<Window 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dämmung" Height="560" Width="400" Background="SkyBlue" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid  x:Name="grid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height ="310"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <GroupBox Margin="2" Grid.ColumnSpan="2" Grid.Row="1">
+            <GroupBox.Header>
+                <TextBlock Text="Modus" FontSize="12" FontWeight="Bold"/>
+            </GroupBox.Header>
+            <DockPanel>
+                <RadioButton x:Name="system" Content="Systemtyp" Click="modus_systemtyp" Margin="10,5,10,0" IsChecked="True"/>
+                <RadioButton x:Name="system_sel" Content="Selection-System" Click="modus_system" Margin="10,5,10,0"/>
+                <RadioButton x:Name="system_elems" Content="Selection-Element" Click="modus_elems" Margin="10,5,10,0"/>
+            </DockPanel>
+        </GroupBox>
+        <GroupBox Margin="2" Grid.ColumnSpan="2" Grid.Row="2">
+            <GroupBox.Header>
+                <TextBlock Text="Kategorie" FontSize="12" FontWeight="Bold"/>
+            </GroupBox.Header>
+            <DockPanel>
+                <CheckBox x:Name="pipe" Content="Rohre" Margin="10,5,10,0" IsChecked="True"/>
+                <CheckBox x:Name="pipefitting" Content="Rohrformteile" Margin="10,5,10,0" IsChecked="True"/>
+                <CheckBox x:Name="softpipe" Content="Flexrohre"  Margin="10,5,10,0" IsChecked="True"/>
+            </DockPanel>
+        </GroupBox>
+
+        <GroupBox Margin="2">
+            <GroupBox.Header>
+                <TextBlock Text="Dämmung" FontSize="12" FontWeight="Bold"/>
+            </GroupBox.Header>
+            <DockPanel>
+                <RadioButton x:Name="manuell"  Margin="10,5,10,0" Click="changetomanuell" >
+                    <RadioButton.Content>
+                        <Button Content="manuell" Click="manuellbearbeiten" Height="18" IsEnabled="False" x:Name="button_manuell"/>
+                    </RadioButton.Content>
+                </RadioButton>
+                <RadioButton x:Name="systemtyp" Content="aus System" Margin="50,5,10,0" IsChecked="True" Click="changetosystem"/>
+
+            </DockPanel>
+        </GroupBox>
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2">
+            <CheckBox Margin="20,10,0,0" Content="vorhandenen Dämmung anpassen" x:Name="anpassen"/>
+            <DockPanel Margin="0,10,0,0">
+                <Button x:Name="add" Click="addisoclick" Content="Dämmung hinzufügen" Width="150" Height="20" Margin="20,0,0,0" HorizontalAlignment="Left"/>
+                <Button x:Name="remove" Click="removeisoclick" Content="Dämmung entfernen" Width="150" Height="20" HorizontalAlignment="Right" Margin="0,0,20,0" />
+            </DockPanel>
+        </StackPanel>
+
+        <DockPanel Margin="5,2,2,2" Grid.Row="3" Height="25" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <TextBlock Text="Filter:  " VerticalAlignment="Center"/>
+            <TextBox Height="20" TextChanged="serchtextchanged" x:Name="suche"/>
+        </DockPanel>
+        <ListView x:Name="systemtyp_lv"   ItemsSource="{Binding}" Background="LightBlue" Margin="2,27,2,2" Grid.Row="3" Grid.ColumnSpan="2">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="30" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="checkedchanged"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="300">
+                        <GridViewColumn.Header>
+                            <TextBlock Text="System" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </GridViewColumn.Header>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+
+
+
+
+    </Grid>
+
+</Window>

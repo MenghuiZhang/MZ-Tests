@@ -1,0 +1,4 @@
+# pylint: skip-file
+from pyrevit import HOST_APP, EXEC_PARAMS
+args = EXEC_PARAMS.event_args
+print(args.Cancellable,args.PreviousActiveView,args.CurrentActiveView)

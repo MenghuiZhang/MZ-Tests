@@ -1,0 +1,21 @@
+<Window 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Trassenzugehörigkeit" Height="350" Width="410"  ShowInTaskbar="False" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="202*"/>
+            <RowDefinition Height="30*"/>
+        </Grid.RowDefinitions>
+        <DataGrid x:Name="dataGrid" ItemsSource="{Binding}" AutoGenerateColumns="False" Grid.Row="0" Background="LightBlue" RowBackground="WhiteSmoke"  CanUserAddRows="False" >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="CAx Trassenbezugsebene" Binding="{Binding CAx}" Width="200" IsReadOnly="True"/>
+                <DataGridTextColumn Header="IGF Trassenzugehörigkeit" Binding="{Binding IGF}" Width="200"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="OK" Grid.Row="1" FontSize="16" Click="ok" Margin="250,3,45,3"/>
+        <Button Content="Cancel" Grid.Row="1" FontSize="16" Click="cancel" Margin="45,3,250,3"/>
+
+    </Grid>
+</Window>

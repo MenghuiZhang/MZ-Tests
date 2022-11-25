@@ -1,0 +1,116 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          Title="ULK-Familien"  ShowInTaskbar="False"
+          WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="1000" Height="400">
+
+      <Grid>
+          <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition Height="30"/>
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+              <ColumnDefinition/>
+              <ColumnDefinition/>
+              <ColumnDefinition/>
+              <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <DataGrid x:Name="dataGrid" ItemsSource="{Binding}" AutoGenerateColumns="False" Grid.Row="0" Background="LightBlue" RowBackground="WhiteSmoke" CanUserAddRows="True" CanUserDeleteRows="True" CanUserResizeRows="True" Grid.ColumnSpan="4">
+              <DataGrid.Columns>
+                  <DataGridCheckBoxColumn Width="30" Binding="{Binding checked}"/>
+                  <DataGridTextColumn Header="Familienname" Binding="{Binding Name}" Width="2*" MinWidth="0"/>
+
+                  <DataGridComboBoxColumn Header="Volumenstrom" SelectedValueBinding="{Binding Vol_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="Kühlleistung" SelectedValueBinding="{Binding KL_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="VL-Temp Kälte" SelectedValueBinding="{Binding V_K_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="RL-Temp Kälte" SelectedValueBinding="{Binding R_K_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="Heizleistung" SelectedValueBinding="{Binding HL_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="VL-Temp Heizung" SelectedValueBinding="{Binding V_H_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+                  <DataGridComboBoxColumn Header="RL-Temp Heizung" SelectedValueBinding="{Binding R_H_Id}" SelectedValuePath="selectId" DisplayMemberPath="ParaName" Width="1*">
+                      <DataGridComboBoxColumn.ElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.ElementStyle>
+                      <DataGridComboBoxColumn.EditingElementStyle>
+                          <Style TargetType="ComboBox">
+                              <Setter Property="ItemsSource" Value="{Binding Path=Paras}" />
+                          </Style>
+                      </DataGridComboBoxColumn.EditingElementStyle>
+                  </DataGridComboBoxColumn>
+
+              </DataGrid.Columns>
+          </DataGrid>
+          <Button x:Name="ein" Content="Show all" Grid.Row="1" FontSize="14" Click="show" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Width="110" Height="25" Grid.Column="1" />
+          <Button Content="OK" Grid.Row="1" FontSize="14" Click="ok" Margin="0" Width="110" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Grid.Column="2"/>
+          <Button x:Name="aus" Content="Hide unselected" Grid.Row="1" Click="hide" Margin="0" Width="110" Height="25" />
+          <Button Content="Abbrechen" Grid.Row="1" FontSize="14" Click="close" Margin="0,0,0,2" Width="110" HorizontalAlignment="Center" VerticalAlignment="Center" Height="24" Grid.Column="3"/>
+      </Grid>
+
+  </Window>

@@ -1,0 +1,24 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DistributionBox spiegeln" Height="140" Width="300" Background="SkyBlue" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel Margin="5">
+            <GroupBox Height="50" VerticalAlignment="Top">
+                <GroupBox.Header>
+                    <TextBlock Text="Modus" FontWeight="Bold" />
+                </GroupBox.Header>
+
+                <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <RadioButton x:Name="modell" Content="Projekt" IsChecked="True" Margin="0,0,20,0" VerticalAlignment="Center" Click="changetomodell"/>
+                    <RadioButton x:Name="ansicht" Content="Ansicht" Margin="0,0,20,0" VerticalAlignment="Center" Click="changetoansicht" />
+                    <RadioButton x:Name="auswahl" Content="Auswahl" VerticalAlignment="Center" Margin="0,0,20,0" Click="changetoselect"/>
+                </DockPanel>
+
+
+        </GroupBox>
+            <Button Click="start" Content="Bauteile spiegeln" Height="20" Margin="5,10,5,0"/>
+        </StackPanel>
+
+    </Grid>
+</Window>

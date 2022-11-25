@@ -1,0 +1,17 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kombirahmen ---> DistributionBox" Height="130" Width="600" Background="SkyBlue" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+
+      <StackPanel Margin="5">
+          <DockPanel Margin="0,10,0,0">
+                  <TextBlock Text="DistributionBox:" Margin="10,0" VerticalAlignment="Center" FontWeight="Bold"/>
+                  <ComboBox x:Name="distribution" Height="25" Margin="2,0,10,0" />
+              </DockPanel>
+          <Button Click="start" Content="austauschen" Height="20"  Margin="20,10,20,0" />
+      </StackPanel>
+
+
+    </Grid>
+</Window>

@@ -1,0 +1,19 @@
+title:
+  Exportieren
+tooltip:
+  exportiert ausgewählte Bauteileliste.
+
+time:
+  [2021.10.04]
+Version:
+  - 1.1
+
+media: Test.png
+
+context:
+  any:
+    - zerodoc
+    - doc
+
+
+author: Menghui Zhang

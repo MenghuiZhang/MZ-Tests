@@ -1,0 +1,97 @@
+<Window
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Sprinkler Dimension"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen"  HorizontalContentAlignment="Center"  Background="SkyBlue" MinWidth="500" MaxWidth="500" Height="400">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="150"/>
+        </Grid.RowDefinitions>
+
+            <ListView x:Name="lv" Background="LightBlue" ItemsSource="{Binding}"  Margin="2" SelectionChanged="Selection_Changed" >
+                <ListView.Resources>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="10"/>
+                        <Setter Property="Height" Value="18"/>
+                    </Style>
+                </ListView.Resources>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="150" x:Name="Von"  >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Path = von}" TextChanged="von_changed" KeyDown="Setkey" InputMethod.IsInputMethodEnabled="False" Width="130" Foreground="{Binding farbe_von}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Anzahl von" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anzahl der Famlien von (größer oder gleich)"/>
+                        </GridViewColumn>
+                        <GridViewColumn Width="150" x:Name="Bis"  >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Path = bis}" Width="130" IsEnabled="False" Foreground="{Binding farbe_bis}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Anzahl bis" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anzahl der Famlien bis zum (kleiner oder gleich)"/>
+                        </GridViewColumn>
+                        <GridViewColumn Width="150" >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox  ItemsSource="{Binding durchmesser}" SelectedItem="{Binding Path = dimension}" Width="130"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Durchmesser (DN)" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Durchmesser DN"/>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+
+        <StackPanel Grid.Row="1" Margin="5,2,5,2">
+            <GroupBox Header="Tabelle bearbeiten" Height="45" >
+                <DockPanel >
+                    <Button Content="hinzufügen" FontSize="14" Click="Add" Width="100" Height="22" Margin="40,0,0,0" HorizontalAlignment="Left" />
+                    <Button x:Name="Remove" IsEnabled="False" Content="entfernen" FontSize="14" Click="dele" Width="100" Height="22" Margin="50,0,0,0" HorizontalAlignment="Stretch" />
+                    <Button Content="schließen" FontSize="14" Click="cancel" Width="100" Height="22" Margin="50,0,0,0" HorizontalAlignment="Left" />
+                </DockPanel>
+            </GroupBox>
+            <GroupBox Header="Strang" >
+
+                <DockPanel >
+                    <Button Content="auswählen" FontSize="14" Click="auswaehlen" Width="100" Height="22" Margin="40,0,0,0" HorizontalAlignment="Left" ToolTip="Strang auswählen.  1. Rohr auswählen. 2. Damit angeschlossen Teil auswählen" />
+                    <Button x:Name="button_dimension" Content="dimensionieren" FontSize="14" Click="dimension" Width="100" Height="22" Margin="50,0,0,0" HorizontalAlignment="Stretch" ToolTip="Soll-Dimension in Para,eter IGF_X_SM_Durchmesser schreiben" IsEnabled="False"/>
+                    <Button x:Name="button_change" Content="übenehmen" FontSize="14" Click="changeuebernehmen" Width="100" Height="22" Margin="50,0,0,0" HorizontalAlignment="Left" ToolTip="Dimension übernehmen" IsEnabled="False"/>
+                </DockPanel>
+            </GroupBox>
+            <GroupBox Header="Fehler beheben">
+                <DockPanel>
+                    <Button Content="T-Stück erstellen" Click="t_stück_erstellen" Width="150" Margin="40,0,0,0" HorizontalAlignment="Left" Height="22"/>
+                    <Button Content="Übergang erstellen" Click="uebergang" Width="150" HorizontalAlignment="Right" Margin="0,0,40,0"/>
+                </DockPanel>
+            </GroupBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="5,2,5,2" x:Name="pb_c" Visibility="Hidden" >
+            <GroupBox Header="Tabelle bearbeiten" Height="45" Visibility="Hidden">
+            </GroupBox>
+            <GroupBox Height="45" >
+                <GroupBox.Header>
+                    <TextBlock Text="Strang" Visibility="Hidden"/>
+                </GroupBox.Header>
+                <ProgressBar x:Name="pb01" Minimum="0"/>
+
+            </GroupBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="5,2,5,2" x:Name="pb_t" Visibility="Hidden">
+            <GroupBox Header="Tabelle bearbeiten" Height="45" Visibility="Hidden">
+            </GroupBox>
+            <GroupBox Height="45" >
+                <GroupBox.Header>
+                    <TextBlock Text="Strang" Visibility="Hidden"/>
+                </GroupBox.Header>
+                <TextBlock x:Name="pb_text" TextAlignment="Center" VerticalAlignment="Center"/>
+            </GroupBox>
+        </StackPanel>
+
+    </Grid>
+</Window>

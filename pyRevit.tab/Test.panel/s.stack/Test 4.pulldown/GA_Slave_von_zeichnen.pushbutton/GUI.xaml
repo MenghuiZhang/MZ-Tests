@@ -1,0 +1,76 @@
+<Window
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="GA"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen" Background="SkyBlue" Width="400" Height="200" ResizeMode="NoResize">
+    <TabControl Background="SkyBlue">
+        <TabItem Header="Slave von" Width="120" x:Name="slavevonitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <DockPanel Grid.ColumnSpan="2" Margin="5,0,5,0">
+                    <TextBlock Text="Filter:" Width="60" VerticalAlignment="Center"/>
+                    <Button Content="bearbeiten" Height="23" Click="familieauswahl" ToolTip="Familien-Filter einstellen" x:Name="buttonfamsel"/>
+                </DockPanel>
+                <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="5,0,5,0">
+                    <TextBlock Text="Slave-von" Width="60" VerticalAlignment="Center" ToolTip="IGF_GA_Slave_von"/>
+                    <TextBox x:Name="textboxSlavevon" Height="23" />
+                </DockPanel>
+                <Button Grid.Row="3" Height="25" Width="100" Content="auswählen" ToolTip="Bauteile auswählen" Click="auswahl"/>
+                <Button x:Name="button_select" Grid.Row="3" Grid.Column="1" Height="25" Width="100" Content="übernehmen" Click="writevalue" ToolTip="den wert in den Parameter schreiben" IsEnabled="False"/>
+
+
+            </Grid>
+        </TabItem>
+        <TabItem Header="Brandbereich MEP" Width="120" x:Name="mepitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <DockPanel Grid.ColumnSpan="2" Margin="5,0,5,0">
+                    <TextBlock Text="Brandsbreich:" VerticalAlignment="Center" ToolTip="IGF_GA_Brandbereich" Width="80"/>
+                    <TextBox x:Name="textbox_bb" Height="23" />
+                </DockPanel>
+                <Button Grid.Row="3" Height="25" Width="100" Content="auswählen" ToolTip="MEP-Räume auswählen" Click="auswahlmep"/>
+                <Button x:Name="buttonwritemep" Grid.Row="3" Grid.Column="1" Height="25" Width="100" Content="übernehmen" Click="writevaluemep" ToolTip="den wert in den Parameter schreiben" IsEnabled="False"/>
+
+
+            </Grid>
+
+        </TabItem>
+        <TabItem Width="120" Header="Brandbereich BSK" x:Name="bskitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition/>
+
+                </Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock Margin="5,0,5,0" TextWrapping="Wrap" Text="Hinweis:" />
+                    <TextBlock Margin="5,0,5,0" TextWrapping="Wrap" Text="Nach Anklicken von Button BSK Brandbereich einstellen," />
+                    <TextBlock Margin="5,0,5,0" TextWrapping="Wrap" Text="1. BSK suawählen" />
+                    <TextBlock Margin="5,0,5,0" TextWrapping="Wrap" Text="2. MEP-Raum 1 auswählen" />
+                    <TextBlock Margin="5,0,5,0" TextWrapping="Wrap" Text="2. MEP-Raum 2 auswählen" />
+
+                </StackPanel>
+
+                <Button Grid.Row="1" Height="25" Content="BSK Brandbreich einstellen" ToolTip="BSK Brandbreich aus MEP-Räume übernehmen" Click="bsk" Margin="10,0,10,0"/>
+            </Grid>
+        </TabItem>
+
+    </TabControl>
+
+</Window>

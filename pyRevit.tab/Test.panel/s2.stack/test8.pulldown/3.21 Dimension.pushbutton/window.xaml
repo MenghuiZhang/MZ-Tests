@@ -1,0 +1,66 @@
+<Window
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Sprinkler Dimension"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen"  HorizontalContentAlignment="Center"  Background="SkyBlue" MinWidth="500" MaxWidth="500" Height="400">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <ListView x:Name="lv" Background="LightBlue" ItemsSource="{Binding}"  Margin="2"  SelectionChanged="Selection_Changed">
+                <ListView.Resources>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="10"/>
+                        <Setter Property="Height" Value="18"/>
+                    </Style>
+                </ListView.Resources>
+                <ListView.View>
+
+                    <GridView>
+                        <GridViewColumn Width="150" x:Name="Von"  >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Path = von}" TextChanged="von_changed" KeyDown="Setkey" InputMethod.IsInputMethodEnabled="False" Width="130" Foreground="{Binding Path = farbe_von}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Anzahl von" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anzahl der Famlien von (größer oder gleich)"/>
+                        </GridViewColumn>
+                        <GridViewColumn Width="150" x:Name="Bis"  >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Path = bis}" Width="130" IsEnabled="False" Foreground="{Binding Path = farbe_bis}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Anzahl bis" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anzahl der Famlien bis zum (kleiner oder gleich)"/>
+                        </GridViewColumn>
+                        <GridViewColumn Width="150" >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox ItemsSource="{Binding durchmesser}"   SelectedItem="{Binding Path = dimension}" Width="130" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                            <TextBlock Text="Durchmesser (DN)" HorizontalAlignment="Center"  KeyDown="Setkey" InputMethod.IsInputMethodEnabled="False" VerticalAlignment="Center" ToolTip="Durchmesser DN"/>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1">
+            <DockPanel Margin="0,2,0,2" >
+                <Button Content="Add" FontSize="14" Click="Add" Width="150" Height="24" Margin="50,0,30,0" HorizontalAlignment="Left" />
+                <Button x:Name="Remove" IsEnabled="False" Content="Entfernen" FontSize="14" Click="dele" Width="150" Height="24" Margin="0,0,50,0" HorizontalAlignment="Right" />
+            </DockPanel>
+            <DockPanel Margin="0,2,0,2" >
+                <Button Content="OK" FontSize="14" Click="OK" Height="24" Width="150" Margin="50,0,0,0" HorizontalAlignment="Left" />
+                <Button Content="Abbrechen" FontSize="14" Click="cancel" Width="150" Height="24" Margin="0,0,50,0" HorizontalAlignment="Right" />
+            </DockPanel>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

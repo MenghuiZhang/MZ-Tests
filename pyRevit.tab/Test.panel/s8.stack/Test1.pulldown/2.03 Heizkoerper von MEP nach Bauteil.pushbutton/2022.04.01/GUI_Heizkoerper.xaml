@@ -1,0 +1,82 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Heizkörper"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="830" Height="400" ResizeMode="CanMinimize">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <ListView x:Name="lv_HK" Background="LightBlue" ItemsSource="{Binding}"  Margin="2" SelectionChanged="HK_Selection_Changed">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="FontSize" Value="10"/>
+                    <Setter Property="Height" Value="18"/>
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="400" >
+                        <GridViewColumn.Header>
+                            <TextBlock Text="Familien" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familien"/>
+                        </GridViewColumn.Header>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox DataContext="{Binding}" SelectedIndex="{Binding familieindex}" ItemsSource="{Binding Familien}" SelectionChanged="selected_fam_changed" Width="350">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding name}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+
+                                </ComboBox>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="200">
+                        <GridViewColumn.Header>
+                            <TextBlock Text="Nennleistung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </GridViewColumn.Header>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox DataContext="{Binding}" SelectedIndex="{Binding nennleistungindex}" ItemsSource="{Binding Parameter_NL}" SelectionChanged="selected_NL_changed" Width="190">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding name}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="200" >
+                        <GridViewColumn.Header>
+                            <TextBlock Text="Heizleistung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </GridViewColumn.Header>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox DataContext="{Binding}" SelectedIndex="{Binding heizleistungindex}" ItemsSource="{Binding Parameter_NL}" SelectionChanged="selected_HL_changed" Width="190">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <DockPanel Grid.Row="1">
+            <Button Content="Hinzufügen" FontSize="14" Click="Add" Width="140" Height="24" Margin="50,0,30,0" />
+            <Button x:Name="delete" IsEnabled="False" Content="Entfernen" FontSize="14" Click="dele" Width="140" Height="24" Margin="20,0,30,0" />
+            <Button Content="OK" FontSize="14" Click="OK" Height="24" Width="140" Margin="20,0,30,0" />
+            <Button Content="Abbrechen" FontSize="14" Click="cancel" Width="140" Height="24" Margin="20,0,50,0" />
+        </DockPanel>
+
+    </Grid>
+</Window>

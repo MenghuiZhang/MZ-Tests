@@ -1,0 +1,44 @@
+<Window
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Sprinkler Dimension"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen"  HorizontalContentAlignment="Center"  Background="SkyBlue" MinWidth="500" MaxWidth="500" Height="400">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1" Margin="5,2,5,2">
+
+            <GroupBox Header="Strang" >
+
+                <DockPanel >
+                    <Button x:Name="button_change" Content="übenehmen" FontSize="14" Click="changeuebernehmen" Width="100" Height="22" Margin="50,0,0,0" HorizontalAlignment="Left" ToolTip="Dimension übernehmen"/>
+                </DockPanel>
+            </GroupBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="5,2,5,2" x:Name="pb_c" Visibility="Hidden" >
+            <GroupBox Header="Tabelle bearbeiten" Height="45" Visibility="Hidden">
+            </GroupBox>
+            <GroupBox Height="45" >
+                <GroupBox.Header>
+                    <TextBlock Text="Strang" Visibility="Hidden"/>
+                </GroupBox.Header>
+                <ProgressBar x:Name="pb01" Value="{Binding Path=value}" Maximum="{Binding Path=maxvalue}" Minimum="0"/>
+
+            </GroupBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="5,2,5,2" x:Name="pb_t" Visibility="Hidden">
+            <GroupBox Header="Tabelle bearbeiten" Height="45" Visibility="Hidden">
+            </GroupBox>
+            <GroupBox Height="45" >
+                <GroupBox.Header>
+                    <TextBlock Text="Strang" Visibility="Hidden"/>
+                </GroupBox.Header>
+                <TextBlock x:Name="pb_text" Text="{Binding Path=PB_text}" TextAlignment="Center" VerticalAlignment="Center"/>
+            </GroupBox>
+        </StackPanel>
+
+    </Grid>
+</Window>
