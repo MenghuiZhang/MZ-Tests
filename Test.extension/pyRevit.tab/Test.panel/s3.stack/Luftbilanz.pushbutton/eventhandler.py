@@ -10,6 +10,7 @@ from System.Collections.Generic import List
 from System.Windows.Media import Brushes
 from clr import GetClrType
 from System.ComponentModel import INotifyPropertyChanged ,PropertyChangedEventArgs
+from System.Text.RegularExpressions import Regex
 
 
 def get_value(param):
@@ -85,6 +86,7 @@ class ABFRAGE(forms.WPFWindow):
     def __init__(self,maininfo = '',checked=True,height = None,minmax = True,faktor = '1,00'):
         forms.WPFWindow.__init__(self,'abfrage.xaml')
         self.maininfo.Text = maininfo
+        self.regex1 = Regex("[^0-9,]+")
         self.faktor = faktor
         self.gridlenge = GridLength(0.0)
         self.hoehe = height
@@ -101,6 +103,14 @@ class ABFRAGE(forms.WPFWindow):
         else:
             self.bestaetigen.IsChecked = False
             self.ja.IsEnabled = False
+    
+    def Textinput1(self, sender, args):
+        if sender.Text not in [None,'']:
+            if sender.Text.find(',') != -1:
+                if args.Text == ',':args.Handled = True
+                return
+        try:args.Handled = self.regex1.IsMatch(args.Text)
+        except:args.Handled = True
     
     def movewindow(self, sender, args):
         self.DragMove()
@@ -636,6 +646,8 @@ class Luftauslass(FamilieExemplar):
         self.iris = ''
         self.VSR_Class = None
         self.Haupt_Class = None
+        self.herstellermin = 0
+        self.herstellermax = 0
         self.IRIS_Class = None
         self.Luftmengenermitteln()
         self.size = self.get_Size()
@@ -676,6 +688,12 @@ class Luftauslass(FamilieExemplar):
         try:self.Luftmengenmax = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMax'))),1)
         except:pass
         try:self.Luftmengentnacht = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromTiefeNacht'))),1)
+        except:pass
+        try:
+            self.herstellermax = self.Luftmengensollmax = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_L_SollVolumenstromMax'))),1)
+        except:pass
+        try:
+            self.herstellermin = self.Luftmengensollmin = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_L_SollVolumenstromMin'))),1)
         except:pass
 
     def get_RountingListe(self,element):
@@ -1048,11 +1066,12 @@ class SchachtGrundinfo(object):
         self.name = name
 
 class MEPGrundInfo(TemplateItemBase):
-    def __init__(self,name,soll,tooltip):
+    def __init__(self,name,soll,reduziert,tooltip):
         TemplateItemBase.__init__(self)
         self.name = name
         self._soll = soll
         self._ist = ''
+        self._reduziert = reduziert
         self.tooltip = tooltip
     @property
     def soll(self):
@@ -1062,6 +1081,14 @@ class MEPGrundInfo(TemplateItemBase):
         if value != self._soll:
             self._soll = value
             self.RaisePropertyChanged('soll')
+    @property
+    def reduziert(self):
+        return self._reduziert
+    @reduziert.setter
+    def reduziert(self,value):
+        if value != self._reduziert:
+            self._reduziert = value
+            self.RaisePropertyChanged('reduziert')
     @property
     def ist(self):
         return self._ist
@@ -1234,11 +1261,16 @@ class MEPRaum(object):
                                 el.List_Iris.Add(iris)
                                 iris.List_VSR.Add(el)
 
-        # self.angezuluft = 0
-        # self.angeabluft = 0
-
         self.IsTierRaum = (self.get_element('IGF_RLT_Tierkäfig_raumunabhängig') != 0)
         self.IsSchacht = (self.get_element('TGA_RLT_InstallationsSchacht') != 0)
+        self.IsReduziert = self.get_element('IGF_RLT_istReduziert')
+        self.reduziertfaktor = self.get_element('IGF_RLT_Raum-ReduziertFaktor')
+        if not self.reduziertfaktor or self.reduziertfaktor == 0:
+            self.reduziertfaktor = 1
+        self.auslassreduziertfaktor = self.get_element('IGF_L_SollVolumenstromFaktor')
+        if not self.auslassreduziertfaktor or self.auslassreduziertfaktor == 0:
+            self.auslassreduziertfaktor = 1
+            
         self.list_auslass = ObservableCollection[Luftauslass]()
         if self.elemid.ToString() in DICT_MEP_AUSLASS.keys():
              for art in sorted(DICT_MEP_AUSLASS[self.elemid.ToString()].keys()):
@@ -1273,118 +1305,124 @@ class MEPRaum(object):
         
         # Übersicht
         self.Uebersicht = ObservableCollection[MEPGrundInfo]()
-        self.angezuluft = MEPGrundInfo('Ange.Zuluft',self.get_element('Angegebener Zuluftstrom'),'Angegebener Zuluftstrom')
+        self.angezuluft = MEPGrundInfo('Ange.Zuluft',self.get_element('IGF_RLT_ZuluftAngegeben'),self.get_element('IGF_RLT_ZuluftAngegebenReduziert'),'Angegebener Zuluftstrom')
         self.Uebersicht.Add(self.angezuluft)
-        self.angeabluft = MEPGrundInfo('Ange.Abluft',self.get_element('Angegebener Abluftluftstrom'),'Angegebener Abluftluftstrom')
+        self.angeabluft = MEPGrundInfo('Ange.Abluft',self.get_element('IGF_RLT_AbluftAngegeben'),self.get_element('IGF_RLT_AbluftAngegebenReduziert'),'Angegebener Abluftstrom')
         self.Uebersicht.Add(self.angeabluft)
 
-        self.ab_24h = MEPGrundInfo('24h Ab',self.get_element('IGF_RLT_AbluftSumme24h'),'IGF_RLT_AbluftSumme24h')
+        self.ab_24h = MEPGrundInfo('24h Ab',self.get_element('IGF_RLT_AbluftSumme24h'),'---','IGF_RLT_AbluftSumme24h')
         self.Uebersicht.Add(self.ab_24h)
 
         self.ab_minsum = MEPGrundInfo('min.AB_SUM',0,'RAB,LAB,24h,Über,Über_M')
         self.Uebersicht.Add(self.ab_minsum)
-        self.ab_min = MEPGrundInfo('min.RAB',self.get_element('IGF_RLT_AbluftminRaum'),'IGF_RLT_AbluftminRaum-IGF_RLT_AbluftminSummeLabor-IGF_RLT_AbluftSumme24h')
+        self.ab_min = MEPGrundInfo('min.RAB',self.get_element('IGF_RLT_AbluftminRaum'),self.get_element('IGF_RLT_AbluftminRaumReduziert'),'Raumabluft min')
         self.Uebersicht.Add(self.ab_min)
-        self.ab_lab_min = MEPGrundInfo('min.LAB',self.get_element('IGF_RLT_AbluftminSummeLabor'),'IGF_RLT_AbluftminSummeLabor')
+        self.ab_lab_min = MEPGrundInfo('min.LAB',self.get_element('IGF_RLT_AbluftminSummeLabor'),'---','IGF_RLT_AbluftminSummeLabor')
         self.Uebersicht.Add(self.ab_lab_min)
         self.zu_minsum = MEPGrundInfo('min.ZU_SUM',0,'RZU,Über,Über_M')
         self.Uebersicht.Add(self.zu_minsum)
-        self.zu_min = MEPGrundInfo('min.RZU',self.get_element('IGF_RLT_ZuluftminRaum'),'IGF_RLT_ZuluftminRaum')
+        self.zu_min = MEPGrundInfo('min.RZU',self.get_element('IGF_RLT_ZuluftminRaum'),self.get_element('IGF_RLT_ZuluftminRaumReduziert'),'IGF_RLT_ZuluftminRaum')
         self.Uebersicht.Add(self.zu_min)
         
         self.ab_maxsum = MEPGrundInfo('max.AB_SUM',0,'RAB,LAB,24h,Über,Über_M')
         self.Uebersicht.Add(self.ab_maxsum)
-        self.ab_max = MEPGrundInfo('max.RAB',self.get_element('IGF_RLT_AbluftmaxRaum'),'IGF_RLT_AbluftmaxRaum-IGF_RLT_AbluftmaxSummeLabor-IGF_RLT_AbluftSumme24h')
+        self.ab_max = MEPGrundInfo('max.RAB',self.get_element('IGF_RLT_AbluftmaxRaum'),self.get_element('IGF_RLT_AbluftmaxRaumReduziert'),'Raumabluft max')
         self.Uebersicht.Add(self.ab_max)
-        self.ab_lab_max = MEPGrundInfo('max.LAB',self.get_element('IGF_RLT_AbluftmaxSummeLabor'),'IGF_RLT_AbluftmaxSummeLabor')
+        self.ab_lab_max = MEPGrundInfo('max.LAB',self.get_element('IGF_RLT_AbluftmaxSummeLabor'),'---','IGF_RLT_AbluftmaxSummeLabor')
         self.Uebersicht.Add(self.ab_lab_max)
         self.zu_maxsum = MEPGrundInfo('max.ZU_SUM',0,'RZU,Über,Über_M')
         self.Uebersicht.Add(self.zu_maxsum)
-        self.zu_max = MEPGrundInfo('max.RZU',self.get_element('IGF_RLT_ZuluftmaxRaum'),'IGF_RLT_ZuluftmaxRaum')
+        self.zu_max = MEPGrundInfo('max.RZU',self.get_element('IGF_RLT_ZuluftmaxRaum'),self.get_element('IGF_RLT_AbluftmaxRaumReduziert'),'IGF_RLT_ZuluftmaxRaum')
         self.Uebersicht.Add(self.zu_max)
 
-        self.nb_von = MEPGrundInfo('NB von',self.get_element('IGF_RLT_NachtbetriebVon'),'IGF_RLT_NachtbetriebVon')
+        self.nb_von = MEPGrundInfo('NB von',self.get_element('IGF_RLT_NachtbetriebVon'),'---','IGF_RLT_NachtbetriebVon')
         self.Uebersicht.Add(self.nb_von)
-        self.nb_bis = MEPGrundInfo('NB bis',self.get_element('IGF_RLT_NachtbetriebBis'),'IGF_RLT_NachtbetriebBis')
+        self.nb_bis = MEPGrundInfo('NB bis',self.get_element('IGF_RLT_NachtbetriebBis'),'---','IGF_RLT_NachtbetriebBis')
         self.Uebersicht.Add(self.nb_bis)
-        self.nb_dauer = MEPGrundInfo('NB Dauer',self.get_element('IGF_RLT_NachtbetriebDauer'),'IGF_RLT_NachtbetriebDauer')
+        self.nb_dauer = MEPGrundInfo('NB Dauer',self.get_element('IGF_RLT_NachtbetriebDauer'),'---','IGF_RLT_NachtbetriebDauer')
         self.Uebersicht.Add(self.nb_dauer)
-        self.nb_zu = MEPGrundInfo('NB Zu',self.get_element('IGF_RLT_ZuluftNachtRaum'),'IGF_RLT_ZuluftNachtRaum')
+        self.nb_zu = MEPGrundInfo('NB Zu',self.get_element('IGF_RLT_ZuluftNachtRaum'),'---','IGF_RLT_ZuluftNachtRaum')
         self.Uebersicht.Add(self.nb_zu)
-        self.nb_ab = MEPGrundInfo('NB Ab',self.get_element('IGF_RLT_AbluftNachtRaum'),'IGF_RLT_AbluftNachtRaum')
+        self.nb_ab = MEPGrundInfo('NB Ab',self.get_element('IGF_RLT_AbluftNachtRaum'),'---','IGF_RLT_AbluftNachtRaum')
         self.Uebersicht.Add(self.nb_ab)
 
-        self.tnb_von = MEPGrundInfo('TNB von',self.get_element('IGF_RLT_TieferNachtbetriebVon'),'IGF_RLT_TieferNachtbetriebVon')
+        self.tnb_von = MEPGrundInfo('TNB von',self.get_element('IGF_RLT_TieferNachtbetriebVon'),'---','IGF_RLT_TieferNachtbetriebVon')
         self.Uebersicht.Add(self.tnb_von)
-        self.tnb_bis = MEPGrundInfo('TNB bis',self.get_element('IGF_RLT_TieferNachtbetriebBis'),'IGF_RLT_TieferNachtbetriebBis')
+        self.tnb_bis = MEPGrundInfo('TNB bis',self.get_element('IGF_RLT_TieferNachtbetriebBis'),'---','IGF_RLT_TieferNachtbetriebBis')
         self.Uebersicht.Add(self.tnb_bis)
-        self.tnb_dauer = MEPGrundInfo('TNB Dauer',self.get_element('IGF_RLT_TieferNachtbetriebDauer'),'IGF_RLT_TieferNachtbetriebDauer')
+        self.tnb_dauer = MEPGrundInfo('TNB Dauer',self.get_element('IGF_RLT_TieferNachtbetriebDauer'),'---','IGF_RLT_TieferNachtbetriebDauer')
         self.Uebersicht.Add(self.tnb_dauer)
-        self.tnb_zu = MEPGrundInfo('TNB Zu',self.get_element('IGF_RLT_ZuluftTieferNachtRaum'),'IGF_RLT_ZuluftTieferNachtRaum')
+        self.tnb_zu = MEPGrundInfo('TNB Zu',self.get_element('IGF_RLT_ZuluftTieferNachtRaum'),'---','IGF_RLT_ZuluftTieferNachtRaum')
         self.Uebersicht.Add(self.tnb_zu)
-        self.tnb_ab = MEPGrundInfo('TNB Ab',self.get_element('IGF_RLT_AbluftTieferNachtRaum'),'IGF_RLT_AbluftTieferNachtRaum')
+        self.tnb_ab = MEPGrundInfo('TNB Ab',self.get_element('IGF_RLT_AbluftTieferNachtRaum'),'---','IGF_RLT_AbluftTieferNachtRaum')
         self.Uebersicht.Add(self.tnb_ab)
 
         if self.IsTierRaum != 0:
-            self.tier_zu_min = MEPGrundInfo('min.TZU',self.get_element('IGF_RLT_Luftmenge_min_TZU'),'IGF_RLT_Luftmenge_min_TZU')
+            self.tier_zu_min = MEPGrundInfo('min.TZU',self.get_element('IGF_RLT_Luftmenge_min_TZU'),'---','IGF_RLT_Luftmenge_min_TZU')
             self.Uebersicht.Add(self.tier_zu_min)
-            self.tier_ab_min = MEPGrundInfo('min.TAB',self.get_element('IGF_RLT_Luftmenge_min_TAB'),'IGF_RLT_Luftmenge_min_TAB')
+            self.tier_ab_min = MEPGrundInfo('min.TAB',self.get_element('IGF_RLT_Luftmenge_min_TAB'),'---','IGF_RLT_Luftmenge_min_TAB')
             self.Uebersicht.Add(self.tier_ab_min)
-            self.tier_zu_max = MEPGrundInfo('max.TZU',self.get_element('IGF_RLT_Luftmenge_max_TZU'),'IGF_RLT_Luftmenge_max_TZU')
+            self.tier_zu_max = MEPGrundInfo('max.TZU',self.get_element('IGF_RLT_Luftmenge_max_TZU'),'---','IGF_RLT_Luftmenge_max_TZU')
             self.Uebersicht.Add(self.tier_zu_max)
-            self.tier_ab_max = MEPGrundInfo('max.TAB',self.get_element('IGF_RLT_Luftmenge_max_TAB'),'IGF_RLT_Luftmenge_max_TAB')
+            self.tier_ab_max = MEPGrundInfo('max.TAB',self.get_element('IGF_RLT_Luftmenge_max_TAB'),'---','IGF_RLT_Luftmenge_max_TAB')
             self.Uebersicht.Add(self.tier_ab_max)
         else:
-            self.tier_zu_min = MEPGrundInfo('min.TZU',0,'IGF_RLT_Luftmenge_min_TZU')
+            self.tier_zu_min = MEPGrundInfo('min.TZU',0,'---','IGF_RLT_Luftmenge_min_TZU')
             self.Uebersicht.Add(self.tier_zu_min)
-            self.tier_ab_min = MEPGrundInfo('min.TAB',0,'IGF_RLT_Luftmenge_min_TAB')
+            self.tier_ab_min = MEPGrundInfo('min.TAB',0,'---','IGF_RLT_Luftmenge_min_TAB')
             self.Uebersicht.Add(self.tier_ab_min)
-            self.tier_zu_max = MEPGrundInfo('max.TZU',0,'IGF_RLT_Luftmenge_max_TZU')
+            self.tier_zu_max = MEPGrundInfo('max.TZU',0,'---','IGF_RLT_Luftmenge_max_TZU')
             self.Uebersicht.Add(self.tier_zu_max)
-            self.tier_ab_max = MEPGrundInfo('max.TAB',0,'IGF_RLT_Luftmenge_max_TAB')
+            self.tier_ab_max = MEPGrundInfo('max.TAB',0,'---','IGF_RLT_Luftmenge_max_TAB')
             self.Uebersicht.Add(self.tier_ab_max)
         
 
-        self.ueber_sum = MEPGrundInfo('Überstrom',self.get_element('IGF_RLT_ÜberströmungRaum'),'IGF_RLT_ÜberströmungRaum')
+        self.ueber_sum = MEPGrundInfo('Überstrom',self.get_element('IGF_RLT_ÜberströmungRaum'),'---','IGF_RLT_ÜberströmungRaum')
         self.Uebersicht.Add(self.ueber_sum)
-        self.ueber_in = MEPGrundInfo('Über. Ein.',self.get_element('IGF_RLT_ÜberströmungSummeIn'),'IGF_RLT_ÜberströmungSummeIn')
+        self.ueber_in = MEPGrundInfo('Über. Ein.',self.get_element('IGF_RLT_ÜberströmungSummeIn'),'---','IGF_RLT_ÜberströmungSummeIn')
         self.Uebersicht.Add(self.ueber_in)
-        self.ueber_aus = MEPGrundInfo('Über. Aus.',self.get_element('IGF_RLT_ÜberströmungSummeAus'),'IGF_RLT_ÜberströmungSummeAus')
+        self.ueber_aus = MEPGrundInfo('Über. Aus.',self.get_element('IGF_RLT_ÜberströmungSummeAus'),'---','IGF_RLT_ÜberströmungSummeAus')
         self.Uebersicht.Add(self.ueber_aus)
-        self.ueber_in_manuell = MEPGrundInfo('Über.Ein.M.',self.get_element('TGA_RLT_RaumÜberströmungMenge'),'TGA_RLT_RaumÜberströmungMenge')
+        self.ueber_in_manuell = MEPGrundInfo('Über.Ein.M.',self.get_element('TGA_RLT_RaumÜberströmungMenge'),'---','TGA_RLT_RaumÜberströmungMenge')
         self.Uebersicht.Add(self.ueber_in_manuell)
-        self.ueber_aus_manuell = MEPGrundInfo('Über.Aus.M.',self.get_element('TGA_RLT_RaumÜberströmungMenge'),'TGA_RLT_RaumÜberströmungMenge')
+        self.ueber_aus_manuell = MEPGrundInfo('Über.Aus.M.',self.get_element('TGA_RLT_RaumÜberströmungMenge'),'---','TGA_RLT_RaumÜberströmungMenge')
         try:self.ueber_aus_manuell.soll = Dict_Ueber_Manuell[self.elem.Number]
         except:self.ueber_aus_manuell.soll = 0
         self.Uebersicht.Add(self.ueber_aus_manuell)
         self.ueber_aus_manuell.ist =self.ueber_aus_manuell.soll
         self.ueber_in_manuell.ist = self.ueber_in_manuell.soll
+        self.ueber_aus_manuell.reduziert = '---'
+        self.ueber_in_manuell.reduziert = '---'
 
         self.ab_min.soll = self.ab_min.soll - self.ab_24h.soll - self.ab_lab_min.soll
         self.ab_max.soll = self.ab_max.soll - self.ab_24h.soll - self.ab_lab_max.soll
+        self.ab_min.reduziert = self.ab_min.reduziert - self.ab_24h.soll - self.ab_lab_min.soll
+        self.ab_max.reduziert = self.ab_max.reduziert - self.ab_24h.soll - self.ab_lab_max.soll
+        self.DictAuslass_RZU = {}
+        self.DictAuslass_RAB = {}
+        self.DictAuslass_TZU = {}
+        self.DictAuslass_TAB = {}
+        self.DictAuslass_LAB = {}
+        self.DictAuslass_24h = {}
         self.sum_update()
-
-        
         
         self.IGF_Legende = ''     
             
-        self.Druckstufe = MEPGrundInfo('Druckstufe',self.get_element('IGF_RLT_RaumDruckstufeEingabe'),'IGF_RLT_RaumDruckstufeEingabe')
+        self.Druckstufe = MEPGrundInfo('Druckstufe',self.get_element('IGF_RLT_RaumDruckstufeEingabe'),'---','IGF_RLT_RaumDruckstufeEingabe')
         self.Uebersicht.Add(self.Druckstufe)
         # Anlagen
         self.Anlagen_info = ObservableCollection[MEPAnlagenInfo]()
 
         # Schacht
         self.Schacht_info = ObservableCollection[MEPSchachtInfo]()
-    
+
+        self.Tagesbetrieb_Berechnen()
+        self.Nachtbetrieb_Berechnen()
         self.Analyse()
         self.get_Anlagen_info()
         self.get_Schacht_info()
-    
-    def update(self):        
-        self.ab_24h.soll = self.get_element('IGF_RLT_AbluftSumme24h')
-        self.ab_lab_min.soll = self.get_element('IGF_RLT_AbluftminSummeLabor') 
-        self.Druckstufe.soll = self.get_element('IGF_RLT_RaumDruckstufeEingabe')
-    
+        self.Druckstufe_Berechnen()
+        
     def sum_update(self):
         self.ab_minsum.soll = str(int(round(float(self.ab_min.soll)+float(self.ab_lab_min.soll)+float(self.ab_24h.soll)+float(self.ueber_aus.soll)+float(self.ueber_aus_manuell.soll)))) + \
             ' (' + str(int(self.ab_min.soll)) + ', ' + str(int(self.ab_lab_min.soll)) + ', ' + str(int(self.ab_24h.soll)) + ', ' + str(int(self.ueber_aus.soll)) + ', ' + str(int(self.ueber_aus_manuell.soll))+ ')'
@@ -1397,6 +1435,17 @@ class MEPRaum(object):
         
         self.zu_maxsum.soll = str(int(round(float(self.zu_max.soll)+float(self.ueber_in.soll)+float(self.ueber_in_manuell.soll)))) + \
             ' (' + str(int(self.zu_max.soll)) + ', ' + str(int(self.ueber_in.soll)) + ', ' + str(int(self.ueber_in_manuell.soll)) + ')'
+        self.ab_minsum.reduziert = str(int(round(float(self.ab_min.reduziert)+float(self.ab_lab_min.soll)+float(self.ab_24h.soll)+float(self.ueber_aus.soll)+float(self.ueber_aus_manuell.soll)))) + \
+            ' (' + str(int(self.ab_min.reduziert)) + ', ' + str(int(self.ab_lab_min.soll)) + ', ' + str(int(self.ab_24h.soll)) + ', ' + str(int(self.ueber_aus.soll)) + ', ' + str(int(self.ueber_aus_manuell.soll))+ ')'
+        
+        self.ab_maxsum.reduziert = str(int(round(float(self.ab_max.reduziert)+float(self.ab_lab_max.soll)+float(self.ab_24h.soll)+float(self.ueber_aus.soll)+float(self.ueber_aus_manuell.soll)))) + \
+            ' (' + str(int(self.ab_max.reduziert)) + ', ' + str(int(self.ab_lab_max.soll)) + ', ' + str(int(self.ab_24h.soll)) + ', ' + str(int(self.ueber_aus.soll)) + ', ' + str(int(self.ueber_aus_manuell.soll))+ ')'
+        
+        self.zu_minsum.reduziert = str(int(round(float(self.zu_min.reduziert)+float(self.ueber_in.soll)+float(self.ueber_in_manuell.soll)))) + \
+            ' (' + str(int(self.zu_min.reduziert)) + ', ' + str(int(self.ueber_in.soll)) + ', ' + str(int(self.ueber_in_manuell.soll))+ ')'
+        
+        self.zu_maxsum.reduziert = str(int(round(float(self.zu_max.reduziert)+float(self.ueber_in.soll)+float(self.ueber_in_manuell.soll)))) + \
+            ' (' + str(int(self.zu_max.reduziert)) + ', ' + str(int(self.ueber_in.soll)) + ', ' + str(int(self.ueber_in_manuell.soll)) + ')'
         
         # self.ab_minsum.ist = str(int(round(float(self.ab_min.ist)+float(self.ab_lab_min.ist)+float(self.ab_24h.ist)+float(self.ueber_aus.ist)+float(self.ueber_aus_manuell.ist)))) + \
         #     ' (' + str(int(self.ab_min.ist)) + ', ' + str(int(self.ab_lab_min.ist)) + ', ' + str(int(self.ab_24h.ist)) + ', ' + str(int(self.ueber_aus.ist)) + ', ' + str(int(self.ueber_aus_manuell.ist))+ ')'
@@ -1420,399 +1469,187 @@ class MEPRaum(object):
         if self.Druckstufe.soll > 0:self.IGF_Legende = n*'+'
         else:self.IGF_Legende = n*'-'
     
+    def Labmin_24h_Druckstufe_Pruefen(self,zuluftmin):
+        if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll > zuluftmin + self.ueber_in_manuell.soll + self.ueber_in.soll:
+            zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+
+        if self.Druckstufe.soll > 0:
+            zuluftmin = zuluftmin + self.Druckstufe.soll > 0
+
+        return zuluftmin
+
+    def Labmax_24h_Druckstufe_Pruefen(self,zuluftmax):
+        if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll > zuluftmax + self.ueber_in_manuell.soll + self.ueber_in.soll:
+            zuluftmax =  self.ab_lab_max.soll + self.ab_24h.soll + self.ueber_aus.soll + self.ueber_aus_manuell.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+
+        if self.Druckstufe.soll > 0:
+            zuluftmax = zuluftmax + self.Druckstufe.soll > 0
+
+        return zuluftmax
+
     def Nachtbetrieb_Berechnen(self):
-        self.TiefeNachtbetrieb_Berechnen()
         if self.nachtbetrieb:
-            if self.tiefenachtbetrieb == 0:
-                if self.nb_bis.soll - self.nb_von.soll > 0:
-                    self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll
-                else:
-                    self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll + 24.00
-            else:
-                if self.nb_bis.soll - self.nb_von.soll > 0:
-                    self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll
-                else:
-                    self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll + 24.00 - self.tnb_dauer.soll
-            if self.bezugsname in ["Fläche","Luftwechsel","Person","manuell"]:
-                self.nb_zu.soll = self.luft_round(float(self.NB_LW) * self.volumen) + self.Druckstufe.soll
-                abweichung = self.nb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll - self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.nb_zu.soll -= abweichung
-                    self.nb_ab.soll = 0
-                else:
-                    self.nb_ab.soll = abweichung
-            elif self.bezugsname in ["nurZU_Fläche","nurZU_Luftwechsel","nurZU_Person","nurZUMa"]:
-                self.nb_zu.soll = self.luft_round(float(self.NB_LW) * self.volumen) + self.Druckstufe.soll
-                abweichung = self.nb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll - self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.nb_ab.soll = 0
-                else:
-                    self.nb_ab.soll = 0
-                self.nb_zu.soll -= abweichung
-            
-            elif self.bezugsname in ["nurAB_Fläche","nurAB_Luftwechsel","nurAB_Person","nurABMa"]:
-                self.nb_zu.soll = 0
-                abweichung = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll + self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.nb_zu.soll -= abweichung
-                    self.nb_ab.soll = 0
-                else:
-                    self.nb_ab.soll = abweichung 
+            if self.tiefenachtbetrieb:
+                self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
+                if self.tnb_dauer.soll < 0:
+                    self.tnb_dauer.soll += 24.00
+                    self.tnb_zu.soll = self.T_NB_LW * self.volumen
+                    self.tnb_zu.soll = self.Labmin_24h_Druckstufe_Pruefen(self.tnb_zu.soll)
+                    self.tnb_ab.soll = self.tnb_zu.soll - self.Druckstufe.soll
+            self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll + 24.00
+            self.nb_zu.soll = self.NB_LW * self.volumen
+            self.nb_zu.soll = self.Labmin_24h_Druckstufe_Pruefen(self.nb_zu.soll)
+            self.nb_ab.soll = self.nb_zu.soll - self.Druckstufe.soll
         else:
+            self.nb_dauer.soll = 0
             self.nb_zu.soll = 0
             self.nb_ab.soll = 0
-    def TiefeNachtbetrieb_Berechnen(self):
-        if self.tiefenachtbetrieb and self.nachtbetrieb:
-            if self.tnb_bis.soll - self.tnb_von.soll > 0:
-                    self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
-            else:
-                self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll + 24.00
-            if self.bezugsname in ["Fläche","Luftwechsel","Person","manuell"]:
-                self.tnb_zu.soll = self.luft_round(float(self.T_NB_LW) * self.volumen) + self.Druckstufe.soll
-                abweichung = self.tnb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll - self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.tnb_zu.soll -= abweichung
-                    self.tnb_ab.soll = 0
-                else:
-                    self.tnb_ab.soll = abweichung
-            elif self.bezugsname in ["nurZU_Fläche","nurZU_Luftwechsel","nurZU_Person","nurZUMa"]:
-                self.tnb_zu.soll = self.luft_round(float(self.T_NB_LW) * self.volumen) + self.Druckstufe.soll
-                abweichung = self.tnb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll - self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.tnb_ab.soll = 0
-                else:
-                    self.tnb_ab.soll = 0
-                self.tnb_zu.soll -= abweichung
-            
-            elif self.bezugsname in ["nurAB_Fläche","nurAB_Luftwechsel","nurAB_Person","nurABMa"]:
-                self.tnb_zu.soll = 0
-                abweichung = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - \
-                self.ab_lab_min.soll + self.Druckstufe.soll - self.ab_24h.soll
-                if abweichung < 0:
-                    self.tnb_zu.soll -= abweichung
-                    self.tnb_ab.soll = 0
-                else:
-                    self.tnb_ab.soll = abweichung 
-        else:
-            self.tnb_zu.soll = 0
+            self.tnb_dauer.soll = 0
             self.tnb_ab.soll = 0
-
+            self.tnb_zu.soll = 0   
+    
     def Tagesbetrieb_Berechnen(self):
         if self.flaeche == 0:
             return
-        if self.bezugsname == 'nurZU_Fläche':
-            self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_min.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll
-            if abweichung < 0:
-                self.logger.error('Bitte Überstrom-Aus erhöhen in Raum {}. min. Zuluft {} m³/h.'.format(self.Raumnr,self.zu_min.soll))
-            else:
-                self.zu_min.soll += abweichung
-            self.ab_min.soll = 0
-            self.angezuluft.soll = self.zu_min.soll
-            self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(self.flaeche * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_max.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_max.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll
+        if self.bezugsname in ['nurZU_Fläche',"nurZU_Luftwechsel","nurZU_Person","nurZUMa"]:
+            if (self.ab_lab_min.soll + self.ab_24h.soll> 0) or (self.ab_lab_max.soll + self.ab_24h.soll> 0):
+                self.logger.error("Berechnungsprinzip von Raum {} ist Falsch. Der Raum ist nur über Überströmung ausströmt aber hat Laborabluft min: {}, max: {} m³/h und 24h-Abluft: {} m³/h".format(self.Raumnr,self.ab_lab_min.soll,self.ab_lab_max.soll,self.ab_24h.soll))
+                return
+            if self.bezugsname == "nurZU_Fläche":
+                self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurZU_Luftwechsel":
+                self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurZU_Person":
+                self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurZUMa":
+                self.zu_min.soll = self.luft_round(float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             
-            if abweichung >= 0:self.zu_max.soll += abweichung
-            self.ab_max.soll = 0
+            self.ab_min.soll = self.ab_max.soll = 0
+            self.ab_min.reduziert = self.ab_max.reduziert = 0
+            self.angeabluft.reduziert = self.angezuluft.reduziert = self.zu_min.reduziert
+            self.angeabluft.soll = self.angezuluft.soll = self.zu_min.soll
 
-        elif self.bezugsname == 'nurZU_Luftwechsel':
-            self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_min.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll
-            if abweichung < 0:self.logger.error('Bitte Überstrom-Aus erhöhen in Raum {}. min. Zuluft {} m³/h.'.format(self.Raumnr,self.zu_min.soll))
-            else:self.zu_min.soll += abweichung
-            self.ab_min.soll = 0
-            self.angezuluft.soll = self.zu_min.soll
+            self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
+            self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+            self.zu_max.soll = self.Labmax_24h_Druckstufe_Pruefen(self.zu_min.soll)
+            self.zu_max.reduziert = self.Labmax_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+            
+
+            abweichung = self.ueber_aus_manuell.soll + self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + self.Druckstufe.soll
+            abweichung_reduziert = self.ueber_aus_manuell.soll + self.ueber_aus.soll - self.zu_min.reduziert - self.ueber_in.soll - self.ueber_in_manuell.soll + self.Druckstufe.soll
+            
+            if abweichung >= 0:
+                self.zu_min.soll += abweichung
+                self.zu_max.soll += abweichung
+            if abweichung_reduziert >= 0:
+                self.zu_min.reduziert += abweichung_reduziert
+                self.zu_max.reduziert += abweichung_reduziert
+
+            if self.IsReduziert:
+                if abweichung_reduziert < 0:
+                    self.hinweis = "Achtung: Bitte Überströmung-Aus um {} m³/h erhöhen".format(int(0 - abweichung_reduziert))
+                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+            else:
+                if abweichung < 0:
+                    self.hinweis = "Achtung: Bitte Überströmung-Aus um {} m³/h erhöhen".format(int(0 - abweichung))
+                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+
+        elif self.bezugsname in ['nurAB_Fläche',"nurAB_Luftwechsel","nurAB_Person","nurABMa"]:
+            if self.bezugsname == "nurAB_Fläche":
+                self.angezuluft.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurAB_Luftwechsel":
+                self.angezuluft.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurAB_Person":
+                self.angezuluft.soll = self.luft_round(self.personen * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "nurABMa":
+                self.angezuluft.soll = self.luft_round(float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
+                        
+            self.angeabluft.reduziert = self.angezuluft.reduziert
             self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(self.volumen * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_max.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_max.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll
-            if abweichung >= 0:self.zu_max.soll += abweichung
-            self.ab_max.soll = 0
+            self.zu_min.soll = self.zu_max.soll = 0
+            self.zu_min.reduziert = self.zu_max.reduziert = 0
+            
+            abweichung_max = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
+            abweichung_min = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
+            abweichung = self.ueber_in.soll + self.ueber_in_manuell.soll - self.angezuluft.soll
+            abweichung_reduziert = self.ueber_in.soll + self.ueber_in_manuell.soll - self.angezuluft.reduziert
+            if abweichung_max >= 0:
+                self.ab_min.soll = abweichung_min
+                self.ab_max.soll = abweichung_max
+                self.ab_min.reduziert = self.ab_min.soll
+                self.ab_max.reduziert = self.ab_max.soll
+                if self.IsReduziert:
+                    if abweichung_reduziert < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(int(0 - abweichung_reduziert))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                else:
+                    if abweichung < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(int(0 - abweichung))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+            else:
+                self.ab_min.soll = 0
+                self.ab_max.soll = 0
+                self.ab_min.reduziert = 0
+                self.ab_max.reduziert = 0
+                if self.IsReduziert:
+                    if abweichung_reduziert < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(max(int(0 - abweichung_reduziert),int(0 - abweichung_max)))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                else:
+                    if abweichung < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(max(int(0 - abweichung),int(0 - abweichung_max)))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+               
         
-        elif self.bezugsname == 'nurZU_Person':
-            self.zu_min.soll = self.luft_round(self.personen * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_min.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll
-            if abweichung < 0:self.logger.error('Bitte Überstrom-Aus erhöhen in Raum {}. min. Zuluft {} m³/h.'.format(self.Raumnr,self.zu_min.soll))
-            else:self.zu_min.soll += abweichung
-            self.ab_min.soll = 0
-            self.angezuluft.soll = self.zu_min.soll
-            self.angeabluft.soll = self.angezuluft.soll
+        elif self.bezugsname in ['Fläche',"Luftwechsel","Person","manuell"]:
+            if self.bezugsname == "Fläche":
+                self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "Luftwechsel":
+                self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "Person":
+                self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            elif self.bezugsname == "manuell":
+                self.zu_min.soll = self.luft_round(float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+            
+            self.angeabluft.reduziert = self.angezuluft.reduziert = self.zu_min.reduziert
+            self.angeabluft.soll = self.angezuluft.soll = self.zu_max.soll
+            
+            self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
+            self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+            self.zu_max.soll = self.Labmax_24h_Druckstufe_Pruefen(self.zu_min.soll)
+            self.zu_max.reduziert = self.Labmax_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+            
 
-            self.zu_max.soll = self.luft_round(self.personen * float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_max.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_max.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll
-            if abweichung >= 0:self.zu_max.soll += abweichung
-            self.ab_max.soll = 0
-        
-        elif self.bezugsname == 'nurAB_Fläche':
-            self.angezuluft.soll = self.luft_round(self.flaeche * float(self.faktor)) + self.Druckstufe.soll
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll > self.angezuluft.soll:
-                    self.angezuluft.soll -= abweichung2
-                    self.ab_min.soll = 0
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-                else:
-                    self.ab_min.soll = 0
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-
-            else:
-                if self.ueber_in.soll + self.ueber_in_manuell.soll < self.angezuluft.soll:
-                    logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
+            self.ab_max.soll = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
+            self.ab_min.soll = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
+            self.ab_max.reduziert = self.zu_max.reduziert + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
+            self.ab_min.reduziert = self.zu_min.reduziert + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
+            
+            if self.ab_max.soll <= 0:
+                self.zu_max.soll -= self.ab_max.soll
                 self.ab_max.soll = 0
-                self.zu_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung2
-                self.zu_max.soll = 0
-                
-        elif self.bezugsname == 'nurAB_Luftwechsel':
-            self.angezuluft.soll = self.luft_round(self.volumen * float(self.faktor)) + self.Druckstufe.soll
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll > self.angezuluft.soll:
-                    self.angezuluft.soll -= abweichung2
-                    self.ab_min.soll = 0
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-                else:
-                    self.ab_min.soll = 0-abweichung2
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-
-            else:
-                if self.ueber_in.soll + self.ueber_in_manuell.soll < self.angezuluft.soll:
-                    logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                self.ab_max.soll = 0
-                self.zu_max.soll = 0
-
-
-            else:
-                self.ab_max.soll = abweichung2
-                self.zu_max.soll = 0
-       
-        elif self.bezugsname == 'nurAB_Person':
-            self.angezuluft.soll = self.luft_round(self.personen * float(self.faktor)) + self.Druckstufe.soll
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll > self.angezuluft.soll:
-                    self.angezuluft.soll -= abweichung2
-                    self.ab_min.soll = 0
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-                else:
-                    self.ab_min.soll = 0-abweichung2
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-
-            else:
-                if self.ueber_in.soll + self.ueber_in_manuell.soll < self.angezuluft.soll:
-                    logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                self.ab_max.soll = 0
-                self.zu_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung2
-                self.zu_max.soll = 0
-                
-        elif self.bezugsname == 'Fläche':
-            self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.zu_min.soll
-            abweichung = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_min.soll -= abweichung
-                self.angezuluft.soll -= abweichung
+            if self.ab_min.soll <= 0:
+                self.zu_max.soll -= self.ab_min.soll
                 self.ab_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-            else:
-                self.ab_min.soll = abweichung
-                self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(self.flaeche * float(self.faktor)) + self.Druckstufe.soll
-            abweichung = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_max.soll -= abweichung
-                self.ab_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung
-           
-        elif self.bezugsname == 'Luftwechsel':
-            self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.zu_min.soll
-            abweichung = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_min.soll -= abweichung
-                self.angezuluft.soll -= abweichung
-                self.ab_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-            else:
-                self.ab_min.soll = abweichung
-                self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(self.volumen * float(self.faktor)) + self.Druckstufe.soll
-            abweichung = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_max.soll -= abweichung
-                self.ab_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung
-
-        elif self.bezugsname == 'Person':
-            self.zu_min.soll = self.luft_round(self.personen * float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.zu_min.soll
-            abweichung = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_min.soll -= abweichung
-                self.angezuluft.soll -= abweichung
-                self.ab_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-            else:
-                self.ab_min.soll = abweichung
-                self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(self.personen * float(self.faktor)) + self.Druckstufe.soll
-            abweichung = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_max.soll -= abweichung
-                self.ab_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung
-  
-        elif self.bezugsname == 'manuell':
-            self.zu_min.soll = self.luft_round(float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.zu_min.soll
-            abweichung = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_min.soll -= abweichung
-                self.angezuluft.soll -= abweichung
-                self.ab_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-            else:
-                self.ab_min.soll = abweichung
-                self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(float(self.faktor)) + self.Druckstufe.soll
-            abweichung = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung < 0:
-                self.zu_max.soll -= abweichung
-                self.ab_max.soll = 0
-                
-            else:
-                self.ab_max.soll = abweichung
-        
-        elif self.bezugsname == 'nurZUMa':
-            self.zu_min.soll = self.luft_round(float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.zu_min.soll
-            if self.ab_lab_min.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll
-            if abweichung < 0:self.logger.error('Bitte Überstrom-Aus erhöhen in Raum {}. min. Zuluft {} m³/h.'.format(self.Raumnr,self.zu_min.soll))
-            else:self.zu_min.soll += abweichung
-            self.ab_min.soll = 0
-            self.angezuluft.soll = self.zu_min.soll
-            self.angeabluft.soll = self.angezuluft.soll
-
-            self.zu_max.soll = self.luft_round(float(self.faktor)) + self.Druckstufe.soll
-            if self.ab_lab_max.soll + self.ab_24h.soll> 0:
-                self.logger.error('Berechnungsprinzip von Raum {} ist Falsch, da Laborabluft/24h Abluft vorhanden.'.format(self.Raumnr))
-            abweichung = self.ueber_aus.soll - self.zu_max.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + \
-                self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll
-            if abweichung >= 0:self.zu_max.soll += abweichung
-            self.ab_max.soll = 0
-                
-        elif self.bezugsname == 'nurABMa':
-            self.ab_min.soll = self.luft_round(float(self.faktor)) + self.Druckstufe.soll
-            self.angezuluft.soll = self.ab_min.soll
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_min.soll + self.ab_24h.soll > self.angezuluft.soll:
-                    self.angezuluft.soll -= abweichung2
-                    self.ab_min.soll = 0
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-                else:
-                    self.ab_min.soll = 0-abweichung2
-                    self.zu_min.soll = 0
-                    self.logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                    self.angeabluft.soll = self.angezuluft.soll
-
-            else:
-                if self.ueber_in.soll + self.ueber_in_manuell.soll < self.angezuluft.soll:
-                    logger.error('Bitte Überstrom-Ein erhöhen in Raum {}. min. Abluft {} m³/h.'.format(self.Raumnr,self.angezuluft.soll))
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-                
-                self.ab_min.soll = abweichung2
-                self.zu_min.soll = 0
-                self.angeabluft.soll = self.angezuluft.soll
-
-            abweichung2 = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll- self.Druckstufe.soll
-            if abweichung2 < 0:
-                self.ab_max.soll = 0
-                self.zu_max.soll = 0
-            else:
-                self.ab_max.soll = abweichung2
-                self.zu_max.soll = 0
-
+            if self.ab_max.reduziert <= 0:
+                self.zu_max.reduziert -= self.ab_max.reduziert
+                self.ab_max.reduziert = 0
+            if self.ab_min.reduziert <= 0:
+                self.zu_max.reduziert -= self.ab_min.reduziert
+                self.ab_min.reduziert = 0
+                       
         elif self.bezugsname == 'keine':
             self.zu_min.soll = 0
             self.angezuluft.soll = 0
@@ -1820,12 +1657,24 @@ class MEPRaum(object):
             self.ab_min.soll = 0
             self.zu_max.soll = 0
             self.ab_max.soll = 0
+            self.zu_min.reduziert = 0
+            self.angezuluft.reduziert = 0
+            self.angeabluft.reduziert = 0
+            self.ab_min.reduziert = 0
+            self.zu_max.reduziert = 0
+            self.ab_max.reduziert = 0
             
         self.get_Schacht_info()
         self.get_Anlagen_info()
         self.sum_update()
 
     def Analyse(self):
+        self.DictAuslass_RZU = {}
+        self.DictAuslass_RAB = {}
+        self.DictAuslass_TZU = {}
+        self.DictAuslass_TAB = {}
+        self.DictAuslass_LAB = {}
+        self.DictAuslass_24h = {}
         min_zu = 0
         min_ab = 0
         max_zu = 0
@@ -1847,30 +1696,52 @@ class MEPRaum(object):
 
         for auslass in self.list_auslass:
             if auslass.art == '24h':
+                if auslass.familyandtyp not in self.DictAuslass_24h.keys():
+                    self.DictAuslass_24h[auslass.familyandtyp] = []
+                self.DictAuslass_24h[auslass.familyandtyp].append(auslass)
+
                 ab24h += auslass.Luftmengenmin
                 nb_ab += auslass.Luftmengennacht
                 tnb_ab += auslass.Luftmengentnacht
             elif auslass.art == 'LAB':
+                if auslass.familyandtyp not in self.DictAuslass_LAB.keys():
+                    self.DictAuslass_LAB[auslass.familyandtyp] = []
+                self.DictAuslass_LAB[auslass.familyandtyp].append(auslass)
                 lab_min += auslass.Luftmengenmin
                 lab_max += auslass.Luftmengenmax
                 nb_ab += auslass.Luftmengennacht
                 tnb_ab += auslass.Luftmengentnacht
             elif auslass.art == 'RZU':
+                if auslass.familyandtyp not in self.DictAuslass_RZU.keys():
+                    self.DictAuslass_RZU[auslass.familyandtyp] = []
+                self.DictAuslass_RZU[auslass.familyandtyp].append(auslass)
                 min_zu += auslass.Luftmengenmin
                 max_zu += auslass.Luftmengenmax
                 nb_zu += auslass.Luftmengennacht
                 tnb_zu += auslass.Luftmengentnacht
+
             elif auslass.art == 'RAB':
+                if auslass.familyandtyp not in self.DictAuslass_RAB.keys():
+                    self.DictAuslass_RAB[auslass.familyandtyp] = []
+                self.DictAuslass_RAB[auslass.familyandtyp].append(auslass)
                 min_ab += auslass.Luftmengenmin
                 max_ab += auslass.Luftmengenmax
                 nb_ab += auslass.Luftmengennacht
                 tnb_ab += auslass.Luftmengentnacht
+
             elif auslass.art == 'TZU':
+                if auslass.familyandtyp not in self.DictAuslass_TZU.keys():
+                    self.DictAuslass_TZU[auslass.familyandtyp] = []
+                self.DictAuslass_TZU[auslass.familyandtyp].append(auslass)
                 min_zu += auslass.Luftmengenmin
                 max_zu += auslass.Luftmengenmax
                 nb_zu += auslass.Luftmengennacht
                 tnb_zu += auslass.Luftmengentnacht
+
             elif auslass.art == 'TAB':
+                if auslass.familyandtyp not in self.DictAuslass_TAB.keys():
+                    self.DictAuslass_TAB[auslass.familyandtyp] = []
+                self.DictAuslass_TAB[auslass.familyandtyp].append(auslass)
                 min_ab += auslass.Luftmengenmin
                 max_ab += auslass.Luftmengenmax
                 nb_ab += auslass.Luftmengennacht
@@ -1901,47 +1772,43 @@ class MEPRaum(object):
                 Dict[el.art][el.AnlNr] = float(el.Luftmengenmax)
             else:
                 Dict[el.art][el.AnlNr] += float(el.Luftmengenmax)
-        
-        if 'RZU' in Dict.keys():
-            for anl in sorted(Dict['RZU'].keys()):
+        if self.IsReduziert:
+            if 'RZU' in Dict.keys():
+                for anl in sorted(Dict['RZU'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                        self.zu_max.reduziert,anl,Dict['RZU'][anl]))
+            else:
                 self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
-                    self.zu_max.soll,anl,Dict['RZU'][anl]))
-        else:
-            #if self.get_element('IGF_RLT_AnlagenNr_RZU') or self.get_element('IGF_RLT_Luftmenge_RZU'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
-                self.zu_max.soll,'',''))
-        if 'RAB' in Dict.keys():
-            for anl in sorted(Dict['RAB'].keys()):
+                    self.zu_max.reduziert,'',''))
+            if 'RAB' in Dict.keys():
+                for anl in sorted(Dict['RAB'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                        self.ab_max.reduziert,anl,Dict['RAB'][anl]))
+            else:
                 self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
-                    self.ab_max.soll,anl,Dict['RAB'][anl]))
+                    self.ab_max.reduziert,'',''))
         else:
-            #if self.get_element('IGF_RLT_AnlagenNr_RAB') or self.get_element('IGF_RLT_Luftmenge_RAB'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
-                self.ab_max.soll,'',''))
-        if 'TZU' in Dict.keys():
-            for anl in sorted(Dict['TZU'].keys()):
-                self.Anlagen_info.Add(MEPAnlagenInfo('TZU',self.get_element('IGF_RLT_AnlagenNr_TZU'),\
-                    self.tier_zu_max.soll,anl,Dict['TZU'][anl]))
-        else:
-            #if self.get_element('IGF_RLT_AnlagenNr_TZU') or self.get_element('IGF_RLT_Luftmenge_TZU'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('TZU',self.get_element('IGF_RLT_AnlagenNr_TZU'),\
-                self.tier_zu_max.soll,'',''))
+            if 'RZU' in Dict.keys():
+                for anl in sorted(Dict['RZU'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                        self.zu_max.soll,anl,Dict['RZU'][anl]))
+            else:
+                self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                    self.zu_max.soll,'',''))
+            if 'RAB' in Dict.keys():
+                for anl in sorted(Dict['RAB'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                        self.ab_max.soll,anl,Dict['RAB'][anl]))
+            else:
+                self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                    self.ab_max.soll,'',''))
         
-        if 'TAB' in Dict.keys():
-            for anl in sorted(Dict['TAB'].keys()):
-                self.Anlagen_info.Add(MEPAnlagenInfo('TAB',self.get_element('IGF_RLT_AnlagenNr_TAB'),\
-                    self.tier_ab_max.soll,anl,Dict['TAB'][anl]))
-        else:
-            # if self.get_element('IGF_RLT_AnlagenNr_TAB') or self.get_element('IGF_RLT_Luftmenge_TAB'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('TAB',self.get_element('IGF_RLT_AnlagenNr_TAB'),\
-                self.tier_ab_max.soll,'',''))
         
         if '24h' in Dict.keys():
             for anl in sorted(Dict['24h'].keys()):
                 self.Anlagen_info.Add(MEPAnlagenInfo('24h',self.get_element('IGF_RLT_AnlagenNr_24h'),\
                     self.ab_24h.soll,anl,Dict['24h'][anl]))
         else:
-            #if self.get_element('IGF_RLT_AnlagenNr_24h') or self.get_element('IGF_RLT_Luftmenge_24h'):
             self.Anlagen_info.Add(MEPAnlagenInfo('24h',self.get_element('IGF_RLT_AnlagenNr_24h'),\
                 self.ab_24h.soll,'',''))
            
@@ -1950,25 +1817,47 @@ class MEPRaum(object):
                 self.Anlagen_info.Add(MEPAnlagenInfo('LAB',self.get_element('IGF_RLT_AnlagenNr_LAB'),\
                     self.ab_lab_max.soll,anl,Dict['LAB'][anl]))  
         else:
-            #if self.get_element('IGF_RLT_AnlagenNr_LAB') or self.get_element('IGF_RLT_Luftmenge_LAB'):
             self.Anlagen_info.Add(MEPAnlagenInfo('LAB',self.get_element('IGF_RLT_AnlagenNr_LAB'),\
                 self.ab_lab_max.soll,'',''))
         
+        if 'TZU' in Dict.keys():
+            for anl in sorted(Dict['TZU'].keys()):
+                self.Anlagen_info.Add(MEPAnlagenInfo('TZU',self.get_element('IGF_RLT_AnlagenNr_TZU'),\
+                    self.tier_zu_max.soll,anl,Dict['TZU'][anl]))
+        else:
+            self.Anlagen_info.Add(MEPAnlagenInfo('TZU',self.get_element('IGF_RLT_AnlagenNr_TZU'),\
+                self.tier_zu_max.soll,'',''))
+        
+        if 'TAB' in Dict.keys():
+            for anl in sorted(Dict['TAB'].keys()):
+                self.Anlagen_info.Add(MEPAnlagenInfo('TAB',self.get_element('IGF_RLT_AnlagenNr_TAB'),\
+                    self.tier_ab_max.soll,anl,Dict['TAB'][anl]))
+        else:
+            self.Anlagen_info.Add(MEPAnlagenInfo('TAB',self.get_element('IGF_RLT_AnlagenNr_TAB'),\
+                self.tier_ab_max.soll,'',''))
+        
     def get_Schacht_info(self):
         self.Schacht_info.Clear()
-        self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.rzu_Schacht)
-        self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.rab_Schacht)
+        if self.IsReduziert:
+            self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.soll,self.liste_schacht)
+            self.Schacht_info.Add(self.rzu_Schacht)
+            self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.soll,self.liste_schacht)
+            self.Schacht_info.Add(self.rab_Schacht)
+        else:
+            self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.reduziert,self.liste_schacht)
+            self.Schacht_info.Add(self.rzu_Schacht)
+            self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.reduziert,self.liste_schacht)
+            self.Schacht_info.Add(self.rab_Schacht)
         
-        self.tzu_Schacht = MEPSchachtInfo('TZU',self.get_element('IGF_RLT_Schacht_TZU'),self.tier_zu_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.tzu_Schacht)
-        self.tab_Schacht = MEPSchachtInfo('TAB',self.get_element('IGF_RLT_Schacht_TAB'),self.tier_ab_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.tab_Schacht)
         self._24h_Schacht = MEPSchachtInfo('24h',self.get_element('TGA_RLT_Schacht24hAbluft'),self.ab_24h.soll,self.liste_schacht)
         self.Schacht_info.Add(self._24h_Schacht)
         self.lab_Schacht = MEPSchachtInfo('LAB',self.get_element('IGF_RLT_Schacht_LAB'),self.ab_lab_max.soll,self.liste_schacht)
         self.Schacht_info.Add(self.lab_Schacht)
+
+        self.tzu_Schacht = MEPSchachtInfo('TZU',self.get_element('IGF_RLT_Schacht_TZU'),self.tier_zu_max.soll,self.liste_schacht)
+        self.Schacht_info.Add(self.tzu_Schacht)
+        self.tab_Schacht = MEPSchachtInfo('TAB',self.get_element('IGF_RLT_Schacht_TAB'),self.tier_ab_max.soll,self.liste_schacht)
+        self.Schacht_info.Add(self.tab_Schacht)
         
     def get_element(self, param_name):
         param = self.elem.LookupParameter(param_name)
@@ -1981,29 +1870,17 @@ class MEPRaum(object):
         """Schreibt die berechneten Werte zurück in das Modell."""
         def wert_schreiben(param_name, wert):
             try:
-                if not wert is None:
-                #  logger.info(
-                #      "{} - {} Werte schreiben ({})".format(self.nummer, param_name, wert))
-                    if self.elem.LookupParameter(param_name):
-                        if self.elem.LookupParameter(param_name).IsReadOnly is True:
-                            self.logger.error(self.elemid)
-                            self.logger.error(param_name)
-                            return
-                        self.elem.LookupParameter(param_name).SetValueString(str(wert))
-                    else:
-                        print(param_name)
-            except Exception as e:print(e,0)
-        def wert_schreiben2(param_name, wert):
-            try:
-                if self.elem.LookupParameter(param_name):
-                    if self.elem.LookupParameter(param_name).IsReadOnly is True:
-                        self.logger.error(self.elemid)
-                        self.logger.error(param_name)
-                        return
-                    self.elem.LookupParameter(param_name).Set(wert)
-                else:
-                    print(param_name)
-            except Exception as e:print(e,1)  
+                param = self.elem.LookupParameter(param_name)
+                if param:
+                    if wert != None and param.IsReadOnly == False:
+                        if param.StorygeType.ToString() == 'Double':
+                            param.SetValueString(str(wert))
+                        elif param.StorygeType.ToString() == 'String':
+                            param.Set(str(wert))
+                        elif param.StorygeType.ToString() == 'Integer':
+                            param.Set(int(wert))
+            except Exception as e:print(e)
+
         def wert_schreiben3(param_name, wert):
             '''für Schacht'''
             try:
@@ -2015,19 +1892,45 @@ class MEPRaum(object):
                   
             except Exception as e:print(e)
 
-        wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.soll)
-        wert_schreiben("Angegebener Abluftluftstrom", self.angeabluft.soll)
+        if self.IsReduziert == 0:
+            wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_min.soll)
+            wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.soll)
+            wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.soll)
+            wert_schreiben("Angegebener Abluftluftstrom", self.angeabluft.soll)
+        else:
+            wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_max.reduziert)
+            wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.reduziert)
+            wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.reduziert)
+            wert_schreiben("Angegebener Abluftluftstrom", self.angezuluft.reduziert)
+        
+        wert_schreiben("IGF_RLT_Luftmenge_24h", self.ab_24h.soll)
+        wert_schreiben("IGF_RLT_Luftmenge_LAB", self.ab_lab_max.soll)
+
+        wert_schreiben("IGF_RLT_ZuluftAngegeben", self.angezuluft.soll)
+        wert_schreiben("IGF_RLT_AbluftAngegeben", self.angeabluft.soll)
+        wert_schreiben("IGF_RLT_ZuluftAngegebenReduziert", self.angezuluft.reduziert)
+        wert_schreiben("IGF_RLT_AbluftAngegebenReduziert", self.angeabluft.reduziert)
+
         wert_schreiben("IGF_RLT_AbluftminRaum", self.ab_min.soll+self.ab_lab_min.soll+self.ab_24h.soll+self.tier_ab_min.soll)
         wert_schreiben("IGF_RLT_AbluftmaxRaum", self.ab_max.soll+self.ab_lab_max.soll+self.ab_24h.soll+self.tier_ab_max.soll)
         wert_schreiben("IGF_RLT_ZuluftminRaum", self.zu_min.soll)
         wert_schreiben("IGF_RLT_ZuluftmaxRaum", self.zu_max.soll)
 
-        wert_schreiben2("TGA_RLT_VolumenstromProName", self.bezugsname)
+        wert_schreiben("IGF_RLT_AbluftminRaumReduziert", self.ab_min.reduziert+self.ab_lab_min.soll+self.ab_24h.soll+self.tier_ab_min.soll)
+        wert_schreiben("IGF_RLT_AbluftmaxRaumReduziert", self.ab_max.reduziert+self.ab_lab_max.soll+self.ab_24h.soll+self.tier_ab_max.soll)
+        wert_schreiben("IGF_RLT_ZuluftminRaumReduziert", self.zu_min.reduziert)
+        wert_schreiben("IGF_RLT_ZuluftmaxRaumReduziert", self.zu_max.reduziert)
+
+        wert_schreiben("TGA_RLT_VolumenstromProName", self.bezugsname)
         wert_schreiben("TGA_RLT_VolumenstromProEinheit", self.einheit)
         wert_schreiben("TGA_RLT_VolumenstromProNummer", self.bezugsnummer)
-        wert_schreiben("TGA_RLT_VolumenstromProFaktor", float(self.faktor))
+        wert_schreiben("TGA_RLT_VolumenstromProFaktor", self.faktor)
 
-        wert_schreiben2("IGF_RLT_Nachtbetrieb", self.nachtbetrieb)
+        wert_schreiben("IGF_RLT_Raum-ReduziertFaktor", self.reduziertfaktor)
+        wert_schreiben("IGF_RLT_istReduziert", self.IsReduziert)
+        wert_schreiben("IGF_L_SollVolumenstromFaktor", self.auslassreduziertfaktor)
+
+        wert_schreiben("IGF_RLT_Nachtbetrieb", self.nachtbetrieb)
         wert_schreiben("IGF_RLT_NachtbetriebLW", self.NB_LW)
         wert_schreiben("IGF_RLT_NachtbetriebDauer", self.nb_dauer.soll)
         wert_schreiben("IGF_RLT_ZuluftNachtRaum", self.nb_zu.soll)
@@ -2035,7 +1938,7 @@ class MEPRaum(object):
         wert_schreiben("IGF_RLT_NachtbetriebVon", self.nb_von.soll)
         wert_schreiben("IGF_RLT_NachtbetriebBis", self.nb_bis.soll)
 
-        wert_schreiben2("IGF_RLT_TieferNachtbetrieb", self.tiefenachtbetrieb)
+        wert_schreiben("IGF_RLT_TieferNachtbetrieb", self.tiefenachtbetrieb)
         wert_schreiben("IGF_RLT_TieferNachtbetriebLW", self.T_NB_LW)
         wert_schreiben("IGF_RLT_TieferNachtbetriebDauer", self.tnb_dauer.soll)
         wert_schreiben("IGF_RLT_ZuluftTieferNachtRaum", self.tnb_zu.soll)
@@ -2044,26 +1947,14 @@ class MEPRaum(object):
         wert_schreiben("IGF_RLT_TieferNachtbetriebBis", self.tnb_bis.soll)
 
         wert_schreiben("IGF_RLT_AbluftSumme24h", self.ab_24h.soll)
-        wert_schreiben("IGF_RLT_AbluftminRaumL24h", self.ab_24h.soll)    
         wert_schreiben("IGF_RLT_AbluftminSummeLabor", self.ab_lab_min.soll)
         wert_schreiben("IGF_RLT_AbluftminSummeLabor24h", self.ab_24h.soll + self.ab_lab_min.soll)
-        wert_schreiben("IGF_RLT_AbluftmaxSummeLabor24h", self.ab_24h.soll + self.ab_lab_max.soll)
         wert_schreiben("IGF_RLT_AbluftmaxSummeLabor", self.ab_lab_max.soll)
-
+        wert_schreiben("IGF_RLT_AbluftmaxSummeLabor24h", self.ab_24h.soll + self.ab_lab_max.soll)
+        
         wert_schreiben("IGF_RLT_RaumDruckstufeEingabe", self.Druckstufe.soll)
-        wert_schreiben2("IGF_RLT_RaumDruckstufeLegende", self.IGF_Legende)
-        
-        # wert_schreiben("IGF_RLT_AnlagenRaumAbluft", self.ab_min.soll+self.ab_lab_min.soll)
-        # wert_schreiben("IGF_RLT_AnlagenRaumZuluft", self.zu_min.soll)
-        # wert_schreiben("IGF_RLT_AnlagenRaum24hAbluft", self.ab_24h.soll)
-        
-        wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_max.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_24h", self.ab_24h.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_LAB", self.ab_lab_max.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_min_TAB", self.tier_ab_min.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_min_TZU", self.tier_zu_min.soll)
-        
+        wert_schreiben("IGF_RLT_RaumDruckstufeLegende", self.IGF_Legende)
+                
         wert_schreiben3('TGA_RLT_SchachtZuluft',self.rzu_Schacht)
         wert_schreiben3('TGA_RLT_SchachtAbluft',self.rab_Schacht)
         wert_schreiben3('IGF_RLT_Schacht_TZU',self.tzu_Schacht)
@@ -2073,17 +1964,17 @@ class MEPRaum(object):
 
         for el in self.Anlagen_info:
             if el.name == 'RZU':
-                wert_schreiben2('IGF_RLT_AnlagenNr_RZU',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_RZU',el.mep_nr)
             elif el.name == 'RAB':
-                wert_schreiben2('IGF_RLT_AnlagenNr_RAB',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_RAB',el.mep_nr)
             elif el.name == 'TZU':
-                wert_schreiben2('IGF_RLT_AnlagenNr_TZU',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_TZU',el.mep_nr)
             elif el.name == 'TAB':
-                wert_schreiben2('IGF_RLT_AnlagenNr_TAB',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_TAB',el.mep_nr)
             elif el.name == 'LAB':
-                wert_schreiben2('IGF_RLT_AnlagenNr_LAB',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_LAB',el.mep_nr)
             elif el.name == '24h':
-                wert_schreiben2('IGF_RLT_AnlagenNr_24h',int(el.mep_nr))
+                wert_schreiben('IGF_RLT_AnlagenNr_24h',el.mep_nr)
        
 DICT_MEP_ITEMSSOIRCE = {}
 
@@ -2238,10 +2129,11 @@ class ExtenalEventListe(IExternalEventHandler):
     
     def LuftmengeverteilenMEP(self,uiapp):
         self.name = 'Luftmengeverteilen ' + self.GUI.mepraum.Raumnr
-        task = ABFRAGE('Luftmenge in akt. Raum gleichmäßig verteilen?',True,130)
+        task = ABFRAGE('Luftmenge in akt. Raum gleichmäßig verteilen?',True,160,self.GUI.mepraum.auslassreduziertfaktor)
         task.ShowDialog()
         if task.result == False:
             return 
+        self.GUI.mepraum.auslassreduziertfaktor = float(task.faktor.Text.replace(',','.'))
         doc = uiapp.ActiveUIDocument.Document
         t = DB.Transaction(doc,self.name)
         t.Start()
@@ -2254,7 +2146,7 @@ class ExtenalEventListe(IExternalEventHandler):
     
     def LuftmengeverteilenProjekt(self,uiapp):
         self.name = 'Luftmengeverteilen Projekt' 
-        task = ABFRAGE('Luftmenge für das Projekt gleichmäßig verteilen?',False,160)
+        task = ABFRAGE('Luftmenge für das Projekt gleichmäßig verteilen?',False,190)
         task.ShowDialog()
         if task.result == False:
             return 
@@ -2262,6 +2154,7 @@ class ExtenalEventListe(IExternalEventHandler):
         t = DB.Transaction(doc,self.name)
         t.Start()
         for mep in self.GUI.mepraum_liste.values():  
+            mep.auslassreduziertfaktor = float(task.faktor.Text.replace(',','.'))
             self.Luftmengeverteilen(mep,task)
         t.Commit()
         t.Dispose()
@@ -2270,34 +2163,31 @@ class ExtenalEventListe(IExternalEventHandler):
         self.GUI.Auswertung_MEP()
     
     def Luftmengeverteilen(self,mep,task):
-        zu = {}
-        ab = {}
-        h24 = {}
-        lab = {}
+        zu = mep.DictAuslass_RZU
+        ab = mep.DictAuslass_RAB
+        h24 = mep.DictAuslass_24h
+        lab = mep.DictAuslass_LAB
+        for key in zu.keys():
+            for auslass in zu[key]:auslass.Luftmengensollmax = auslass.herstellermax*mep.auslassreduziertfaktor
+        for key in ab.keys():
+            for auslass in ab[key]:auslass.Luftmengensollmax = auslass.herstellermax*mep.auslassreduziertfaktor
 
-        for auslass in mep.list_auslass:
-            if auslass.art == 'RZU':
-                if auslass.familyandtyp not in zu.keys():
-                    zu[auslass.familyandtyp] = [auslass]
-                else:
-                    zu[auslass.familyandtyp].append(auslass)
-            if auslass.art == 'RAB':
-                if auslass.familyandtyp not in ab.keys():
-                    ab[auslass.familyandtyp] = [auslass]
-                else:
-                    ab[auslass.familyandtyp].append(auslass)
-            if auslass.art == '24h':
-                if auslass.familyandtyp not in h24.keys():
-                    h24[auslass.familyandtyp] = [auslass]
-                else:
-                    h24[auslass.familyandtyp].append(auslass)
-            if auslass.art == 'LAB':
-                if auslass.familyandtyp not in lab.keys():
-                    lab[auslass.familyandtyp] = [auslass]
-                else:
-                    lab[auslass.familyandtyp].append(auslass)
-        
-        if int(mep.ab_24h.soll) != int(mep.ab_24h.ist) or int(mep.ab_lab_min.soll) != int(mep.ab_lab_min.ist) or int(mep.ab_lab_min.soll) != int(mep.ab_lab_min.ist):
+        if len(h24.keys()) > 0:
+            for key in h24.keys():
+                for auslass in h24[key]:
+                    auslass.Luftmengenmin = auslass.Luftmengensollmin
+                    auslass.Luftmengennacht = auslass.Luftmengensollmin
+                    auslass.Luftmengenmax = auslass.Luftmengensollmin
+                    auslass.Luftmengentnacht = auslass.Luftmengensollmin
+        if len(lab.keys()) > 0:
+            for key in lab.keys():
+                for auslass in lab[key]:
+                    auslass.Luftmengenmin = auslass.Luftmengensollmin
+                    auslass.Luftmengenmax = auslass.Luftmengensollmax
+
+        mep.Analyse()
+
+        if int(mep.ab_24h.soll) != int(mep.ab_24h.ist) or int(mep.ab_lab_max.soll) != int(mep.ab_lab_max.ist) or int(mep.ab_lab_min.soll) != int(mep.ab_lab_min.ist):
             print(30*'-')
             print('24h-Abluft oder Laborabluft in MEP-Raum {} stimmt nicht übereinandern.'.format(mep.Raumnr))
             print('24h-Abluft-soll: {} m³/h, 24h-Abluft-ist: {} m³/h'.format(mep.ab_24h.soll,mep.ab_24h.ist))
@@ -2317,65 +2207,87 @@ class ExtenalEventListe(IExternalEventHandler):
             print('Abluft min : {} m³/h, Abluft max: {} m³/h'.format(mep.ab_min.soll,mep.ab_max.soll))
             print('Bitte manuell anpassen. ')
    
-        if len(h24.keys()) > 0:
-            for key in h24.keys():
-                for auslass in h24[key]:
-                    auslass.Luftmengennacht = auslass.Luftmengenmin
-                    auslass.Luftmengenmax = auslass.Luftmengenmin
-                    auslass.Luftmengentnacht = auslass.Luftmengenmin
                     
         if len(zu.keys()) == 1:
             for key in zu.keys():
                 for auslass in zu[key]:
-                    if task.min:auslass.Luftmengenmin = round(mep.zu_min.soll * 1.0 / len(zu[key]),1)
-                    if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll * 1.0 / len(zu[key]),1)
-                    if task.max:auslass.Luftmengenmax = round(mep.zu_max.soll * 1.0 / len(zu[key]),1)
+                    if mep.IsReduziert:
+                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.reduziert * 1.0 / len(zu[key]),1)
+                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.reduziert * 1.0 / len(zu[key]),1)
+
+                    else:
+                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.soll * 1.0 / len(zu[key]),1)
+                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.soll * 1.0 / len(zu[key]),1)
+
                     if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_zu.soll * 1.0 / len(zu[key]),1)
+                    if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll * 1.0 / len(zu[key]),1)
+
         
         elif len(zu.keys()) > 1:
-            sum_luft = 0
+            sum_luft_min = 0
+            sum_luft_max = 0
             for key in zu.keys():
                 for auslass in zu[key]:
-                    if auslass.Luftmengenmin > 0:sum_luft += auslass.Luftmengenmin
-                    else:sum_luft += 0.01
+                    if auslass.Luftmengensollmin <= 0:
+                        auslass.Luftmengensollmin = 1
+                    sum_luft_min += auslass.Luftmengensollmin
+                    if auslass.Luftmengensollmax <= 0:
+                        auslass.Luftmengensollmax = 1
+                    sum_luft_max += auslass.Luftmengensollmax
+
             for key in zu.keys():
                 for auslass in zu[key]:
-                    if auslass.Luftmengenmin > 0:
-                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_zu.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
+                    if mep.IsReduziert:
+                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.reduziert *1.0 * auslass.Luftmengensollmax / sum_luft_max,1)
+                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.reduziert *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_zu.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+
                     else:
-                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_zu.soll *1.0 * 0.01 / sum_luft,1)
+                        if task.max:auslass.Luftmengenmax = round(mep.zu_max.soll *1.0 * auslass.Luftmengensollmax / sum_luft_max,1)
+                        if task.min:auslass.Luftmengenmin = round(mep.zu_min.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_zu.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_zu.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
 
         if len(ab.keys()) == 1:
             for key1 in ab.keys():
                 for auslass in ab[key1]:
-                    if task.min:auslass.Luftmengenmin = round(mep.ab_min.soll *1.0 / len(ab[key1]),1)
-                    if task.nacht:auslass.Luftmengenmax = round(mep.ab_max.soll *1.0 / len(ab[key1]),1)
-                    if task.max:auslass.Luftmengentnacht = round(mep.tnb_ab.soll *1.0 / len(ab[key1]),1)
-                    if task.tnacht:auslass.Luftmengennacht = round(mep.nb_ab.soll *1.0 / len(ab[key1]),1)
-        elif len(ab.keys()) > 1:
-            sum_luft = 0
-            for key in ab.keys():
-                for auslass in ab[key]:
-                    if auslass.Luftmengenmin > 0:sum_luft += auslass.Luftmengenmin
-                    else:sum_luft += 0.01
-            for key in ab.keys():
-                for auslass in ab[key]:
-                    if auslass.Luftmengenmin > 0:
-                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_ab.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
-                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_ab.soll *1.0 * auslass.Luftmengenmin / sum_luft,1)
+                    if mep.IsReduziert:
+                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.reduziert * 1.0 / len(ab[key]),1)
+                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.reduziert * 1.0 / len(ab[key]),1)
+
                     else:
-                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_ab.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.soll *1.0 * 0.01 / sum_luft,1)
-                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_ab.soll *1.0 * 0.01 / sum_luft,1)
+                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.soll * 1.0 / len(ab[key]),1)
+                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.soll * 1.0 / len(ab[key]),1)
+
+                    if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_ab.soll * 1.0 / len(ab[key]),1)
+                    if task.nacht:auslass.Luftmengennacht = round(mep.nb_ab.soll * 1.0 / len(ab[key]),1)
+
+        elif len(ab.keys()) > 1:
+            sum_luft_min = 0
+            sum_luft_max = 0
+            for key in ab.keys():
+                for auslass in ab[key]:
+                    if auslass.Luftmengensollmin <= 0:
+                        auslass.Luftmengensollmin = 1
+                    sum_luft_min += auslass.Luftmengensollmin
+                    if auslass.Luftmengensollmax <= 0:
+                        auslass.Luftmengensollmax = 1
+                    sum_luft_max += auslass.Luftmengensollmax
+
+            for key in ab.keys():
+                for auslass in ab[key]:
+                    if mep.IsReduziert:
+                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.reduziert *1.0 * auslass.Luftmengensollmax / sum_luft_max,1)
+                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.reduziert *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_ab.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_ab.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+
+                    else:
+                        if task.max:auslass.Luftmengenmax = round(mep.ab_max.soll *1.0 * auslass.Luftmengensollmax / sum_luft_max,1)
+                        if task.min:auslass.Luftmengenmin = round(mep.ab_min.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.nacht:auslass.Luftmengennacht = round(mep.nb_ab.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
+                        if task.tnacht:auslass.Luftmengentnacht = round(mep.tnb_ab.soll *1.0 * auslass.Luftmengensollmin / sum_luft_min,1)
         
         for vsr in mep.list_vsr:
             if vsr.art in ['RZU','RAB','LAB','24h','RUM']:

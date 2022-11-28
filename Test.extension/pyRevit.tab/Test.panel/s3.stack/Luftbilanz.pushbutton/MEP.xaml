@@ -1,162 +1,232 @@
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MEP-Räume-Übersicht" Height="900" Width="1700" MinWidth="1700" Background="SkyBlue">
+        Title="MEP-Räume-Übersicht" Height="900" Width="1800" MinWidth="1700" Background="SkyBlue">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="450"/>
+            <ColumnDefinition Width="500"/>
             <ColumnDefinition/>
             <ColumnDefinition Width="350"/>
-
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="180"/>
-            <RowDefinition Height="4*"/>
-            <RowDefinition Height="*"/>
-
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="190"/>
+            <RowDefinition Height="479*"/>
+            <RowDefinition Height="120*"/>
             <RowDefinition Height="60"/>
 
         </Grid.RowDefinitions>
+        <Grid Grid.ColumnSpan="3" Margin="0,0,0,205" Grid.RowSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="130"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="100"/>
 
-        <GroupBox VerticalAlignment="Center" Margin="10,0,10,0" Grid.Column="0" Grid.ColumnSpan="2">
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+        </Grid>
+
+        <GroupBox VerticalAlignment="Top" Margin="10,0,10,0" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Height="166">
             <GroupBox.Header>
                 <TextBlock Text="MEP-Raum" FontWeight="Bold"/>
             </GroupBox.Header>
             <Grid>
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.5*"/>
                     <ColumnDefinition/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="1.3*"/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <GroupBox Header="Raumfinder" Margin="5,5,5,5">
-                    <StackPanel>
+                <GroupBox Header="Raumfinder" Margin="5,2,5,2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
                         <DockPanel Height="20" VerticalAlignment="Center" Margin="5,5,5,5">
                             <TextBlock Text="Filter: " VerticalAlignment="Center" Margin="0,0,0,0" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="Nummer" Width="40"/>
                             <TextBox x:Name="suche" VerticalAlignment="Center" TextChanged="MEP_Suche_changed"  />
                         </DockPanel>
-                        <DockPanel Height="20" VerticalAlignment="Center" Margin="5,5,5,5">
+                        <DockPanel Height="20" VerticalAlignment="Center" Margin="5,5,5,5" Grid.Row="1">
                             <TextBlock Text="Raum: " VerticalAlignment="Center" Margin="0,0,0,0" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="Nummer" Width="40"/>
                             <ComboBox x:Name="Raumnr" IsEditable="True" VerticalAlignment="Center" SelectionChanged="MEP_changed"/>
                         </DockPanel>
-                        <Button x:Name="rauman" Click="raumanzeigen" Content="Raum anzeigen" VerticalAlignment="Center" Margin="5,5,5,0" FontWeight="Bold" ToolTip="Raum anzeigen" IsEnabled="False"/>
-                        <Button x:Name="rauman1" Click="bauteilundraumanzeigen" Content="Raum und alle Bauteile anzeigen" VerticalAlignment="Center" Margin="5,5,5,0" FontWeight="Bold" ToolTip="Raum anzeigen" IsEnabled="False"/>
-                    </StackPanel>
+                        <Button x:Name="rauman" Click="raumanzeigen" Content="Raum anzeigen" VerticalAlignment="Center" Margin="5,5,5,0" FontWeight="Bold" ToolTip="Raum anzeigen" IsEnabled="False" Grid.Row="2"/>
+                        <Button x:Name="rauman1" Click="bauteilundraumanzeigen" Content="Raum und alle Bauteile anzeigen" VerticalAlignment="Center" Margin="5,5,5,0" FontWeight="Bold" ToolTip="Raum anzeigen" IsEnabled="False" Grid.Row="3"/>
+                    </Grid>
 
                 </GroupBox>
-                <GroupBox Header="Grundinfo." Margin="5,5,5,5" Grid.Column="1">
-                    <StackPanel>
-                        <DockPanel Height="20" Margin="5,0,5,0">
+                <GroupBox Header="Grundinfo." Margin="5,2,5,2" Grid.Column="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Height="20" Margin="5,0,0,0">
                             <TextBlock Text="Ebene: " VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="Ebene" Width="42" />
-                            <TextBlock x:Name="ebene" HorizontalAlignment="Left" VerticalAlignment="Center" Width="130"/>
+                            <TextBlock x:Name="ebene" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Height="20" Margin="5,0,5,0">
+                        <DockPanel Height="20" Margin="5,0,5,0" Grid.Row="1">
                             <TextBlock VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Fläche: " Width="65"/>
                             <TextBlock x:Name="flaeche" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text=" m²" VerticalAlignment="Center" Margin="0" />
                         </DockPanel>
-                        <DockPanel Height="20" Margin="5,0,5,0">
+                        <DockPanel Height="20" Margin="5,0,5,0" Grid.Row="2">
                             <TextBlock VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Volumen: " Width="65"/>
                             <TextBlock x:Name="volumen" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text=" m³" VerticalAlignment="Center" Margin="0" />
                         </DockPanel>
-                        <DockPanel Height="20" Margin="0,0,5,0">
+                        <DockPanel Height="20" Margin="0,0,5,0" Grid.Row="3">
                             <TextBlock VerticalAlignment="Center" Margin="5,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Licht Höhe:" Width="65"/>
                             <TextBlock x:Name="hoehe" VerticalAlignment="Center" Width="70"/>
                             <TextBlock Text=" mm" VerticalAlignment="Center" Margin="0" />
                         </DockPanel>
-                        <DockPanel Height="20" Margin="0,0,5,0">
+                        <DockPanel Height="20" Margin="0,0,5,0" Grid.Row="4">
                             <TextBlock VerticalAlignment="Center" Margin="5,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Personen: " Width="70"/>
                             <TextBlock x:Name="personen" VerticalAlignment="Center" />
                         </DockPanel>
 
-                    </StackPanel>
+                    </Grid>
                 </GroupBox>
-                <GroupBox Header="Tagbetrieb" Margin="5,5,5,5" Grid.Column="2">
-                    <StackPanel Margin="5,0,5,0">
-                        <TextBlock Text="Berechnung nach: " VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="TGA_RLT_VolumenstromProName" Margin="0,5,0,0"/>
-                        <ComboBox x:Name="bezugsname" IsEnabled="False" VerticalAlignment="Center" SelectionChanged="bezugsnameselectionchanged" Margin="0,5,0,0"/>
-                        <TextBlock Text="Faktor:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="TGA_RLT_VolumenstromProFaktor" Margin="0,5,0,0"/>
+                <GroupBox Header="Tagbetrieb" Margin="5,2,5,2" Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
                         <DockPanel>
-                            <TextBox PreviewTextInput="Textinput1" x:Name="faktor" IsEnabled="False" VerticalAlignment="Center" Margin="0,5,0,5" Width="50" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" TextChanged="faktorchanged"/>
-                            <TextBlock x:Name="einheit" VerticalAlignment="Center" />
+                            <TextBlock Text="Berechnung nach: " VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="TGA_RLT_VolumenstromProName" Height="15"/>
+                            <ComboBox x:Name="bezugsname" IsEnabled="False" VerticalAlignment="Center" SelectionChanged="bezugsnameselectionchanged"/>
                         </DockPanel>
-                    </StackPanel>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="1.5*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Faktor: " VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="TGA_RLT_VolumenstromProFaktor"/>
+                            <TextBox PreviewTextInput="Textinput1" x:Name="faktor" IsEnabled="False" VerticalAlignment="Center" Margin="0,0,0,0" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" TextChanged="faktorchanged" Grid.Column="1" Height="18"/>
+                            <TextBlock x:Name="einheit" VerticalAlignment="Center" Grid.Column="2" Margin="10,0,0,0" />
+                        </Grid>
+                        <DockPanel Grid.Row="2">
+                            <TextBlock Text="istReduziert:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_istReduziert" Width="140"/>
+                            <CheckBox x:Name="istReduziert" IsEnabled="False" Checked="reduziertchanged" Unchecked="reduziertchanged" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Grid.Row="3">
+                            <TextBlock Text="Raum-ReduziertFaktor:  " VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Raum-ReduziertFaktor" Width="140"/>
+                            <TextBox TextChanged="reduziertfaktorchanged" PreviewTextInput="Textinput1" x:Name="redufaktor" IsEnabled="False" VerticalAlignment="Center" Margin="0,0,0,0" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" Grid.Column="1" Height="18"/>
+                        </DockPanel>
+                        <DockPanel Grid.Row="4">
+                            <TextBlock Text="Druckstufe (m³/h):" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="140" Height="18"/>
+                            <TextBox x:Name="druckeingabe" IsEnabled="False" Height="18" TextChanged="druckeingabe_changed" PreviewTextInput="Textinput2"/>
+                        </DockPanel>
+                    </Grid>
                 </GroupBox>
-                <GroupBox Header="Nachtbetrieb" Margin="5,5,5,5" Grid.Column="3">
-                    <StackPanel>
-                        <DockPanel Margin="5,5,5,5">
+                <GroupBox Header="Nachtbetrieb" Margin="5,2,5,2" Grid.Column="3">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="5,0,5,0">
                             <TextBlock Text="Nachtsbetrieb:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb"/>
-                            <CheckBox x:Name="isnachtbetrieb" IsEnabled="False" Checked="nachtbetriebchanged" Unchecked="nachtbetriebchanged" Margin="5,0,0,0" VerticalContentAlignment="Center"/>
+                            <CheckBox x:Name="isnachtbetrieb" IsEnabled="False" Checked="nachtbetriebchanged" Unchecked="nachtbetriebchanged" Margin="5,0,0,0" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="1">
                             <TextBlock Text="Luftwechsel:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_NachtbetriebLW" Width="75" Height="18"/>
-                            <TextBox x:Name="LW_nacht" IsEnabled="False" Width="25" Height="18" TextChanged="LW_nacht_changed" PreviewTextInput="Textinput1"/>
-                            <TextBlock Text="-1/h" Margin="5,0,0,0"/>
+                            <TextBox x:Name="LW_nacht" IsEnabled="False" Width="40" Height="18" TextChanged="LW_nacht_changed" PreviewTextInput="Textinput1"/>
+                            <TextBlock Text="-1/h" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="2">
                             <TextBlock Text="Von:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_NachtbetriebVon" Width="75" Height="18"/>
                             <TextBox x:Name="von_nacht" Height="18" IsEnabled="False" TextChanged="von_nacht_changed" PreviewTextInput="Textinput1"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="3">
                             <TextBlock Text="Bis:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_NachtbetriebBis" Width="75" Height="18"/>
                             <TextBox x:Name="bis_nacht" Height="18" IsEnabled="False" TextChanged="bis_nacht_changed" PreviewTextInput="Textinput1"/>
                         </DockPanel>
-                    </StackPanel>
+                    </Grid>
                 </GroupBox>
-                <GroupBox Header="TiefeNachtbetrieb" Margin="5,5,5,5" Grid.Column="4">
-                    <StackPanel>
-                        <DockPanel Margin="5,5,5,5">
+                <GroupBox Header="TiefeNachtbetrieb" Margin="5,2,5,2" Grid.Column="4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="5,0,5,0">
                             <TextBlock Text="T-Nachtsbetrieb:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_TieferNachtbetrieb"/>
-                            <CheckBox x:Name="istiefenachtbetrieb" IsEnabled="False" Checked="tnachtbetriebchanged" Unchecked="tnachtbetriebchanged" Margin="5,0,0,0" VerticalContentAlignment="Center"/>
+                            <CheckBox x:Name="istiefenachtbetrieb" IsEnabled="False" Checked="tnachtbetriebchanged" Unchecked="tnachtbetriebchanged" Margin="5,0,0,0" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="1">
                             <TextBlock Text="Luftwechsel:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_TieferNachtbetriebLW" Width="75" Height="18"/>
-                            <TextBox x:Name="LW_tnacht" IsEnabled="False" Width="25" Height="18" TextChanged="LW_tnacht_changed" PreviewTextInput="Textinput1"/>
-                            <TextBlock Text="-1/h" Margin="5,0,0,0"/>
+                            <TextBox x:Name="LW_tnacht" IsEnabled="False" Width="40" Height="18" TextChanged="LW_tnacht_changed" PreviewTextInput="Textinput1"/>
+                            <TextBlock Text="-1/h" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="2">
                             <TextBlock Text="Von:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_TieferNachtbetriebVon" Width="75" Height="18"/>
                             <TextBox x:Name="von_tnacht" Height="18" IsEnabled="False" TextChanged="von_tnacht_changed" PreviewTextInput="Textinput1"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Margin="5,0,5,0" Grid.Row="3">
                             <TextBlock Text="Bis:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_TieferNachtbetriebBis" Width="75" Height="18"/>
                             <TextBox x:Name="bis_tnacht" Height="18" IsEnabled="False" TextChanged="bis_tnacht_changed" PreviewTextInput="Textinput1"/>
                         </DockPanel>
-                    </StackPanel>
+                    </Grid>
                 </GroupBox>
-                <GroupBox Header="Laboreingabe (m³/h)" Margin="5,5,5,5" Grid.Column="5">
-                    <StackPanel>
+                <GroupBox Header="Laboreingabe (m³/h)" Margin="5,2,5,2" Grid.Column="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
 
-                        <DockPanel Margin="5,5,5,5">
+
+                        </Grid.RowDefinitions>
+                        <DockPanel>
                             <TextBlock Text="LABmin:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75" Height="18"/>
-                            <TextBox x:Name="labmineingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labmineingabe_changed" PreviewTextInput="Textinput0"/>
+                            <TextBox x:Name="labmineingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labmineingabe_changed" PreviewTextInput="Textinput0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Grid.Row="1">
                             <TextBlock Text="LABmax:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75" Height="18"/>
-                            <TextBox x:Name="labmaxeingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labmaxeingabe_changed" PreviewTextInput="Textinput0"/>
+                            <TextBox x:Name="labmaxeingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labmaxeingabe_changed" PreviewTextInput="Textinput0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
+                        <DockPanel Grid.Row="2" Visibility="Hidden">
+                            <TextBlock Text="LABnacht:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75" Height="18"/>
+                            <TextBox x:Name="labnachteingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labnachteingabe_changed" PreviewTextInput="Textinput0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Grid.Row="3" Visibility="Hidden">
+                            <TextBlock Text="LABtnacht:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75" Height="18"/>
+                            <TextBox x:Name="labtnachteingabe" IsEnabled="False" Width="70" Height="18" TextChanged="labtnachteingabe_changed" PreviewTextInput="Textinput0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Grid.Row="4">
                             <TextBlock Text="24h-Ab:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75                                        " Height="18"/>
-                            <TextBox x:Name="ab24heingabe" IsEnabled="False" Width="70" Height="18" TextChanged="ab24heingabe_changed" PreviewTextInput="Textinput0"/>
+                            <TextBox x:Name="ab24heingabe" IsEnabled="False" Width="70" Height="18" TextChanged="ab24heingabe_changed" PreviewTextInput="Textinput0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <DockPanel Margin="5,5,5,5">
-                            <TextBlock Text="Druckstufe:" VerticalAlignment="Center" Foreground="#FFAE4141" FontWeight="Bold" ToolTip="IGF_RLT_Nachtbetrieb" Width="75" Height="18"/>
-                            <TextBox x:Name="druckeingabe" IsEnabled="False" Width="70" Height="18" TextChanged="druckeingabe_changed" PreviewTextInput="Textinput0"/>
-                        </DockPanel>
-                    </StackPanel>
+                    </Grid>
                 </GroupBox>
             </Grid>
 
 
 
         </GroupBox>
-        <StackPanel Grid.Column="5" x:Name="warnung" Margin="0,15,0,0">
+        <StackPanel Grid.Column="2" x:Name="warnung" Grid.Row="1" VerticalAlignment="Center" Height="124">
             <TextBlock Text="Achtung: Der VSR versorgt mehrere Räume!" Foreground="#FFFF0505" TextWrapping="Wrap" VerticalAlignment="Top" Margin="10,0" FontSize="14"/>
             <TextBlock Text="-------------------------------------------------------------" VerticalAlignment="Top" Margin="10,0" FontSize="14"/>
             <TextBlock x:Name="Rauminfo" Text="Die angezeigte Rauminfomationen beziehen sich auf Raum =&gt;" TextWrapping="Wrap" Visibility="Visible" FontSize="14" Foreground="#FFF5085E" HorizontalAlignment="Stretch" VerticalAlignment="Center" Padding="10,0,0,0"/>
@@ -166,7 +236,7 @@
             </StackPanel>
         </StackPanel>
 
-        <DockPanel Margin="10,5,5,10" Grid.Row="1" >
+        <DockPanel Margin="10,5,5,10" Grid.Row="2" >
             <TabControl  Background="LightBlue">
                 <TabItem >
                     <TabItem.Header>
@@ -258,6 +328,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn IsReadOnly="True" Header="Art" Width="*" Binding="{Binding name}"/>
                             <DataGridTextColumn IsReadOnly="True" Header="Soll (m³/h)" Width="*" Binding="{Binding Path= soll}"/>
+                            <DataGridTextColumn IsReadOnly="True" Header="Redu. Soll (m³/h)" Width="*" Binding="{Binding Path= soll}"/>
                             <DataGridTextColumn IsReadOnly="True" Header="Ist (m³/h)" Width="*" Binding="{Binding Path= ist}"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -268,410 +339,419 @@
                     </TabItem.Header>
                     <TabControl  Background="LightBlue">
                         <TabItem Header="TagMinbetrieb"  Width="100">
-                            <StackPanel Background="White" Margin="0,0,0,0">
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
-                                    <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_raum_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_raum_sys" Width="100"   Foreground="Blue"/>
-                                </DockPanel>
+                            <ScrollViewer Background="White" Margin="0,0,0,0">
+                                <StackPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_ueber_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_ueber_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_ueber_m_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_ueber_m_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_raum_mep" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_raum_sys" Width="100"  Foreground="Orange"/>
-                                </DockPanel>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
+                                        <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_raum_mep" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_raum_sys" Width="100"   Foreground="Blue"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_ueber_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_ueber_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_ueber_m_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_ueber_m_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_lab_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_lab_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-24h: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_min_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_min_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="min_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="min_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="min_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="min_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="min_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,25,0,0"/>
-                                <DockPanel Margin="0,0,0,0" >
-                                    <TextBlock Text="Tierhaltung: " Width="100" FontWeight="Bold"  FontSize="14" HorizontalAlignment="Left"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_tier_mep" Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_min_tier_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab: " Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_tier_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_min_tier_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_min_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_min_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_min_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_min_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                            </StackPanel>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_raum_mep" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_raum_sys" Width="100"  Foreground="Orange"/>
+                                    </DockPanel>
+
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_ueber_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_ueber_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_ueber_m_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_ueber_m_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_lab_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_lab_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-24h: " Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_min_mep" Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_min_sys" Width="100" Foreground="#FFC85B00"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="min_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="min_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="min_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="min_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="min_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,25,0,0"/>
+                                    <DockPanel Margin="0,0,0,0" >
+                                        <TextBlock Text="Tierhaltung: " Width="100" FontWeight="Bold"  FontSize="14" HorizontalAlignment="Left"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_tier_mep" Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_min_tier_sys" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab: " Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_tier_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_min_tier_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                </StackPanel>
+                            </ScrollViewer>
 
 
 
 
                         </TabItem>
                         <TabItem Header="TagMaxbetrieb"  Width="100">
-                            <StackPanel Background="White" Margin="0,0,0,0">
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
-                                    <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_raum_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_raum_sys" Width="100"   Foreground="Blue"/>
-                                </DockPanel>
+                            <ScrollViewer>
+                                <StackPanel Background="White" Margin="0,0,0,0">
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
+                                        <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_raum_mep" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_raum_sys" Width="100"   Foreground="Blue"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_ueber_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_ueber_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_ueber_m_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_ueber_m_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_max_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_max_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_max_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_max_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_raum_mep" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_raum_sys" Width="100"  Foreground="Orange"/>
-                                </DockPanel>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_raum_mep" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_raum_sys" Width="100"  Foreground="Orange"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_ueber_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_ueber_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_ueber_m_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_ueber_m_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_lab_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_lab_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-24h: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_max_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_max_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="max_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="max_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="max_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="max_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="max_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,25,0,0"/>
-                                <DockPanel Margin="0,0,0,0" >
-                                    <TextBlock Text="Tierhaltung: " Width="100" FontWeight="Bold"  FontSize="14" HorizontalAlignment="Left"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_tier_mep" Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_max_tier_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab: " Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_tier_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_max_tier_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_max_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_max_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_max_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_max_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_lab_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_lab_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-24h: " Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_max_mep" Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_max_sys" Width="100" Foreground="#FFC85B00"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="max_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="max_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="max_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="max_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="max_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black" Margin="0,25,0,0"/>
+                                    <DockPanel Margin="0,0,0,0" >
+                                        <TextBlock Text="Tierhaltung: " Width="100" FontWeight="Bold"  FontSize="14" HorizontalAlignment="Left"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black" Margin="0,0,0,0"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_tier_mep" Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_max_tier_sys" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab: " Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_tier_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_max_tier_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
 
-                            </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
 
 
 
 
                         </TabItem>
                         <TabItem Header="Nachtbetrieb" x:Name="auswertung_nachtbetrieb" Width="100">
-                            <StackPanel Background="White" Margin="0,0,0,0">
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
-                                    <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_raum_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_raum_sys" Width="100"   Foreground="Blue"/>
-                                </DockPanel>
+                            <ScrollViewer>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_ueber_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_ueber_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_ueber_m_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_nacht_ueber_m_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_raum_mep" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_raum_sys" Width="100"  Foreground="Orange"/>
-                                </DockPanel>
+                                <StackPanel Background="White" Margin="0,0,0,0">
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
+                                        <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_nacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_nacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_nacht_raum_mep" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_nacht_raum_sys" Width="100"   Foreground="Blue"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_ueber_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_ueber_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_ueber_m_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_ueber_m_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_lab_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_nacht_lab_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-24h: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_nacht_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_nacht_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="nacht_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="nacht_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="nacht_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="nacht_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="nacht_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_nacht_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_nacht_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_nacht_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_nacht_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                            </StackPanel>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_raum_mep" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_raum_sys" Width="100"  Foreground="Orange"/>
+                                    </DockPanel>
 
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_nacht_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_nacht_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_nacht_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_nacht_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_lab_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_nacht_lab_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-24h: " Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_nacht_mep" Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_nacht_sys" Width="100" Foreground="#FFC85B00"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="nacht_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="nacht_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="nacht_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="nacht_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="nacht_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+
+                                </StackPanel>
+                            </ScrollViewer>
                         </TabItem>
                         <TabItem Header="T-Nachtbetrieb" x:Name="auswertung_tnachtbetrieb" Width="100">
-                            <StackPanel Background="White" Margin="0,0,0,0">
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
-                                    <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_raum_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_raum_sys" Width="100"   Foreground="Blue"/>
-                                </DockPanel>
+                            <ScrollViewer>
+                                <StackPanel Background="White" Margin="0,0,0,0">
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock  FontWeight="Bold" Text="MEP" Width="100" />
+                                        <TextBlock FontWeight="Bold" Text="Anlagen" Width="100" />
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zuluft-Summe: " FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_tnacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_tnacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Blue"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Zu-Raum: " Width="100"  Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_tnacht_raum_mep" Width="100" Foreground="Blue"/>
+                                        <TextBlock x:Name="b_zu_tnacht_raum_sys" Width="100"   Foreground="Blue"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_ueber_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_ueber_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_ueber_m_mep" Width="100" Foreground="Blue"/>
-                                    <TextBlock x:Name="b_zu_tnacht_ueber_m_sys" Width="100" Foreground="Blue"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_tnacht_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_tnacht_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Zu-Überstrom_M: " Width="100"  Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_tnacht_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_zu_tnacht_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
 
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,5,0,0" >
-                                    <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_raum_mep" Width="100"  Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_raum_sys" Width="100"  Foreground="Orange"/>
-                                </DockPanel>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Abluft-Summe: " FontWeight="Bold" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_sum_mep" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_sum_sys" FontWeight="Bold" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,5,0,0" >
+                                        <TextBlock Text="Ab-Raum: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_raum_mep" Width="100"  Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_raum_sys" Width="100"  Foreground="Orange"/>
+                                    </DockPanel>
 
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_ueber_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_ueber_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_ueber_m_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_ueber_m_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_lab_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_tnacht_lab_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,2,0,0" >
-                                    <TextBlock Text="Ab-24h: " Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_tnacht_mep" Width="100" Foreground="Orange"/>
-                                    <TextBlock x:Name="b_ab_24h_tnacht_sys" Width="100" Foreground="Orange"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="tnacht_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="tnacht_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="tnacht_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
-                                <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
-                                <DockPanel Margin="0,10,0,0" >
-                                    <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="tnacht_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                    <TextBlock x:Name="tnacht_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
-                                </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_tnacht_ueber_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_tnacht_ueber_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Überstrom_M: " Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_tnacht_ueber_m_mep" Width="100" Foreground="DarkGreen"/>
+                                        <TextBlock x:Name="b_ab_tnacht_ueber_m_sys" Width="100" Foreground="DarkGreen"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-Labor: " Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_lab_mep" Width="100" Foreground="Orange"/>
+                                        <TextBlock x:Name="b_ab_tnacht_lab_sys" Width="100" Foreground="Orange"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="1" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,2,0,0" >
+                                        <TextBlock Text="Ab-24h: " Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_tnacht_mep" Width="100" Foreground="#FFC85B00"/>
+                                        <TextBlock x:Name="b_ab_24h_tnacht_sys" Width="100" Foreground="#FFC85B00"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Luftbilanz:" Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="tnacht_Abweichung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="tnacht_Abweichung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Druckstufe: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="tnacht_auswertung_druckstufe" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
+                                    <Rectangle StrokeThickness="2" Stroke="Black" OpacityMask="Black"/>
+                                    <DockPanel Margin="0,10,0,0" >
+                                        <TextBlock Text="Auswertung: " Width="100" FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="tnacht_auswertung_mep" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                        <TextBlock x:Name="tnacht_auswertung_sys" Width="100"  FontWeight="Bold"  FontSize="14"/>
+                                    </DockPanel>
 
-                            </StackPanel>
-
+                                </StackPanel>
+                            </ScrollViewer>
                         </TabItem>
 
                     </TabControl>
@@ -778,7 +858,7 @@
 
         </DockPanel>
 
-        <GroupBox Grid.Column="1" Grid.Row="1" Margin="10" Grid.ColumnSpan="2">
+        <GroupBox Grid.Column="1" Grid.Row="2" Margin="10,10,10,10" Grid.ColumnSpan="2">
             <GroupBox.Header>
                 <TextBlock Text="Einbauteile" FontWeight="Bold" />
             </GroupBox.Header>
@@ -1203,6 +1283,24 @@
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                             <TextBlock Text="Dimension" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="100" >
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Path = Luftmengensollmin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                            <TextBlock Text="Soll-Min" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_L_SollVolumenstromMin" />
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="100" >
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Path = Luftmengensollmax, UpdateSourceTrigger=PropertyChanged}" />
+
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                            <TextBlock Text="Soll-Max" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_L_SollVolumenstromMax" />
                                         </GridViewColumn>
                                         <GridViewColumn Width="100" >
                                             <GridViewColumn.CellTemplate>
@@ -1680,6 +1778,24 @@
                                 <GridViewColumn Width="100" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
+                                            <TextBlock Text="{Binding Path = Luftmengensollmin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                    <TextBlock Text="Soll-Min" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_L_SollVolumenstromMin" />
+                                </GridViewColumn>
+                                <GridViewColumn Width="100" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path = Luftmengensollmax, UpdateSourceTrigger=PropertyChanged}" />
+
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                    <TextBlock Text="Soll-Max" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_L_SollVolumenstromMax" />
+                                </GridViewColumn>
+                                <GridViewColumn Width="100" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
                                             <TextBox Text="{Binding Path = Luftmengenmin, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_min" Width="55" IsEnabled="{Binding enabledmin}"/>
 
                                         </DataTemplate>
@@ -1713,7 +1829,7 @@
                                     </GridViewColumn.CellTemplate>
                                     <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
                                 </GridViewColumn>
-                                <GridViewColumn>
+                                <GridViewColumn Width="200">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Path = Anmerkung, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
@@ -1732,7 +1848,7 @@
             </TabControl>
         </GroupBox>
 
-        <GroupBox Grid.Row="2"  Margin="10,5,10,0" Grid.ColumnSpan="3" >
+        <GroupBox Grid.Row="3"  Margin="10,5,10,0" Grid.ColumnSpan="3" >
             <GroupBox.Header>
                 <TextBlock Text="Überströmung" FontWeight="Bold" />
             </GroupBox.Header>
@@ -1841,62 +1957,73 @@
             </Grid>
         </GroupBox>
 
-        <Grid Grid.Row="3" Grid.ColumnSpan="3">
+        <Grid Grid.Row="4" Grid.ColumnSpan="3" Margin="0,5,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <Button Content="Raumluftbilanz berechnen" Width="200" Height="50" Grid.Column="0" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben"/>
-
-            <Button Width="200"   Height="50" Grid.Column="1" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" >
+            <Button Height="50" Grid.Column="0" Click="VSRdatenbearbeiten" ToolTip="VSR Typ überprüfen" Margin="20,0,20,0" IsEnabled="False" >
                 <Button.Content>
-                    <StackPanel>
-                        <TextBlock Text="Luftmenge in akt. Raum" HorizontalAlignment="Center"/>
-                        <TextBlock Text="gleichmäßig verteilen" HorizontalAlignment="Center" />
-                    </StackPanel>
+                    <TextBlock Text="VSR Datenbank einstellen" TextWrapping="Wrap"/>
+                </Button.Content>
+            </Button>
+            <Button Content="Raumluftbilanz berechnen" Height="50" Grid.Column="1" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben" Margin="20,0,20,0"/>
+            <Button   Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" Margin="20,0,20,0" >
+                <Button.Content>
+
+                     <TextBlock Text="Luftmenge in akt. Raum gleichmäßig verteilen" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
 
                 </Button.Content>
             </Button>
 
-            <Button Width="200" Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" Visibility="Hidden">
+            <Button Height="50" Grid.Column="3" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" Visibility="Visible" Margin="20,0,20,0">
                 <Button.Content>
-                    <StackPanel>
-                        <TextBlock Text="Luftmenge für das Projekt" HorizontalAlignment="Center"/>
-                        <TextBlock Text="gleichmäßig verteilen" HorizontalAlignment="Center" />
-                    </StackPanel>
+                    <TextBlock Text="Luftmenge für das Projekt gleichmäßig verteilen" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                </Button.Content>
+            </Button>
+            <Button  Height="50" Grid.Column="4" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben" Margin="20,0,20,0">
+                <Button.Content>
+                    <TextBlock Text="Änderung akt. Raum übernehmen" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+            </Button>
+            <Button Height="50" Grid.Column="5" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben" Margin="20,0,20,0">
+                <Button.Content>
+                    <TextBlock Text="alle Änderung übernehmen" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+            </Button>
+            <Button   Height="50" Grid.Column="6" Click="aus_revit_uebernehmen" ToolTip="geänderte Daten wie z.B. Auslässesinfo in GUI übertragen und Übersicht aktualisieren" Margin="20,0,20,0">
+                <Button.Content>
+
+                    <TextBlock Text="Luftmenge für akt. Raum aus Modell übernehmen" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+
 
                 </Button.Content>
             </Button>
-            <Button Content="Änderung akt. Raum übernehmen" Width="200"   Height="50" Grid.Column="3" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben"/>
-            <Button Content="alle Änderung übernehmen" Width="200"   Height="50" Grid.Column="4" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben"/>
-            <Button  Width="200"   Height="50" Grid.Column="5" Click="aus_revit_uebernehmen" ToolTip="geänderte Daten wie z.B. Auslässesinfo in GUI übertragen und Übersicht aktualisieren">
+            <Button  Height="50" Grid.Column="7" Click="abbrechen" Visibility="Visible" Margin="20,0,20,0">
                 <Button.Content>
-                    <StackPanel>
-                        <TextBlock Text="Luftmenge für akt. Raum" HorizontalAlignment="Center"/>
-                        <TextBlock Text="aus Modell übernehmen" HorizontalAlignment="Center" />
-                    </StackPanel>
-                </Button.Content>
+
+                    <TextBlock Text="Programm schließen" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+
+
+                    </Button.Content>
             </Button>
-            <Button Content="Programm schließen" Width="200"  Height="50" Grid.Column="6" Click="abbrechen" Visibility="Visible"/>
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="3">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Button Content="Büro" Click="buero" Height="19"/>
-                <Button Content="Labor 1" Click="lab1" Grid.Row="1" Height="19"/>
-                <Button Content="Labor 2" Click="lab2" Grid.Row="2" Height="19" HorizontalAlignment="Left" Width="100"/>
-                <Button Content="Labor 3" Click="lab3" Grid.Row="2" Height="19" HorizontalAlignment="Right" Width="99.2"/>
+                <Button Content="Büro" Click="buero" Height="19" Visibility="Hidden"/>
+                <Button Content="Labor 1" Click="lab1" Grid.Row="1" Height="19" Visibility="Hidden"/>
+                <Button Content="Labor 2" Click="lab2" Grid.Row="2" Height="19" HorizontalAlignment="Left" Width="100" Visibility="Hidden"/>
+                <Button Content="Labor 3" Click="lab3" Grid.Row="2" Height="19" HorizontalAlignment="Right" Width="99.2" Visibility="Hidden"/>
             </Grid>
         </Grid>
-
-
-
     </Grid>
 </Window>
