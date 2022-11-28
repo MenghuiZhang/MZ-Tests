@@ -524,7 +524,10 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
         except:pass
-    
+    def labnachteingabe_changed(self, sender, args):
+        pass
+    def labtnachteingabe_changed(self, sender, args):
+        pass
     def labmaxeingabe_changed(self, sender, args):
         try:
             self.mepraum.ab_lab_max.soll = round(float(str(sender.Text).replace(',', '.')))
@@ -597,7 +600,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.Auswertung_MEP()
         except:pass
 
-    def reduziertfaktorchanged(self, sender, args):
+    def reduziertchanged(self, sender, args):
         try:
             self.mepraum.IsReduziert = 1 if sender.IsChecked else 0
             self.mepraum.Tagesbetrieb_Berechnen()
@@ -605,7 +608,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.Auswertung_MEP()
         except Exception as e:print(e)
 
-    def reduziertchanged(self, sender, args):
+    def reduziertfaktorchanged(self, sender, args):
         try:
             self.mepraum.faktor = float(str(sender.Text).replace(',', '.'))
         except:pass
