@@ -87,7 +87,7 @@ class ABFRAGE(forms.WPFWindow):
         forms.WPFWindow.__init__(self,'abfrage.xaml')
         self.maininfo.Text = maininfo
         self.regex1 = Regex("[^0-9,]+")
-        self.faktor = faktor
+        self.faktor.Text = faktor
         self.gridlenge = GridLength(0.0)
         self.hoehe = height
         self.minmax = minmax
@@ -1873,11 +1873,11 @@ class MEPRaum(object):
                 param = self.elem.LookupParameter(param_name)
                 if param:
                     if wert != None and param.IsReadOnly == False:
-                        if param.StorygeType.ToString() == 'Double':
+                        if param.StorageType.ToString() == 'Double':
                             param.SetValueString(str(wert))
-                        elif param.StorygeType.ToString() == 'String':
+                        elif param.StorageType.ToString() == 'String':
                             param.Set(str(wert))
-                        elif param.StorygeType.ToString() == 'Integer':
+                        elif param.StorageType.ToString() == 'Integer':
                             param.Set(int(wert))
             except Exception as e:print(e)
 
