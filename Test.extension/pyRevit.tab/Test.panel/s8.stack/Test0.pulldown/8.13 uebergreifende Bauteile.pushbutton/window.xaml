@@ -78,7 +78,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Content="ok" FontSize="14" Click="schreiebn" Height="24" Margin="10,0,10,0" />
+            <Button Content="ok" FontSize="14" Click="schreiben" Height="24" Margin="10,0,10,0" />
             <Button Content="schließen" FontSize="14" Click="cancel" Height="24" Grid.Column="1" Margin="10,0,10,0" />
 
         </Grid>
