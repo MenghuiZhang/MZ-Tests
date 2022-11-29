@@ -610,7 +610,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
 
     def reduziertfaktorchanged(self, sender, args):
         try:
-            self.mepraum.faktor = float(str(sender.Text).replace(',', '.'))
+            self.mepraum.reduziertfaktor = float(str(sender.Text).replace(',', '.'))
         except:pass
         try:
             self.mepraum.Tagesbetrieb_Berechnen()
