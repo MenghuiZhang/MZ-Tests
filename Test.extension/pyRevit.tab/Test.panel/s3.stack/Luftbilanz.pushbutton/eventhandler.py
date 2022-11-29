@@ -1520,13 +1520,13 @@ class MEPRaum(object):
                 self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurZU_Luftwechsel":
                 self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurZU_Person":
                 self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurZUMa":
                 self.zu_min.soll = self.luft_round(float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
             
             self.ab_min.soll = self.ab_max.soll = 0
             self.ab_min.reduziert = self.ab_max.reduziert = 0
@@ -1615,16 +1615,16 @@ class MEPRaum(object):
                 self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "Luftwechsel":
                 self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "Person":
                 self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "manuell":
                 self.zu_min.soll = self.luft_round(float(self.faktor))
-                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
+                self.zu_min.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
             
             self.angeabluft.reduziert = self.angezuluft.reduziert = self.zu_min.reduziert
-            self.angeabluft.soll = self.angezuluft.soll = self.zu_max.soll
+            self.angeabluft.soll = self.angezuluft.soll = self.zu_min.soll
             
             self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
             self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
@@ -1884,13 +1884,14 @@ class MEPRaum(object):
         def wert_schreiben3(param_name, wert):
             '''für Schacht'''
             try:
-                if self.elem.LookupParameter(param_name):
+                param = self.elem.LookupParameter(param_name)
+                if param:
                     if wert.schachtindex != -1:
-                        self.elem.LookupParameter(param_name).Set(wert.SchachtListe[wert.schachtindex])
+                        param.Set(wert.SchachtListe[wert.schachtindex])
                 else:
                     print(param_name)
                   
-            except Exception as e:print(e)
+            except:pass
 
         if self.IsReduziert == 0:
             wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_min.soll)
