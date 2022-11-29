@@ -328,7 +328,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn IsReadOnly="True" Header="Art" Width="*" Binding="{Binding name}"/>
                             <DataGridTextColumn IsReadOnly="True" Header="Soll (m³/h)" Width="*" Binding="{Binding Path= soll}"/>
-                            <DataGridTextColumn IsReadOnly="True" Header="Redu. Soll (m³/h)" Width="*" Binding="{Binding Path= soll}"/>
+                            <DataGridTextColumn IsReadOnly="True" Header="Redu. Soll (m³/h)" Width="*" Binding="{Binding Path= reduziert}"/>
                             <DataGridTextColumn IsReadOnly="True" Header="Ist (m³/h)" Width="*" Binding="{Binding Path= ist}"/>
                         </DataGrid.Columns>
                     </DataGrid>
