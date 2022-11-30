@@ -2,19 +2,14 @@
 from IGF_log import getlog
 from rpw import revit, DB
 from pyrevit import script, forms
-import clr
 from System.Collections.ObjectModel import ObservableCollection
 from System.Windows import FontWeights, FontStyles, Visibility
 from System.Windows.Media import Brushes, BrushConverter
 from System.Windows.Forms import OpenFileDialog,DialogResult
 from System.Windows.Controls import *
 from pyrevit.forms import WPFWindow
-clr.AddReference("Microsoft.Office.Interop.Excel")
-import Microsoft.Office.Interop.Excel as Excel
-from System.Runtime.InteropServices import Marshal
 from IGF_forms import abfrage
 import os
-from excel import get_cell,get_cell_Daten
 
 ##"8.10 BIM-ID und Bearbeitsungsbereiche (RUB-NA)"
 __title__ = "BIM ID"
@@ -60,12 +55,46 @@ if revitversion == '2020':
 else:
     import excel._NPOI_2022 as _NPOI
 
+def get_cell_Daten(sheet,r,c):
+    """für NPOI"""
+    row = sheet.GetRow(r)
+    if row:
+        cell = row.GetCell(c)
+        if cell:
+            if cell.CellType.value__ == 0:
+                try:return cell.NumericCellValue
+                except:return ''
+            elif cell.CellType.value__ == 1:
+                try:return cell.StringCellValue
+                except:
+                    try:return cell.RichStringCellValue
+                    except:return ''
+
+            elif cell.CellType.value__ == 2:
+                try:return cell.StringCellValue
+                except:
+                    try:return cell.NumericCellValue
+                    except:return ''
+            elif cell.CellType.value__ == 3:
+                return ''
+            elif cell.CellType.value__ == 4:
+                try:return cell.BooleanCellValue
+                except:return ''
+
+            elif cell.CellType.value__ == 5:
+                try:return cell.ErrorCellValue
+                except:return ''
+            return ''
+        else:
+            return ''
+    else:
+        return ''
+
 # Bearbeitungsbereich
 worksets = DB.FilteredWorksetCollector(doc).OfKind(DB.WorksetKind.UserWorkset)
 Workset_dict = {}
 for el in worksets:
     Workset_dict[el.Name] = el.Id.ToString()
-
 
 # Exceldaten
 class Exceldaten(object):
@@ -87,10 +116,18 @@ class Exceldaten(object):
         self.TempW = None
         self.TempS = None
         self.Workset = None
+    
+    def get_bimid(self):
+        self.BIMID = self.GK+'_'+self.KG+'_'+self.KN01+' '+self.KN02
 
 Liste_Luft = ObservableCollection[Exceldaten]()
 Liste_Rohr = ObservableCollection[Exceldaten]()
 Liste_All = ObservableCollection[Exceldaten]()
+
+def getKN(kn):
+    if len(kn) == 0:return '00'
+    if len(kn) == 0:return '0' + kn
+    if len(kn) == 0:return kn
 
 def datenlesen(filepath):
     fs = _NPOI.FileStream(filepath,_NPOI.FileMode.Open,_NPOI.FileAccess.Read)
@@ -103,43 +140,21 @@ def datenlesen(filepath):
         sysname = get_cell_Daten(sheet,row,0)
         if sysname == '' or sysname == None:
             continue
-        GK = get_cell_Daten(sheet,row,1)
-        KG = str(int(get_cell_Daten(sheet,row,2)))
-        KN01 = str(int(get_cell_Daten(sheet,row,3)))
-        if len(KN01) == 0:
-            KN01 = '00'
-        elif len(KN01) == 1:
-            KN01 = '0' + KN01
-        KN02 = str(int(get_cell_Daten(sheet,row,4)))
-        if len(KN02) == 0:
-            KN02 = '00'
-        if len(KN02) == 1:
-            KN02 = '0' + KN02
-        bimid = get_cell_Daten(sheet,row,5)
-        annr = get_cell_Daten(sheet,row,6)
-        gean = get_cell_Daten(sheet,row,7)
-        TempW = get_cell_Daten(sheet,row,8)
-        TempS = get_cell_Daten(sheet,row,9)
-        PzAT = get_cell_Daten(sheet,row,10)
-        PzAZ = get_cell_Daten(sheet,row,11)
-        syskz = get_cell_Daten(sheet,row,12)
-        sysna = get_cell_Daten(sheet,row,13)
-        workset = get_cell_Daten(sheet,row,14)
-        tempclass.AnNr = annr
-        tempclass.AnGeAn = gean
-        tempclass.SysKZ = syskz
-        tempclass.Sysname = sysna
         tempclass.Systemname = sysname
-        tempclass.GK = GK
-        tempclass.KG = KG
-        tempclass.KN01 = KN01
-        tempclass.KN02 = KN02
-        tempclass.TempW = TempW
-        tempclass.TempS = TempS
-        tempclass.PzAT = PzAT
-        tempclass.PzAZ = PzAZ
-        tempclass.BIMID = bimid
-        tempclass.Workset = workset
+        tempclass.GK = get_cell_Daten(sheet,row,1)
+        tempclass.KG = str(int(get_cell_Daten(sheet,row,2)))
+        tempclass.KN01 = getKN(str(int(get_cell_Daten(sheet,row,3))))
+        tempclass.KN02 = getKN(str(int(get_cell_Daten(sheet,row,4))))
+        tempclass.AnNr = get_cell_Daten(sheet,row,6)
+        tempclass.AnGeAn = get_cell_Daten(sheet,row,7)
+        tempclass.TempW = get_cell_Daten(sheet,row,8)
+        tempclass.TempS = get_cell_Daten(sheet,row,9)
+        tempclass.PzAT = get_cell_Daten(sheet,row,10)
+        tempclass.PzAZ = get_cell_Daten(sheet,row,11)
+        tempclass.SysKZ = get_cell_Daten(sheet,row,12)
+        tempclass.Sysname = get_cell_Daten(sheet,row,13)
+        tempclass.Workset = get_cell_Daten(sheet,row,14)
+        tempclass.get_bimid()
         Liste_Luft.Add(tempclass)
         Liste_All.Add(tempclass)
     
@@ -150,35 +165,17 @@ def datenlesen(filepath):
         sysname = get_cell_Daten(sheet,row,0)
         if sysname == '' or sysname == None:
             continue
-        GK = get_cell_Daten(sheet,row,1)
-        KG = str(int(get_cell_Daten(sheet,row,2)))
-        KN01 = str(int(get_cell_Daten(sheet,row,3)))
-        if len(KN01) == 0:
-            KN01 = '00'
-        elif len(KN01) == 1:
-            KN01 = '0' + KN01
-        KN02 = str(int(get_cell_Daten(sheet,row,4)))
-        if len(KN02) == 0:
-            KN02 = '00'
-        if len(KN02) == 1:
-            KN02 = '0' + KN02
-        bimid = get_cell_Daten(sheet,row,5)
-        annr = get_cell_Daten(sheet,row,6)
-        gean = get_cell_Daten(sheet,row,7)
-        syskz = get_cell_Daten(sheet,row,8)
-        sysna = get_cell_Daten(sheet,row,9)
-        workset = get_cell_Daten(sheet,row,10)
-        tempclass.AnNr = annr
-        tempclass.AnGeAn = gean
-        tempclass.SysKZ = syskz
-        tempclass.Sysname = sysna
         tempclass.Systemname = sysname
-        tempclass.GK = GK
-        tempclass.KG = KG
-        tempclass.KN01 = KN01
-        tempclass.KN02 = KN02
-        tempclass.BIMID = bimid
-        tempclass.Workset = workset
+        tempclass.GK = get_cell_Daten(sheet,row,1)
+        tempclass.KG = str(int(get_cell_Daten(sheet,row,2)))
+        tempclass.KN01 = getKN(str(int(get_cell_Daten(sheet,row,3))))
+        tempclass.KN02 = getKN(str(int(get_cell_Daten(sheet,row,4))))
+        tempclass.AnNr = get_cell_Daten(sheet,row,6)
+        tempclass.AnGeAn = get_cell_Daten(sheet,row,7)
+        tempclass.SysKZ = get_cell_Daten(sheet,row,8)
+        tempclass.Sysname = get_cell_Daten(sheet,row,9)
+        tempclass.Workset = get_cell_Daten(sheet,row,10)
+        tempclass.get_bimid()
         Liste_Rohr.Add(tempclass)
         Liste_All.Add(tempclass)
         
@@ -191,7 +188,6 @@ try:
             logger.error(e)
 except Exception as e:
     logger.error(e)
-
 
 # ExcelBimId GUI
 class ExcelBimId(WPFWindow):
@@ -389,15 +385,11 @@ if len(fehlendeworkset) > 0:
         t.Dispose()
 
 # Luft System
-luftsys = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_DuctSystem).WhereElementIsNotElementType()
-luftsysids = luftsys.ToElementIds()
-luftsys.Dispose()
+luftsysids = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_DuctSystem).WhereElementIsNotElementType().ToElementIds()
+
 
 # Rohr System
-rohrsys = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_PipingSystem).WhereElementIsNotElementType()
-rohrsysids = rohrsys.ToElementIds()
-rohrsys.Dispose()
-
+rohrsysids = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_PipingSystem).WhereElementIsNotElementType().ToElementIds()
 
 class MEP_System:
     def __init__(self,System_Excel):
@@ -478,66 +470,62 @@ class MEP_System:
                     connunvers = Unverbunden.values()[:]
                     conns.extend(connouts)
                     conns.extend(connunvers)
-                    if not uebergreifend_beruecksichtigt:
-                        try:
-                            for conn in conns:
-                                if not conn.MEPSystem:
-                                    continue
-                                else:
-                                    if conn.MEPSystem.Id.ToString() == systemid:
-                                        if elem.Id.ToString() not in self.liste_bauteile:
-                                            self.liste_bauteile.append(elem.Id.ToString())
-                                    break
-                                
-                        except:
-                            pass
-                    else:
-                        systemListe = [systemid] 
-                        gewerke = []
-                        try:
-                            for conn in conns:
-                                if not conn.MEPSystem:
-                                    continue
-                                else:
-                                    if conn.MEPSystem.Id.ToString() == systemid:
-                                        if elem.Id.ToString() not in self.liste_bauteile:
-                                            gewerke.append(self.GK)
-                                    break
-                        except:
-                            pass
-
-                        if len(gewerke) > 0:
-                            try:
-                                for conn in conns:
-                                    if not conn.MEPSystem:
-                                        continue
-                                        # if '' not in gewerke:
-                                        #     gewerke.append('')
-                                        
-                                    else:
-                                        systemtyp = conn.MEPSystem.get_Parameter(DB.BuiltInParameter.ELEM_TYPE_PARAM).AsValueString()
-                                        if conn.MEPSystem.Id.ToString() not in systemListe:
-                                            systemListe.append(conn.MEPSystem.Id.ToString())
-                                        try:
-                                            gewerk = self.dict_external[systemtyp].GK
-                                            if gewerk and gewerk != None:
-                                                if gewerk not in gewerke:
-                                                    gewerke.append(gewerk)
-                                        except Exception as e:
-                                            logger.error(e)
-                            except:
-                                pass
-                            if len(gewerke) == 1:
-                                if len(systemListe) == 1:
+                    # if not uebergreifend_beruecksichtigt:
+                    try:
+                        for conn in conns:
+                            if not conn.MEPSystem:
+                                continue
+                            else:
+                                if conn.MEPSystem.Id.ToString() == systemid:
                                     if elem.Id.ToString() not in self.liste_bauteile:
                                         self.liste_bauteile.append(elem.Id.ToString())
-                                else:
-                                    if elem.Id.ToString() not in self.dict_bauteile_ueber.keys():
-                                        self.dict_bauteile_ueber[elem.Id.ToString()] = sorted(gewerke)
-                            else:
-                                if elem.Id.ToString() not in self.dict_bauteile_ueber.keys():
-                                    self.dict_bauteile_ueber[elem.Id.ToString()] = sorted(gewerke)
+                                break
+                            
+                    except:
+                        pass
+                    # else:
+                    #     systemListe = [systemid] 
+                    #     gewerke = []
+                    #     try:
+                    #         for conn in conns:
+                    #             if not conn.MEPSystem:
+                    #                 continue
+                    #             else:
+                    #                 if conn.MEPSystem.Id.ToString() == systemid:
+                    #                     if elem.Id.ToString() not in self.liste_bauteile:
+                    #                         gewerke.append(self.GK)
+                    #                 break
+                    #     except:
+                    #         pass
 
+                    #     if len(gewerke) > 0:
+                    #         try:
+                    #             for conn in conns:
+                    #                 if not conn.MEPSystem:
+                    #                     continue                                        
+                    #                 else:
+                    #                     systemtyp = conn.MEPSystem.get_Parameter(DB.BuiltInParameter.ELEM_TYPE_PARAM).AsValueString()
+                    #                     if conn.MEPSystem.Id.ToString() not in systemListe:
+                    #                         systemListe.append(conn.MEPSystem.Id.ToString())
+                    #                     try:
+                    #                         gewerk = self.dict_external[systemtyp].GK
+                    #                         if gewerk and gewerk != None:
+                    #                             if gewerk not in gewerke:
+                    #                                 gewerke.append(gewerk)
+                    #                     except Exception as e:
+                    #                         logger.error(e)
+                    #         except:
+                    #             pass
+                    #         if len(gewerke) == 1:
+                    #             if len(systemListe) == 1:
+                    #                 if elem.Id.ToString() not in self.liste_bauteile:
+                    #                     self.liste_bauteile.append(elem.Id.ToString())
+                    #             else:
+                    #                 if elem.Id.ToString() not in self.dict_bauteile_ueber.keys():
+                    #                     self.dict_bauteile_ueber[elem.Id.ToString()] = sorted(gewerke)
+                    #         else:
+                    #             if elem.Id.ToString() not in self.dict_bauteile_ueber.keys():
+                    #                 self.dict_bauteile_ueber[elem.Id.ToString()] = sorted(gewerke)
 
     def get_systemtyp(self):
         for el in self.liste_system:
@@ -577,7 +565,8 @@ class Bauteil(object):
         self.bb = self.elem.LookupParameter('Bearbeitungsbereich').AsValueString()
         try:self.ubergreifend = self.elem.Symbol.LookupParameter('IGF_X_Übergreifend').AsInteger()
         except:self.ubergreifend = 0
-
+        self.typ = self.system.GK
+    
     def wert_schreiben(self, elem, param_name, wert):
         if wert not in [None,""]:
             para = elem.LookupParameter(param_name)
@@ -600,9 +589,26 @@ class Bauteil(object):
                         para.Set(str(wert))
                     except:
                         logger.error(self.elemid,wert,param_name)
+    
+    def GK_schreiben(self):
+        if self.ubergreifend == 0:
+            self.wert_schreiben(self.elem,'IGF_X_Gewerkkürzel_Exemplar',self.system.GK+'_')
+        else:
+            typ = self.elem.LookupParameter('IGF_X_Gewerkkürzel_Exemplar').AsString()
+            if typ:
+                liste = typ.split('_')
+                text = ''
+                for el in liste:
+                    if el:
+                        if el != self.typ:
+                            text += el + '_' 
+                text = self.typ + ' _' + text
+            else:
+                text = self.typ + '_'
+            self.wert_schreiben(self.elem,'IGF_X_Gewerkkürzel_Exemplar',text)
   
     def werte_schreiben_bimid(self):
-        if self.ubergreifend == 0:self.wert_schreiben(self.elem,'IGF_X_Gewerkkürzel_Exemplar',self.system.GK)
+        self.GK_schreiben()
         self.wert_schreiben(self.elem,'IGF_X_KG_Exemplar',self.system.KG)
         self.wert_schreiben(self.elem,'IGF_X_KN01_Exemplar',self.system.KN01)
         self.wert_schreiben(self.elem,'IGF_X_KN02_Exemplar',self.system.KN02)
@@ -617,128 +623,30 @@ class Bauteil(object):
         self.wert_schreiben(self.elem,'IGF_RLT_ZuluftTemperaturWi_Exemplar',self.system.TempW)
 
     def werte_schreiben_BB(self):
-        try:
-            self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict[self.system.Workset]))
-        except Exception as e:
-            logger.error(e)
+        if self.ubergreifend and uebergreifend_beruecksichtigt:
+            typ = self.elem.LookupParameter('IGF_X_Gewerkkürzel_Exemplar').AsString()
+            if typ:
+                liste = typ.split('_')
+                if self.typ not in liste:
+                    liste.append(self.typ)
+            else:
+                liste = [self.typ]
+            if len(liste) == 1:
+                if liste[0] == 'L':
+                    Bearbeitungsbereich = Workset_dict['KG431_Raumlufttechnische Anlagen_Übergreifend']
+                elif liste[0] == 'K':
+                    Bearbeitungsbereich = Workset_dict['KG434_Kälteanlagen_Übergreifend']
+                elif liste[0] == 'S':
+                    Bearbeitungsbereich = Workset_dict['KG410_Sanitärtechnische Anlagen_Übergreifend']
+                elif liste[0] == 'H':
+                    Bearbeitungsbereich = Workset_dict['KG420_Wärmeerzeugungsanlagen_Übergreifend']
+            else:
+                Bearbeitungsbereich = Workset_dict['KG4xx_Übergreifend']
+            self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Bearbeitungsbereich))
 
-class Bauteil_ueber(object):
-    def __init__(self,elemid,system,Gewerk):
-        self.elemid = DB.ElementId(int(elemid))
-        self.elem = doc.GetElement(self.elemid)
-        self.Fam = self.elem.Symbol.FamilyName
-        self.typ = self.elem.Name
-        self.checked = False
-        self.gewerk = Gewerk
-        self.gewerkschreiben = ''
-        self.systemname = system.systemname
-        self.system = system
-        self.bb = self.elem.LookupParameter('Bearbeitungsbereich').AsValueString()
-        self.R = False
-        self.B = False
-        self.G = False
-        self.H = False
-        self.K = False
-        self.S = False
-        self.M = False
-        self.set_up()
-    
-    def set_up(self):
-        if 'R' in self.gewerk:
-            self.R = True
-            self.RReadonly = True
-        if 'B' in self.gewerk:
-            self.B = True
-            self.BReadonly = True
-        if 'G' in self.gewerk:
-            self.G = True
-            self.GReadonly = True
-        if 'H' in self.gewerk:
-            self.H = True
-            self.HReadonly = True
-        if 'K' in self.gewerk:
-            self.K = True
-            self.KReadonly = True
-        if 'S' in self.gewerk:
-            self.S = True
-            self.SReadonly = True
-        if 'M' in self.gewerk:
-            self.M = True
-            self.MReadonly = True
-
-    def get_gewerk(self):
-        out_ = ''
-        if self.B: out_ += 'B'
-        if self.G: out_ += 'G'
-        if self.H: out_ += 'H'
-        if self.K: out_ += 'K'
-        if self.M: out_ += 'M'
-        if self.R: out_ += 'R'
-        if self.S: out_ += 'S'
-        return out_
-
-    def wert_schreiben(self, elem, param_name, wert):
-        if wert not in [None,""]:
-            para = elem.LookupParameter(param_name)
-            
-            if para:
-                if para.IsReadOnly:
-                    return
-                if para.StorageType.ToString() == 'Double':
-                    try:
-                        para.SetValueString(str(wert))
-                    except:
-                        logger.error(self.elemid,wert,param_name)
-                elif para.StorageType.ToString() == 'Integer':
-                    try:
-                        para.Set(int(wert))
-                    except:
-                        logger.error(self.elemid,wert,param_name)
-                elif para.StorageType.ToString() == 'String':
-                    try:
-                        para.Set(str(wert))
-                    except:
-                        logger.error(self.elemid,wert,param_name)
-
-    def werte_schreiben_bimid(self):
-        self.wert_schreiben(self.elem,'IGF_X_Gewerkkürzel_Exemplar',self.gewerkschreiben)
-        self.wert_schreiben(self.elem,'IGF_X_KG_Exemplar',self.system.KG)
-        self.wert_schreiben(self.elem,'IGF_X_KN01_Exemplar',self.system.KN01)
-        self.wert_schreiben(self.elem,'IGF_X_KN02_Exemplar',self.system.KN02)
-        self.wert_schreiben(self.elem,'IGF_X_BIM-ID_Exemplar',self.system.BIMID)
-
-        self.wert_schreiben(self.elem,'IGF_X_AnlagenGeräteAnzahl_Exemplar',self.system.AnGeAn)
-        self.wert_schreiben(self.elem,'IGF_X_AnlagenNr_Exemplar',self.system.AnNr)
-        self.wert_schreiben(self.elem,'IGF_X_SystemKürzel_Exemplar',self.system.SysKZ)
-        self.wert_schreiben(self.elem,'IGF_X_SystemName_Exemplar',self.system.Sysname)
-
-        self.wert_schreiben(self.elem,'IGF_RLT_ZuluftTemperaturSo_Exemplar',self.system.TempS)
-        self.wert_schreiben(self.elem,'IGF_RLT_ZuluftTemperaturWi_Exemplar',self.system.TempW)
-
-    def werte_schreiben_BB(self):
-        if self.gewerkschreiben == 'S':
-            try:
-                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict['KG410_Sanitärtechnische Anlagen_Übergreifend']))
-            except Exception as e:
-                logger.error(e)
-        elif self.gewerkschreiben == 'H':
-            try:
-                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict['KG420_Wärmeerzeugungsanlagen_Übergreifend']))
-            except Exception as e:
-                logger.error(e)
-        elif self.gewerkschreiben == 'K':
-            try:
-                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict['KG434_Kälteanlagen_Übergreifen']))
-            except Exception as e:
-                logger.error(e)
-        elif self.gewerkschreiben == 'R':
-            try:
-                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict['KG431_Raumlufttechnische Anlagen_Übergreifend']))
-            except Exception as e:
-                logger.error(e)
         else:
             try:
-                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict['KG4xx_Übergreifend']))
+                self.wert_schreiben(self.elem,'Bearbeitungsbereich',int(Workset_dict[self.system.Workset]))
             except Exception as e:
                 logger.error(e)
 
@@ -792,163 +700,6 @@ with forms.ProgressBar(title="{value}/{max_value} Systeme --- Datenermittlung",c
         liste_neu.append(mepsystem)
         pb.update_progress(n+1,len(liste))
 
-########Übergreifend###########
-
-# class Bauteile_ueber_wpf(WPFWindow):
-#     def __init__(self, xaml_file_name,liste_Bauteile):
-#         self.liste_Bauteile = liste_Bauteile
-#         self.tempcoll = ObservableCollection[Bauteil_ueber]()
-#         WPFWindow.__init__(self, xaml_file_name)
-
-#         try:
-#             self.dataGrid.ItemsSource = self.liste_Bauteile
-#         except Exception as e:
-#             logger.error(e)
-#         self.systemauswahl = self.system_click.IsChecked
-#         self.famauswahl = self.fam_click.IsChecked
-#         self.typauswahl = self.typ_click.IsChecked
-#         self.suche.TextChanged += self.auswahl_txt_changed
-#         self.system_click.Click += self.auswahl_txt_changed
-#         self.fam_click.Click += self.auswahl_txt_changed
-#         self.typ_click.Click += self.auswahl_txt_changed
-#         self.text_upper = ''
-
-#     def auswahl_txt_changed(self,sender,args):
-#         if self.suche.Text == None:
-#             text_typ = ''
-#             self.text_upper = text_typ
-#             self.systemauswahl = self.system_click.IsChecked
-#             self.famauswahl = self.fam_click.IsChecked
-#             self.typauswahl = self.typ_click.IsChecked
-#             self.dataGrid.ItemsSource = self.liste_Bauteile
-#             return
-
-#         else:
-#             text_typ = self.suche.Text.upper()
-#         if text_typ == self.text_upper \
-#             and self.systemauswahl == self.system_click.IsChecked \
-#             and self.famauswahl == self.fam_click.IsChecked \
-#             and self.typauswahl == self.typ_click.IsChecked:return
-
-#         self.tempcoll.Clear()
-#         self.text_upper = text_typ
-#         self.systemauswahl = self.system_click.IsChecked
-#         self.famauswahl = self.fam_click.IsChecked
-#         self.typauswahl = self.typ_click.IsChecked
-
-#         if self.systemauswahl:
-#             for item in self.liste_Bauteile:
-#                 if item.system.upper().find(text_typ) != -1:
-#                     self.tempcoll.Add(item)
-#         elif self.famauswahl:
-#             for item in self.liste_Bauteile:
-#                 if item.Fam.upper().find(text_typ) != -1:
-#                     self.tempcoll.Add(item)
-#         elif self.typauswahl:
-#             for item in self.liste_Bauteile:
-#                 if item.typ.upper().find(text_typ) != -1:
-#                     self.tempcoll.Add(item)
-        
-#         self.dataGrid.ItemsSource = self.tempcoll
-#         self.dataGrid.Items.Refresh()
-
-#     def bchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:
-#                     el.B = Checked
-#             self.dataGrid.Items.Refresh()
-#     def gchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.G = Checked
-#             self.dataGrid.Items.Refresh()
-#     def hchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.H = Checked
-#             self.dataGrid.Items.Refresh()
-#     def kchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.K = Checked
-#             self.dataGrid.Items.Refresh()
-#     def mchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.M = Checked
-#             self.dataGrid.Items.Refresh()
-#     def rchanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.R = Checked
-#             self.dataGrid.Items.Refresh()
-#     def schanged(self,sender,args):
-#         Checked = sender.IsChecked
-#         if sender.DataContext.checked:
-#             for el in self.liste_Bauteile:
-#                 if el.checked:el.S = Checked
-#             self.dataGrid.Items.Refresh()
-
-#     def toggle(self,sender,args):
-#         for el in self.dataGrid.Items:
-#             el.checked = not el.checked
-#         self.dataGrid.Items.Refresh()
-
-#     def check(self,sender,args):
-#         for el in self.dataGrid.Items:
-#             el.checked = True
-#         self.dataGrid.Items.Refresh()
-#     def uncheck(self,sender,args):
-#         for el in self.dataGrid.Items:
-#             el.checked = False
-#         self.dataGrid.Items.Refresh()
-#     def ok(self,sender,args):
-#         self.dataGrid.Items.Refresh()
-#         self.Close()
-    
-# if uebergreifend_beruecksichtigt:
-#     liste_bauteile_ueber = ObservableCollection[Bauteil_ueber]()
-#     for system in liste_neu:
-#         dict_bauteile_ueber = system.dict_bauteile_ueber
-#         for elemid in dict_bauteile_ueber.keys():
-#             bauteil = Bauteil_ueber(elemid,system,dict_bauteile_ueber[elemid])
-#             liste_bauteile_ueber.Add(bauteil)
-#     if liste_bauteile_ueber.Count > 0:
-#         windowBauteil = Bauteile_ueber_wpf("bauteile.xaml",liste_bauteile_ueber)
-#         try:
-#             windowBauteil.ShowDialog()
-#         except Exception as e:
-#             logger.error(e)
-#             windowBauteil.Close()
-#             script.exit()
-        
-#         t = DB.Transaction(doc,'Bauteile übergreifend')
-#         t.Start()
-#         if forms.alert('Daten in übergreifenden Bauteilen schreiben?',yes=True,no=True,ok=False):
-#             with forms.ProgressBar(title='{value}/{max_value} Bauteile',cancellable=True, step=10) as pb2:
-#                 n = 0
-#                 for bauteil in liste_bauteile_ueber:
-#                     bauteil.gewerkschreiben = bauteil.get_gewerk()
-#                     if bauteil.system.bimid:
-#                         bauteil.werte_schreiben_bimid()
-#                     if bauteil.system.bb:
-#                         if bauteil.bb in muster_bb and not muster_bb_bearbeiten:
-#                             pass
-#                         else:
-#                             bauteil.werte_schreiben_BB()
-
-#                     pb2.update_progress(n+1, liste_bauteile_ueber.Count)
-#                     n+=1
-                    
-#         t.Commit()
-#         t.Dispose()
 
 bearbeitet = []
 nichtbearbeitet = liste_neu[:]
