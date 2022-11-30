@@ -1,0 +1,254 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="BIM ID und Bearbeitungsbereiche"  ShowInTaskbar="False"
+ WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="1700" Height="1050" >
+<Grid Margin="5">
+  <Grid.RowDefinitions>
+      <RowDefinition Height="30"/>
+      <RowDefinition Height="30"/>
+      <RowDefinition Height="2*"/>
+      <RowDefinition Height="2.5*"/>
+      <RowDefinition Height="3.5*"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="*"/>
+  </Grid.RowDefinitions>
+  <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="8*" />
+      <ColumnDefinition Width="1.5*"/>
+  </Grid.ColumnDefinitions>
+  <DataGrid x:Name="dataGrid" ItemsSource="{Binding}" Grid.RowSpan="5" AutoGenerateColumns="False" Grid.Row="2"  Grid.Column="0"  Background="LightBlue" RowBackground="WhiteSmoke" CanUserAddRows="True" CanUserDeleteRows="True" CanUserResizeRows="True" Grid.ColumnSpan="2">
+      <DataGrid.Columns>
+          <DataGridTemplateColumn Width="30">
+              <DataGridTemplateColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="Parameter werden übertragen wenn angehakt."/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+
+              </DataGridTemplateColumn.HeaderStyle>
+              <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                      <CheckBox IsChecked="{Binding checked, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="System" Binding="{Binding Systemname}" IsReadOnly="True" Width="5*">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="Systemtyp"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="GK" Binding="{Binding GK}" IsReadOnly="True" Width="*">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_Gewerkkürzel"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="KG" Binding="{Binding KG}" IsReadOnly="True" Width="*">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_Kostengruppe"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="KN 1" Binding="{Binding KN01}" Width="*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_Kennnummer_1"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="KN 2" Binding="{Binding KN02}" Width="*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_Kennnummer_2"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="BIM ID" Binding="{Binding BIMID}" Width="3*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_BIM-ID"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="AnlagenNR" Binding="{Binding AnNr}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_AnlagenNr"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="GeräteAnz." Binding="{Binding AnGeAn}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_AnlagenGeräteAnzahl"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="Proz.Anteil" Binding="{Binding PzAT}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_AnlagenProzentualAnteil"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="Proz.Anz." Binding="{Binding PzAZ}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_AnlagenProzentualAnzahl"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="ZuTemp.Wi" Binding="{Binding TempW}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_RLT_ZuluftTemperaturWi"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="ZuTemp.So" Binding="{Binding TempS}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_RLT_ZuluftTemperaturSo"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="SystemKZ" Binding="{Binding SysKZ}" Width="2*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_SystemKürzel"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="SystemName" Binding="{Binding Sysname}" Width="2.4*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="IGF_X_SystemName"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTextColumn Header="Bearbeitungsbereich" Binding="{Binding Workset}" Width="5*" IsReadOnly="True">
+              <DataGridTextColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="Bearbeitungbereiche"/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTextColumn.HeaderStyle>
+          </DataGridTextColumn>
+          <DataGridTemplateColumn Header="BB" Width="30">
+              <DataGridTemplateColumn.HeaderStyle>
+                  <Style TargetType="DataGridColumnHeader">
+                      <Setter Property="ToolTip" Value="Bearbeitungsbereiche der Bauteile werden übertragen wenn angehakt."/>
+                      <Setter Property="FontWeight" Value="Bold" />
+                      <Setter Property="Foreground" Value="Black"/>
+                      <Setter Property="FontSize" Value="11" />
+                  </Style>
+              </DataGridTemplateColumn.HeaderStyle>
+              <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                      <CheckBox IsChecked="{Binding bb, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+      </DataGrid.Columns>
+  </DataGrid>
+
+  <TextBox Margin="15,3,0,3" Text="BIM ID:"  Background="SkyBlue" IsReadOnly="True" FontWeight="Bold"  BorderThickness="0" />
+  <TextBox x:Name="Adresse" Margin="0,3,0,3" TextWrapping="Wrap" BorderThickness="0" Grid.Column="1" />
+  <Button Content="Durchsuchen" Grid.Row="0"  Grid.Column="3" FontSize="14" Click="durchsuchen" Margin="25,3,25,3" />
+
+  <TextBox Text="System" TextAlignment="Center" Margin="10" Grid.Row="2" Grid.Column="2"  Background="#FFB8E4F5" IsReadOnly="True"  BorderThickness="1" FontWeight="Bold" FontSize="16" />
+
+  <TextBox Margin="10" Grid.Row="6" Grid.Column="2"  Background="#FFB8E4F5" IsReadOnly="True"  BorderThickness="1" />
+
+  <Button Content="ok" Grid.Row="6"  Grid.Column="2" FontSize="20" FontWeight="Bold" Click="ok" Margin="25,5" Height="30"/>
+
+  <StackPanel Grid.Row="2" Grid.Column="2" Margin="10,0" VerticalAlignment="Center" >
+      <Button x:Name="rohr" Content="Rohr Systeme"  Click="rohre" FontSize="14"   Background = "#FFCCD2D3" Height="30" Margin="15,5,15,10"/>
+      <Button x:Name="luft" Content="Luftkanal Systeme" Click="luftung" FontSize="14"  Background = "#FFCCD2D3" Height="30" Margin="15,5,15,0"/>
+  </StackPanel>
+  <TextBox Text="BIM ID" TextAlignment="Center" Margin="10" Grid.Row="3" Grid.Column="2"  Background="#FFB8E4F5" IsReadOnly="True"  BorderThickness="1" FontWeight="Bold" FontSize="16" />
+
+  <StackPanel Grid.Row="3" Grid.Column="2" Margin="10,0" VerticalAlignment="Center" >
+      <Button Content="Check" Click="checkall" FontSize="14"  Background = "#FFCCD2D3"  Height="30"  Margin="15,0,15,10"/>
+      <Button Content="Uncheck" Click="uncheckall" FontSize="14" Background = "#FFCCD2D3" Height="30" Margin="15,5,15,10"/>
+      <Button Content="Toggle"  Click="toggleall" FontSize="14" Background = "#FFCCD2D3" Height="30"  Margin="15,5,15,0"/>
+  </StackPanel>
+
+  <TextBox Text="Bearbeitungsbereich" TextAlignment="Center" Margin="10" Grid.Row="4" Grid.Column="2"  Background="#FFB8E4F5" IsReadOnly="True"  BorderThickness="1" FontWeight="Bold" FontSize="16" Grid.RowSpan="2" />
+
+  <StackPanel Grid.Row="4" Grid.Column="2" Margin="10,0" VerticalAlignment="Center" Grid.RowSpan="2" >
+      <Button Content="Check" Click="checkallbb" FontSize="14"  Background = "#FFCCD2D3"  Height="30"  Margin="15,0,15,10"/>
+      <Button Content="Uncheck" Click="uncheckallbb" FontSize="14" Background = "#FFCCD2D3" Height="30" Margin="15,5,15,10"/>
+      <Button Content="Toggle"  Click="toggleallbb" FontSize="14" Background = "#FFCCD2D3" Height="30"  Margin="15,5,15,0"/>
+
+      <DockPanel Margin="0,20,0,0">
+          <TextBlock Text="Bauteile, die sich auf den Bearbeitungsbereich 'KG4xx_Musterbereich' befinden, berücksichtigen?" TextWrapping="Wrap" Foreground="#FFEE0000" FontWeight="Bold" Margin="15,0,0,0" Width="145" FontSize="10" />
+          <CheckBox x:Name="muster" Width="17" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Right" />
+      </DockPanel>
+      <DockPanel Margin="0,10,0,0">
+          <TextBlock Text="neue erstellte Bearbeitungsbereiche in alle Ansichten sichtbar?" TextWrapping="Wrap" Foreground="#FF004CEE" FontWeight="Bold" Margin="15,0,0,0" Width="145" FontSize="10" />
+          <CheckBox x:Name="sichtbar" Width="17" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Right" />
+      </DockPanel>
+      <DockPanel Margin="0,10,0,0">
+          <TextBlock Text="die Bearbeitungsbereiche, wenn Bauteil in mehrere Gewerken eingebaut sind, werden auf 'KG4xx_Übergreifend' legen." TextWrapping="Wrap" Foreground="#FF116F0D" FontWeight="Bold" Margin="15,0,0,0" Width="145" FontSize="10" />
+          <CheckBox x:Name="mehrgewerke" Width="17" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Right" />
+      </DockPanel>
+  </StackPanel>
+
+  <TextBox Margin="15,4,0,4" Text="Suche:"  Background="SkyBlue" IsReadOnly="True" FontWeight="Bold"  BorderThickness="0" Grid.Row="1"/>
+  <TextBox x:Name="systemsuche" TextWrapping="Wrap" Grid.Row="1"  Grid.Column="1" BorderThickness="0" Margin="0,3,0,3" />
+
+</Grid>
+</Window>
