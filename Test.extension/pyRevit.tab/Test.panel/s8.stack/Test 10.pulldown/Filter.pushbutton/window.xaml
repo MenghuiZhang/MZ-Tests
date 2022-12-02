@@ -5,7 +5,8 @@
        WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="1000" Height="600">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="300"/>
+
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -14,34 +15,61 @@
 
 
         </Grid.RowDefinitions>
-        <GroupBox Margin="5,0,5,0">
-            <GroupBox.Header>
-                <TextBlock Text="Kategorie" FontWeight="Bold"/>
-            </GroupBox.Header>
-            <ListView Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_category">
-                <ListView.View>
-                    <GridView>
-                        <GridView.Columns>
-                            <GridViewColumn Width="30">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding Path= checked}" Checked="catechanged" Unchecked="catechanged"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Kategorie" Width="130">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding category}" TextWrapping="Wrap"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView.Columns>
-                    </GridView>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <GroupBox Margin="5,0,5,0">
+                <GroupBox.Header>
+                    <TextBlock Text="Kategorie" FontWeight="Bold"/>
+                </GroupBox.Header>
+                <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_category">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Path= checked}" Checked="catechanged" Unchecked="catechanged"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Kategorie" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding category}" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
 
-                </ListView.View>
-            </ListView>
-        </GroupBox>
+                </DataGrid>
+            </GroupBox>
+            <GroupBox Margin="5,0,5,0" Grid.Row="1">
+                <GroupBox.Header>
+                    <TextBlock Text="System" FontWeight="Bold"/>
+                </GroupBox.Header>
+                <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_System">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Path= checked}" Checked="systemchanged" Unchecked="systemchanged"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Systemtyp" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding systemtyp}" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+
         <GroupBox Grid.Column="1" Margin="0,0,5,0">
             <GroupBox.Header>
                 <TextBlock Text="Familien" FontWeight="Bold"/>
@@ -88,7 +116,7 @@
                         <DataGridTemplateColumn Width="50" Header="Anzahl">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding  anzahl}"></TextBlock>
+                                    <TextBlock Text="{Binding Path = anzahl}"></TextBlock>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

@@ -2,14 +2,15 @@
 from IGF_log import getloglocal
 from rpw import revit,DB
 from pyrevit import script, forms
-from externalevent import ExternalEvent,ExternalEventListe,ObservableCollection,Bauteil
+from externalevent import ExternalEvent,ExternalEventListe,ObservableCollection,Bauteil,Systemtyp
 import os
 
 
 __title__ = "Filter"
 __doc__ = """
 
-[2022.11.21]
+ergänzt: Systemtyp auswählen
+[2022.12.02]
 Version: 1.1
 """
 __authors__ = "Menghui Zhang"
@@ -27,10 +28,13 @@ doc = revit.doc
 class GUI(forms.WPFWindow):
     def __init__(self):
         self.temp_coll = ObservableCollection[Bauteil]()    
+        self.temp_coll_Systemtyp = ObservableCollection[Systemtyp]()   
         self.externaleventhandler = ExternalEventListe()
         self.event = ExternalEvent.Create(self.externaleventhandler)
         forms.WPFWindow.__init__(self,'window.xaml',handle_esc=False)
         self.set_icon(os.path.join(os.path.dirname(__file__), 'icon.png'))
+        self.LV_System.ItemsSource = self.temp_coll_Systemtyp
+        self.DG_Familie.ItemsSource = self.temp_coll
   
     def catechanged(self,sender,args):
         item = sender.DataContext
@@ -38,20 +42,58 @@ class GUI(forms.WPFWindow):
         if self.LV_category.SelectedIndex != -1:
             if item in self.LV_category.SelectedItems:
                 for el in self.LV_category.SelectedItems:el.checked = checked
-        self.cateorychanged()
-
-    def cateorychanged(self):
+        try:
+            self.get_Systemtyp()
+            self.get_item()
+        except Exception as e:print(e)
+    
+    def get_Systemtyp(self):
+        self.temp_coll_Systemtyp.Clear()
+        Dict = {}
+        for el in self.LV_category.Items:
+            if el.checked:
+                for system in el.Systems:
+                    if system.systemtyp != '' and system.systemtyp not in Dict.keys():Dict[system.systemtyp] = system
+        for systemname in sorted(Dict.keys()):
+            self.temp_coll_Systemtyp.Add(Dict[systemname])
+        
+    def get_item(self):
         self.temp_coll.Clear()
         text = self.suche.Text
         for el in self.LV_category.Items:
             if el.checked:
                 for item in el.Items:
-                    if not text:self.temp_coll.Add(item)
-                    else:
-                        if item.category.upper().find(text.upper()) != -1 or item.familyname.upper().find(text.upper()) != -1 or item.typname.upper().find(text.upper()) != -1:
-                            self.temp_coll.Add(item)
+                    item.elems = []
+                    for system in el.Systems:
+                        if system.checked:
+                            if item.familyname in el.elem_mit_system[system.systemtyp].keys():
+                                if item.typname in el.elem_mit_system[system.systemtyp][item.familyname].keys():
+                                    item.elems.extend(el.elem_mit_system[system.systemtyp][item.familyname][item.typname])
+                    item.anzahl = item.get_anzahl()
+                    if item.anzahl > 0:
+                        if not text:self.temp_coll.Add(item)
+                        else:
+                            if item.category.upper().find(text.upper()) != -1 or item.familyname.upper().find(text.upper()) != -1 or item.typname.upper().find(text.upper()) != -1:
+                                self.temp_coll.Add(item)
 
-        self.DG_Familie.ItemsSource = self.temp_coll
+    
+    def systemchanged(self,sender,args):
+        if self.LV_System.SelectedIndex == -1:
+            return 
+        item = sender.DataContext
+        checked = sender.IsChecked
+        if self.LV_System.SelectedIndex != -1:
+            if item in self.LV_System.SelectedItems:
+                for el in self.LV_System.SelectedItems:
+                    el.checked = checked
+                    for cate in self.LV_category.Items:
+                        if cate.checked:
+                            if el.systemtyp in cate.dict_Systems.keys():
+                                cate.dict_Systems[el.systemtyp].checked = checked
+
+        try:self.get_item()
+        except Exception as e:print(e)
+
 
     def familiechanged(self,sender,e):
         item = sender.DataContext
@@ -69,7 +111,7 @@ class GUI(forms.WPFWindow):
         self.event.Raise()
     
     def suchechanged(self,sender,e):
-        self.cateorychanged()
+        self.get_item()
 
 
 gui = GUI()
