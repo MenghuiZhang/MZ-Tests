@@ -42,12 +42,15 @@ class GUI(forms.WPFWindow):
 
     def cateorychanged(self):
         self.temp_coll.Clear()
+        text = self.suche.Text
         for el in self.LV_category.Items:
             if el.checked:
                 for item in el.Items:
-                    self.temp_coll.Add(item)
-            else:
-                for item in el.Items:item.checked = False
+                    if not text:self.temp_coll.Add(item)
+                    else:
+                        if item.category.upper().find(text.upper()) != -1 or item.familyname.upper().find(text.upper()) != -1 or item.typname.upper().find(text.upper()) != -1:
+                            self.temp_coll.Add(item)
+
         self.DG_Familie.ItemsSource = self.temp_coll
 
     def familiechanged(self,sender,e):
@@ -64,6 +67,10 @@ class GUI(forms.WPFWindow):
     def inrevit(self,sender,e):
         self.externaleventhandler.Executeapp = self.externaleventhandler.PostSelect
         self.event.Raise()
+    
+    def suchechanged(self,sender,e):
+        self.cateorychanged()
+
 
 gui = GUI()
 gui.externaleventhandler.GUI = gui
