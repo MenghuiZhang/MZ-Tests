@@ -217,9 +217,9 @@ class ROHRERSTELLEN(IExternalEventHandler):
                 t = DB.Transaction(doc,'Übergang')
                 t.Start()
                 try:
-                    rohr = DB.Plumbing.Pipe.Create(doc,DB.ElementId(9759272),view,co1,co0)
+                    rohr = DB.Plumbing.Pipe.Create(doc,DB.ElementId(2170325),view,co1,co0)
                 except:
-                    try: rohr = DB.Plumbing.Pipe.Create(doc,DB.ElementId(9759272),view,co0,co1)
+                    try: rohr = DB.Plumbing.Pipe.Create(doc,DB.ElementId(2170325),view,co0,co1)
                     except:print('nicht geklappt')
                 doc.Regenerate()
                 mep = rohr.MEPSystem
