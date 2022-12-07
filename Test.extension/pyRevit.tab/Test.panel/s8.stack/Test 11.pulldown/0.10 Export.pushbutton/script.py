@@ -43,13 +43,20 @@ for el in Liste_bauteileliste:
     el.checked = True if el.name == viewname else False
 
 def rgb_to_hex(liste):
-    return '''#{:02X}{:02X}{:02X}'''.format(liste[0],liste[1],liste[2])
+    return '''#{:02X}{:02X}{:02X}'''.format(int(liste[0]),int(liste[1]),int(liste[2]))
 
 def get_number_format(data):
     accuracy = data.accuracy
     units = data.units
+    if str(accuracy) == '1.0':
+
+        try:
+            return '''{} "{}"'''.format(0,units)
+
+        except:
+            return None
     try:
-        return str(accuracy).replace('1','0') + ' ' + units
+        return '''{} "{}"'''.format(str(accuracy).replace('1','0'),units)
 
     except:
         return None
@@ -64,23 +71,28 @@ def write_one_sheet(d,p,sheetname = None):
     else:
         if len(d[0]) == 0:
             return
-    for r in range(len(d)):
-        for c in range(len(d[0])):
+    for c in range(len(d[0])):
+        worksheet.set_column(c, c, width=d[0][c].width)
+        for r in range(len(d)):
             celldata = d[r][c]
             if celldata.data.GetType().ToString() == 'System.String':
                 cellformat = e.add_format()
-                cellformat.set_font_color('#FF0000')
+                # cellformat.set_font_color('#FF0000')
                 # cellformat.set_font_color(rgb_to_hex(celldata.textcolor))
-                # cellformat.bg_color = rgb_to_hex(celldata.background)
+                if rgb_to_hex(celldata.background) != '#FFFFFF':
+                    cellformat.set_bg_color(rgb_to_hex(celldata.background))
                 cellformat.set_align(celldata.textalign.lower())
                 worksheet.write(r, c, celldata.data,cellformat)
                 
            
             else:
                 cellformat = e.add_format()
-                cellformat.set_font_color('#FF0000')
                 # cellformat.set_font_color(rgb_to_hex(celldata.textcolor))
-                # cellformat.set_bg_color(rgb_to_hex(celldata.background))
+                # print(rgb_to_hex(celldata.textcolor))
+                # cellformat.set_font_color(rgb_to_hex(celldata.textcolor))
+                if rgb_to_hex(celldata.background) != '#FFFFFF':
+                    cellformat.set_bg_color(rgb_to_hex(celldata.background))
+                # cellformat.set_border_color('#F000000')
                 cellformat.set_align(celldata.textalign.lower())
                 number_format = get_number_format(celldata)
                 if number_format:
