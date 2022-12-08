@@ -234,11 +234,12 @@ get_IS()
 
 class Window_AKS(forms.WPFWindow):
     def __init__(self):
+        forms.WPFWindow.__init__(self, "aksnummer.xaml",handle_esc=False)
         self.IS_luft = Liste_Luft
         self.IS_Rohr = Liste_Rohr
         self.IS_HLS = Liste_HLS
         self.dict_daten = {}
-        forms.WPFWindow.__init__(self, "aksnummer.xaml",handle_esc=False)
+        
         self.read_config()
 
         self.listview.ItemsSource = self.IS_luft
@@ -248,13 +249,11 @@ class Window_AKS(forms.WPFWindow):
     def search_txt_changed(self, sender, args):
         """Handle text change in search box."""
         self.tempcoll.Clear()
-        text_typ = self.suche.Text.upper()
+        text_typ = sender.Text.upper()
         if text_typ in ['',None]:
             self.listview.ItemsSource = self.altdatagrid
 
         else:
-            if text_typ == None:
-                text_typ = ''
             for item in self.altdatagrid:
                 if item.familie.upper().find(text_typ) != -1:
                     self.tempcoll.Add(item)

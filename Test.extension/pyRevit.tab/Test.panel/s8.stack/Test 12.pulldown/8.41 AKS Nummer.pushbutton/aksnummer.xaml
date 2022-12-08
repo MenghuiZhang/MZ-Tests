@@ -50,9 +50,9 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <RadioButton Content="Luftkanalzubehör" Checked="luft" IsChecked="True" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <RadioButton Content="Rohrzubehör"  Checked="rohr" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <RadioButton Content="HLS-Bauteile" Checked="hls" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <RadioButton Content="Luftkanalzubehör" Click="luft" IsChecked="True" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <RadioButton Content="Rohrzubehör"  Click="rohr" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <RadioButton Content="HLS-Bauteile" Click="hls" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
             </Grid>
         </GroupBox>
         <GroupBox Margin="10" Grid.Column="1" Grid.Row="6" >
