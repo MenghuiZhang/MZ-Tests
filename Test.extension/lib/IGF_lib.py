@@ -296,7 +296,7 @@ def CreateProjFromSharedParam_2020(ExternalDefinition = None, Gruppe = None, Kat
     try:
         map.Insert(ExternalDefinition, binding, ParaGroup)
     except:
-        return
+        return   
 
 
 
