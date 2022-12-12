@@ -2,10 +2,12 @@
 from IGF_log import getlog
 from rpw import revit, DB, UI
 from pyrevit import script, forms
-from IGF_lib import get_value
+from IGF_lib import get_value,Muster_Pruefen
 from System.Collections.ObjectModel import ObservableCollection
 from System.ComponentModel import INotifyPropertyChanged ,PropertyChangedEventArgs
 from System.Text.RegularExpressions import Regex
+from System.Collections.Generic import List
+from clr import GetClrType
 
 __title__ = "Wirkungsort"
 __doc__ = """
@@ -70,14 +72,22 @@ class Endverbraucher(TemplateItemBase):
         self._RV = False
         self._Sechswege = False
         self._VSR = False
+        self.VSR_enabled = False
+        self.RV_enabled = False
         self.liste_ort = ['Vorlauf','Rücklauf']
         if self.category == 'Luftdurchlässe':
             self.Orts = []
             self.VSR = True
+            self.VSR_enabled = True
         else:
             self.VSR = False
-            self.Orts = sorted(self.liste_art)
+            self.RV_enabled = True
+            self.Orts = sorted(self.liste_ort)
         self.elems = elems
+        if len(self.elems) == 0:
+            self.info = 'Typ nicht verwendet'
+        else:
+            self.info = 'Typ bereits verwendet'
     
     @property
     def RV(self):
@@ -113,8 +123,9 @@ class Endverbraucher(TemplateItemBase):
             self.RaisePropertyChanged('Selectedort')
 
 class Regelkomponent(TemplateItemBase):
-    def __init__(self,name,elems,category):
+    def __init__(self,name,category):
         TemplateItemBase.__init__(self)
+        self._checked = False
         self.familyname = name
         self.category = category
         self._Selectedart = -1
@@ -122,12 +133,10 @@ class Regelkomponent(TemplateItemBase):
         self.liste_art1 = ['Regelventil','6-Wege-Ventil']
         self.liste_art2 = ['VSR']
         if self.category == 'Rohrzubehör':
-            self.Arts = sorted(self.liste_art1 )
+            self.Arts = sorted(self.liste_art1)
         else:
             self.Arts = self.liste_art2 
    
-        self.elems = elems
-    
     @property
     def checked(self):
         return self._checked
@@ -145,161 +154,220 @@ class Regelkomponent(TemplateItemBase):
             self._Selectedart = value
             self.RaisePropertyChanged('Selectedart')
 
-HLS_Dict = {}
-HLS_Para_Dict = {}
-for elid in bauteile:
-    elem = doc.GetElement(elid)
-    Family = elem.Symbol.FamilyName + ': ' + elem.Name
-    if not Family in HLS_Dict.keys():
-        HLS_Dict[Family] = [elem]
-        Paraliste = []
-        for para in elem.Parameters:
-            if not para.Definition.Name in Paraliste:
-                try:Paraliste.append(para.Definition.Name)
-                except:pass
-        HLS_Para_Dict[Family]=Paraliste
-    else:
-        HLS_Dict[Family].append(elem)
+AUSWAHL_EV_IS = ObservableCollection[Endverbraucher]()
+AUSWAHL_RK_IS = ObservableCollection[Regelkomponent]()
 
-Liste_Datagrid = ObservableCollection[MechanicalEquipment]()
+def get_IS():
+    Dict = {}
+    filter_EV = DB.ElementMulticategoryFilter(List[DB.BuiltInCategory]([DB.BuiltInCategory.OST_MechanicalEquipment,DB.BuiltInCategory.OST_DuctTerminal]))
+    HLSs = DB.FilteredElementCollector(doc).WhereElementIsNotElementType().WherePasses(filter_EV).ToElements()
+    for el in HLSs:
+        category = el.Category.Name
+        FamilyName = el.Symbol.FamilyName + ': ' + el.Name
+        if category not in Dict.keys():
+            Dict[category] = {}   
+        if FamilyName not in Dict[category].keys():
+            Dict[category][FamilyName] = [el.Id]            
+        else:Dict[category][FamilyName].append(el.Id)
+    
+    Families = DB.FilteredElementCollector(doc).OfClass(GetClrType(DB.Family)).ToElements()
+    Dict_EV = {}
+    Dict_RK = {}
+    for el in Families:
+        if el.FamilyCategoryId.IntegerValue in [-2001140,-2008013]:
+            category = el.FamilyCategory.Name
+            if category not in Dict_EV.keys():
+                Dict_EV[category] = []
+            for typid in el.GetFamilySymbolIds():
+                typ = doc.GetElement(typid)
+                typname = typ.get_Parameter(DB.BuiltInParameter.SYMBOL_FAMILY_AND_TYPE_NAMES_PARAM).AsString()
+                if typname not in Dict_EV[category]:
+                    Dict_EV[category].append(typname)
+        elif el.FamilyCategoryId.IntegerValue in [-2008016,-2008055]:
+            category = el.FamilyCategory.Name
+            famname = el.Name
+            if category not in Dict_RK.keys():
+                Dict_RK[category] = []
+            if famname not in Dict_RK[category]:
+                Dict_RK[category].append(famname)         
+    
+    for category in sorted(Dict_EV.keys()):
+        for fam in sorted(Dict_EV[category]):
+            if category in Dict.keys():
+                if fam in Dict[category].keys():
+                    AUSWAHL_EV_IS.Add(Endverbraucher(fam,Dict[category][fam],category))
+                else:
+                    AUSWAHL_EV_IS.Add(Endverbraucher(fam,[],category))
+            else:
+                AUSWAHL_EV_IS.Add(Endverbraucher(fam,[],category))
 
-for name in sorted(HLS_Dict.keys()):Liste_Datagrid.Add(MechanicalEquipment(name,HLS_Dict[name],sorted(HLS_Para_Dict[name])))
+    for category in sorted(Dict_RK.keys()):
+        for fam in sorted(Dict_RK[category]):
+            AUSWAHL_RK_IS.Add(Regelkomponent(fam,category))
+    
+get_IS()
 
 class FamilieEinstellen(forms.WPFWindow):
     def __init__(self):
-        self.Liste_Datagrid = Liste_Datagrid
+        self.Liste_EV = AUSWAHL_EV_IS
+        self.Liste_RK = AUSWAHL_RK_IS
         forms.WPFWindow.__init__(self, "window.xaml",handle_esc=False)
-        self.tempcoll = ObservableCollection[MechanicalEquipment]()
-        self.dataGrid.ItemsSource = self.Liste_Datagrid
+        self.tempcoll_EV = ObservableCollection[Endverbraucher]()
+        self.tempcoll_RK = ObservableCollection[Regelkomponent]()
+        self.datagrid_EV.ItemsSource = self.Liste_EV
+        self.datagrid_RK.ItemsSource = self.Liste_RK
         self.read_config()
         self.start = False
-        self.zuluftleistungfaktor = 0.8
-        self.regex1 = Regex("[^0-9,]+")
         
     def read_config(self):
-        def read_config_intern(_dict,_Liste):
-            for item in _Liste:
-                if item.Name in _dict.keys():
-                    try:item.checked = _dict[item.Name][0]
-                    except:item.checked = False
-                    try:item.Selectedart = item.Arts.index(_dict[item.Name][1])
-                    except:item.Selectedart = -1
-                    try:item.Selectedindex = item.Paras.index(_dict[item.Name][2])
-                    except:item.Selectedindex = -1
-                   
-        try:read_config_intern(config.HeizFamilien,self.Liste_Datagrid)
+        try:
+            for item in self.Liste_EV:
+                if item.familyname in config.Endverbraucher.keys():
+                    configdatei = config.Endverbraucher[item.familyname]
+                    item.RV = configdatei[0]
+                    item.Sechswege = configdatei[1]
+                    item.VSR = configdatei[2]
+                    if configdatei[3] not in ['',None]:item.Selectedort = item.Orts.index(configdatei[3])
         except:pass
         try:
-            if config.faktor:
-                try:self.faktor.Text = config.faktor
-                except:pass
+            for item in self.Liste_RK:
+                if item.familyname in config.Regelkomponent.keys():
+                    configdatei = config.Regelkomponent[item.familyname]
+                    item.checked = configdatei[0]
+                    if configdatei[1] not in ['',None]:item.Selectedart = item.Arts.index(configdatei[1])
         except:pass
-
- 
+           
+       
     def write_config(self):
-        def write_conifg_intern(_Liste):
-            _dict = {}
-            for item in _Liste:
-                if item.Selectedindex == -1:param = ''
-                else:param = item.Paras[item.Selectedindex]
-                if item.Selectedart == -1:art = ''
-                else:art = item.Arts[item.Selectedart]
-                _dict[item.Name] = [item.checked,art,param]
-            return _dict
-        try:config.HeizFamilien = write_conifg_intern(self.Liste_Datagrid)
+        _dict_EV = {}
+        _dict_RK = {}
+        try:
+            for item in self.Liste_EV:
+                if item.Selectedort == -1:
+                    _dict_EV[item.familyname] = [item.RV,item.Sechswege,item.VSR,'']
+                else:
+                    _dict_EV[item.familyname] = [item.RV,item.Sechswege,item.VSR,item.Orts[item.Selectedort]]
+                
         except:pass
         try:
-            config.faktor = self.faktor.Text
+            for item in self.Liste_RK:
+                if item.Selectedart == -1:
+                    _dict_RK[item.familyname] = [item.checked,'']
+                else:
+                    _dict_RK[item.familyname] = [item.checked,item.Arts[item.Selectedart]]
         except:pass
-        
+        config.Regelkomponent = _dict_RK
+        config.Endverbraucher = _dict_EV
+
         script.save_config()
 
-    def _checked_changed(self,sender,Datagird):
+    def checkedchanged(self,sender,e):
         item = sender.DataContext
         checked = sender.IsChecked
-        if Datagird.SelectedIndex != -1:
-            if item in Datagird.SelectedItems:
-                for el in Datagird.SelectedItems:el.checked = checked
+        if self.datagrid_RK.SelectedIndex != -1:
+            if item in self.datagrid_RK.SelectedItems:
+                for el in self.datagrid_RK.SelectedItems:el.checked = checked
 
-    def _Param_changed(self,sender,Datagird):
-        item = sender.DataContext
-        paramindex = sender.SelectedIndex
-        if paramindex != -1:
-            param = item.Paras[paramindex]
-            if Datagird.SelectedIndex != -1:
-                if item in Datagird.SelectedItems:
-                    for el in Datagird.SelectedItems:
-                        if param in el.Paras:
-                            el.Selectedindex = el.Paras.index(param)
-    
-    def _suche_textchanged(self,sender,Datagird,temp,default):
-        text = sender.Text
-        if not text:
-            Datagird.ItemsSource = default
-            return
-        temp.Clear()
-        for item in default:
-            if item.Name.upper().find(text.upper()) != -1:
-                temp.Add(item)
-        Datagird.ItemsSource = temp 
-
-    def suche_changed(self,sender,e):
-        self._suche_textchanged(sender,self.dataGrid,self.tempcoll,self.Liste_Datagrid)
-    
-    def checkedchanged(self,sender,e):
-        self._checked_changed(sender,self.dataGrid)
-
-    def param_select_changed(self,sender,e):
-        self._Param_changed(sender,self.dataGrid)
-    
     def art_select_changed(self,sender,e):
         item = sender.DataContext
-        paramindex = sender.SelectedIndex
-        if paramindex != -1:
-            param = item.Arts[paramindex]
-            if self.dataGrid.SelectedIndex != -1:
-                if item in self.dataGrid.SelectedItems:
-                    for el in self.dataGrid.SelectedItems:
-                        if param in el.Arts:
-                            el.Selectedart = el.Arts.index(param)
+        artindex = sender.SelectedIndex
+        if artindex != -1:
+            art = item.Arts[artindex]
+            if self.datagrid_RK.SelectedIndex != -1:
+                if item in self.datagrid_RK.SelectedItems:
+                    for el in self.datagrid_RK.SelectedItems:
+                        if art in el.Arts:
+                            el.Selectedart = el.Arts.index(art)
+    
+    def VSR_checkedchanged(self,sender,e):
+        item = sender.DataContext
+        checked = sender.IsChecked
+        if self.datagrid_EV.SelectedIndex != -1:
+            if item in self.datagrid_EV.SelectedItems:
+                for el in self.datagrid_EV.SelectedItems:
+                    if el.category == 'Luftdurchlässe':
+                        el.VSR = checked
+    
+    def RV_checkedchanged(self,sender,e):
+        item = sender.DataContext
+        checked = sender.IsChecked
+        if self.datagrid_EV.SelectedIndex != -1:
+            if item in self.datagrid_EV.SelectedItems:
+                for el in self.datagrid_EV.SelectedItems:
+                    if el.category == 'HLS-Bauteile':
+                        el.RV = checked
+    
+    def Sechswege_checkedchanged(self,sender,e):
+        item = sender.DataContext
+        checked = sender.IsChecked
+        if self.datagrid_EV.SelectedIndex != -1:
+            if item in self.datagrid_EV.SelectedItems:
+                for el in self.datagrid_EV.SelectedItems:
+                    if el.category == 'HLS-Bauteile':
+                        el.Sechswege = checked
 
-    def pruefen(self,item):
+    def ort_select_changed(self,sender,e):
+        item = sender.DataContext
+        ortindex = sender.SelectedIndex
+        if ortindex != -1:
+            ort = item.Orts[ortindex]
+            if self.datagrid_EV.SelectedIndex != -1:
+                if item in self.datagrid_EV.SelectedItems:
+                    for el in self.datagrid_EV.SelectedItems:
+                        if ort in el.Orts:
+                            el.Selectedort = el.Orts.index(ort)
+
+    def EV_suchechanged(self,sender,e):
+        text = sender.Text
+        if not text:
+            self.datagrid_EV.ItemsSource = self.Liste_EV
+            return
+        self.tempcoll_EV.Clear()
+        for item in self.Liste_EV:
+            if item.familyname.upper().find(text.upper()) != -1:
+                self.tempcoll_EV.Add(item)
+        self.datagrid_EV.ItemsSource = self.tempcoll_EV 
+
+    def RK_suchechanged(self,sender,e):
+        text = sender.Text
+        if not text:
+            self.datagrid_RK.ItemsSource = self.Liste_RK
+            return
+        self.tempcoll_RK.Clear()
+        for item in self.Liste_RK:
+            if item.familyname.upper().find(text.upper()) != -1:
+                self.tempcoll_RK.Add(item)
+        self.datagrid_RK.ItemsSource = self.tempcoll_RK 
+
+    def pruefen_EV(self,item):
+        if item.RV or item.Sechswege:
+            if item.Selectedort == -1:
+                return "Entverbraucher: {} - Ort nicht definiert".format(item.familyname)
+            else:
+                return None
+    
+    def pruefen_RK(self,item):
         if item.checked:
-            if item.Selectedindex == -1:
-                return "{}: Heizleistung-Parameter nicht definiert".format(item.Name)
-            elif item.Selectedart == -1:
-                return "{}: Bauteilart nicht definiert".format(item.Name)
+            if item.Selectedart == -1:
+                return "Regelkomponent: {} - Art nicht definiert".format(item.familyname)
             else:
                 return None
 
     def ok(self,sender,args):
-        for el in self.Liste_Datagrid:
-            text = self.pruefen(el)
+        for el in self.Liste_EV:
+            text = self.pruefen_EV(el)
             if text:
                 UI.TaskDialog.Show('Fehler',text)
                 return
-        try:
-            self.zuluftleistungfaktor = float(self.faktor.Text.replace(',','.'))
-        except:
-            UI.TaskDialog.Show('Fehler','Bitte ein gültige Zuluftleistungsfaktor eingeben!')
-            return
-        
+        for el in self.Liste_RK:
+            text = self.pruefen_RK(el)
+            if text:
+                UI.TaskDialog.Show('Fehler',text)
+                return      
         
         self.write_config()
         self.start = True
         self.Close()
-    
-    def textinput(self, sender, args):
-        try:
-            if sender.Text in ['',None]:
-                args.Handled = self.regex1.IsMatch(args.Text)
-            elif sender.Text.find(',') != -1 and args.Text == ',':
-                args.Handled = True
-            else:
-                args.Handled = self.regex1.IsMatch(args.Text)
-        except:
-            args.Handled = True
-
 
     def close(self,sender,args):
         self.Close()
@@ -315,176 +383,260 @@ except Exception as e:
 if Familie_Auswahl.start == False:
     script.exit()
 
-class Bauteil:
-    def __init__(self, elem, param, art):
-        self.elem = elem
-        self.paramname = param
-        self.art = art
-        if self.Muster_Pruefen():
-            return
-        
-        self.space = self.elem.Space[doc.GetElement(self.elem.CreatedPhaseId)]
-        if self.space is None:
-            logger.error('Kein MEP Raum für Bauteil {} gefunden!'.format(self.elem.Id.ToString()))
-            self.spaceid = None
-        else:
-            self.spaceid = self.space.Id.IntegerValue
+Liste_VSR = [el.familyname for el in AUSWAHL_RK_IS if el.checked and el.Selectedart != -1 and el.Arts[el.Selectedart] == 'VSR']
+Liste_RV = [el.familyname for el in AUSWAHL_RK_IS if el.checked and el.Selectedart != -1 and el.Arts[el.Selectedart] == 'Regelventil']
+Liste_6_Wege = [el.familyname for el in AUSWAHL_RK_IS if el.checked and el.Selectedart != -1 and el.Arts[el.Selectedart] == '6-Wege-Ventil']
+Liste_EV = [el for el in AUSWAHL_EV_IS if el.RV or el.Sechswege or el.VSR]
 
-        self.param = self.elem.LookupParameter(self.paramname)
-        if self.param:
-            self.leistung = float(self.get_value(self.param))
-        else:
-            self.leistung = 0
-            logger.error("Parameter {} konnte nicht gefunden werden".format(self.paramname))
-
-    def Muster_Pruefen(self):
-        '''prüft, ob der Bauteil sich in Musterbereich befindet.'''
-        try:
-            bb = self.elem.LookupParameter('Bearbeitungsbereich').AsValueString()
-            if bb == 'KG4xx_Musterbereich':return True
-            else:return False
-        except:return False
-    
-    def get_value(self,param):
-        return get_value(param)
-    
-class MEPRaum:
-    def __init__(self, elemid, Liste_Bauteile):
+class EndverbraucherInstance:
+    def __init__(self, elemid, family):
+        self.family = family
         self.elemid = elemid
-        self.zuluftleistungsfaktor = Familie_Auswahl.zuluftleistungfaktor
         self.elem = doc.GetElement(self.elemid)
-        self.name = self.get_value(self.elem.LookupParameter('Name'))
-        self.nummer = self.elem.Number
-        self.Liste_Bauteile = Liste_Bauteile
-        self.Leistung_ULK = 0
-        self.Leistung_DES = 0
-        self.Leistung_SON = 0
-        self.Leistung_ZUL = 0
-        self.Leistung_Gesamt = 0
-        self.kuehllast_Gesamt = 0
-        self.Bilanz = 0
-        self.Prozent = 1
-        
-        self.kuehllast_Gebaeude = self.get_value(self.elem.LookupParameter('LIN_BA_CALCULATED_COOLING_LOAD'))
-        self.Vol_zu = self.get_value(self.elem.LookupParameter('IGF_RLT_ZuluftminRaum'))
-        self.T_raum = self.get_value(self.elem.LookupParameter('LIN_BA_DESIGN_COOLING_TEMPERATURE'))
-        self.Kuehllast_Labor_Raum = self.get_value(self.elem.LookupParameter('IGF_K_KühllastLaborRaum'))
-        self.Kuehllast_Labor_PKW = self.get_value(self.elem.LookupParameter('IGF_S_KühllastLaborPWK'))
-        self.raumtyp = self.elem.LookupParameter('Bedingungstyp').AsValueString()
-
+        self.ismuster = Muster_Pruefen(self.elem)
+        if self.ismuster:return
         try:
-            self.T_zu = self.get_value(self.elem.LookupParameter('IGF_RLT_ZuluftTemperatur'))
-            if self.T_zu == '0' or self.T_zu == None:
-                try:
-                    self.T_zu = self.get_value(self.elem.LookupParameter('LIN_BA_OVERFLOW_SUPPLY_AIR_TEMPERATURE'))
-                except:
-                    self.T_zu = -273.15
-                    logger.error('kein Zulufttemperatur eingegeben in MEP-Raum {}-{}'.format(self.nummer,self.name))
-            else:
-                pass
+            self.raumnummer = self.elem.Space[doc.GetElement(self.elem.CreatedPhaseId)].Number
         except:
-            try:
-                self.T_zu = self.get_value(self.elem.LookupParameter('LIN_BA_OVERFLOW_SUPPLY_AIR_TEMPERATURE'))
-            except:
-                self.T_zu = -273.15
-                logger.error('kein Zulufttemperatur eingegeben in MEP-Raum {}-{}'.format(self.nummer,self.name))
-
-        self.Leistung_berechnen()
-
-    def get_value(self,param):
-        return get_value(param)
-
-    def Leistung_berechnen(self):
-        if len(self.Liste_Bauteile) > 0:
-            for item in self.Liste_Bauteile:
-                if item.art == 'Segel':
-                    self.Leistung_DES += item.leistung
-                elif item.art == 'Umluftkühler':
-                    self.Leistung_ULK += item.leistung
-                else:
-                    self.Leistung_SON += item.leistung
-        if self.raumtyp in ['Gekühlt','Beheizt und gekühlt']:
-            if self.Vol_zu and self.T_zu > -273.15 and self.T_raum > -273.15:
-                self.Leistung_ZUL = round(self.zuluftleistungsfaktor * (self.Vol_zu * 1000 * 1.2 * 1.006 * (self.T_raum - self.T_zu) / 3600),2)
-
-        self.Leistung_Gesamt = self.Leistung_DES + self.Leistung_ZUL + self.Leistung_ULK + self.Leistung_SON
-        self.kuehllast_Gesamt = self.kuehllast_Gebaeude + self.Kuehllast_Labor_Raum
-        self.Bilanz = self.Leistung_Gesamt - float(self.kuehllast_Gesamt)
-        if not self.kuehllast_Gesamt:
-            self.Prozent = 1
-        else:
-            self.Prozent = float(self.Leistung_Gesamt)/self.kuehllast_Gesamt
-    
-    def werte_schreiben(self):
-        """Schreibt die berechneten Werte zurück in das Modell."""
-        def wert_schreiben(param_name, wert):
-            if not wert is None:
-                param = self.elem.LookupParameter(param_name)
-                if param:
-                    if param.StorageType.ToString() == 'Double':
-                        param.SetValueString(str(wert))
-                    else:
-                        param.Set(wert)
+            self.raumnummer = ''
         
-        wert_schreiben("IGF_K_KühllastGesamt", self.kuehllast_Gesamt)
-        wert_schreiben("IGF_K_KühlleistungBilanz", self.Bilanz)
-        wert_schreiben("IGF_K_KühlleistungRaum", self.Leistung_Gesamt)
-        wert_schreiben("IGF_K_KühlBilanzProzent", self.Prozent)
+        self.vsr_geregelt = self.family.VSR
+        self.rv_geregelt = self.family.RV
+        self.sechswege_geregelt = self.family.Sechswege
 
-        wert_schreiben("IGF_K_DeS_Leistung", self.Leistung_DES)
-        wert_schreiben("IGF_RLT_ZuluftKühlleistung", self.Leistung_ZUL)
-        wert_schreiben("IGF_K_KA_Leistung", self.Leistung_SON)
-        wert_schreiben("IGF_K_ULK_Leistung", self.Leistung_ULK)
+        self.list = []
+        self.vsr = None
+        self.rv = None
+        self.wege_6 = None
+        if self.family.Selectedort != -1:
+            self.ort = self.family.Orts[self.family.Selectedort]
+        else:
+            self.ort = ''
+        
+        self.regelkomponent_ermitteln()
 
-Liste_Familie = []
-for el in Liste_Datagrid:
-    if el.checked:
-        Liste_Familie.append(el)
 
-if len(Liste_Familie) == 0:
-    UI.TaskDialog.Show('Fehler','Keine Familie ausgewählt!')
-    script.exit()
+    def reglerermitteln_VSR(self, elem):
+        '''Ermittlung des VSRs Wirkungsorte'''
+        if self.vsr:
+            return
+        if len(self.list) > 500:return 
+        id = elem.Id.IntegerValue
+        self.list.append(id)
+        cate = elem.Category.Name
+        if not cate in ['Luftkanal Systeme', 'Rohr Systeme', 'Rohrdämmung', 'Luftkanaldämmung außen','Luftkanaldämmung innen']:
+            conns = None
+            try:
+                conns = elem.MEPModel.ConnectorManager.Connectors
+            except:
+                try:
+                    conns = elem.ConnectorManager.Connectors
+                except:
+                    pass
 
-MEP_Dict = {}
+            if conns:
+                if conns.Size > 8:
+                    self.vsr = None
+                    return
+                for conn in conns:
+                    refs = conn.AllRefs
+                    for ref in refs:
+                        owner = ref.Owner
 
+                        if not owner.Id.IntegerValue in self.list:
+                            if owner.Category.Name == 'Luftkanalzubehör':
+                                faminame = owner.Symbol.FamilyName
+                                if faminame in Liste_VSR:
+                                    self.vsr = owner.Id.IntegerValue
+                                    return
+                            self.reglerermitteln_VSR(owner)
+    
+    def reglerermitteln_RV(self, elem):
+        '''Ermittlung des RVs Wirkungsorte'''
+        if self.rv:
+            return
+        if len(self.list) > 500:return 
+        elemid = elem.Id.IntegerValue
+        self.list.append(elemid)
+        cate = elem.Category.Name
+        if not cate in ['Luftkanal Systeme', 'Rohr Systeme', 'Rohrdämmung', 'Luftkanaldämmung außen','Luftkanaldämmung innen']:
+            conns = None
+            try:
+                conns = elem.MEPModel.ConnectorManager.Connectors
+            except:
+                try:
+                    conns = elem.ConnectorManager.Connectors
+                except Exception as e:
+                    print(e)
+
+            if conns:
+                for conn in conns:
+       
+                    if elemid == self.elemid.IntegerValue:
+                
+                        if self.ort == 'Rücklauf':
+                            try:
+                                if conn.PipeSystemType.ToString() != 'ReturnHydronic':
+                                    continue
+                            except:
+                                continue
+                        elif self.ort == 'Vorlauf':
+                            try:
+                                if conn.PipeSystemType.ToString() != 'SupplyHydronic':
+                                    continue
+                            except:
+                                continue
+
+                    refs = conn.AllRefs
+                    for ref in refs:
+                        owner = ref.Owner
+
+                        if not owner.Id.IntegerValue in self.list:
+                            if owner.Category.Name == 'HLS-Bauteile':
+                                return
+                            if owner.Category.Name == 'Rohrzubehör':
+                                faminame = owner.Symbol.FamilyName
+                                if faminame in Liste_RV:
+                                    self.rv = owner.Id.IntegerValue
+                                    return
+
+                            self.reglerermitteln_RV(owner)
+
+    def reglerermitteln_6_wege(self, elem):
+        '''Ermittlung des RVs Wirkungsorte'''
+        if self.wege_6:
+            return
+        if len(self.list) > 500:return 
+        elemid = elem.Id.IntegerValue
+        self.list.append(elemid)
+        cate = elem.Category.Name
+        if not cate in ['Luftkanal Systeme', 'Rohr Systeme', 'Rohrdämmung', 'Luftkanaldämmung außen','Luftkanaldämmung innen']:
+            conns = None
+            try:
+                conns = elem.MEPModel.ConnectorManager.Connectors
+            except:
+                try:
+                    conns = elem.ConnectorManager.Connectors
+                except:
+                    pass
+
+            if conns:
+                for conn in conns:
+                    if elemid == self.elemid.IntegerValue:
+                        if self.ort == 'Rücklauf':
+                            try:
+                                if conn.PipeSystemType.ToString() != 'ReturnHydronic':
+                                    continue
+                            except:
+                                continue
+                        elif self.ort == 'Vorlauf':
+                            try:
+                                if conn.PipeSystemType.ToString() != 'SupplyHydronic':
+                                    continue
+                            except:
+                                continue
+
+                    refs = conn.AllRefs
+                    for ref in refs:
+                        owner = ref.Owner
+
+                        if not owner.Id.IntegerValue in self.list:
+                            if owner.Category.Name == 'HLS-Bauteile':
+                                return
+                            if owner.Category.Name == 'Rohrzubehör':
+                                faminame = owner.Symbol.FamilyName
+                                if faminame in Liste_6_Wege:
+                                    self.wege_6 = owner.Id.IntegerValue
+                                    return
+
+                            self.reglerermitteln_6_wege(owner)
+
+    def regelkomponent_ermitteln(self):
+        if self.vsr_geregelt:
+            self.reglerermitteln_VSR(self.elem)
+        else:
+            if self.rv_geregelt:
+                self.reglerermitteln_RV(self.elem)
+            if self.sechswege_geregelt:
+                self.list = []
+                self.reglerermitteln_6_wege(self.elem)
+
+class RegelkomponentInstance:
+    def __init__(self, elemid,elems):
+        self.elems = elems
+        self.elemid = elemid
+        self.elem = doc.GetElement(DB.ElementId(self.elemid))
+        self.ismuster = Muster_Pruefen(self.elem)
+
+        if self.ismuster:return
+        try:
+            self.raumnummer = self.elem.Space[doc.GetElement(self.elem.CreatedPhaseId)].Number
+        except:
+            self.raumnummer = ''
+        self.wirkungsort = ''
+        self.get_wirkungsort()
+        
+    def get_wirkungsort(self):
+        text = ''
+        for el in self.elems:
+            if el.raumnummer:
+                text += el.raumnummer + ', '
+        if text:
+            self.wirkungsort = text[:-2]
+        else:
+            self.wirkungsort = ''
+        
+    def werte_schreiben(self):
+        try:self.elem.LookupParameter('IGF_X_Einbauort').Set(self.raumnummer)
+        except Exception as e:logger.error(e)
+        try:self.elem.LookupParameter('IGF_X_Wirkungsort').Set(self.wirkungsort)
+        except Exception as e:logger.error(e)
+
+regel_komponent_dict = {}        
 with forms.ProgressBar(title='{value}/{max_value} Kälte', cancellable=True, step=10) as pb:
-    for n, familie in enumerate(Liste_Familie):
-        pb.title='{value}/{max_value} Exemplare von ' + familie.Name + ' --- ' + str(n+1) + ' / '+ str(len(Liste_Familie)) + 'Familien'
-        for n1, elem in enumerate(familie.elems):
+    for n, familie in enumerate(Liste_EV):
+        pb.title='{value}/{max_value} Exemplare von ' + familie.familyname + ' --- ' + str(n+1) + ' / '+ str(len(Liste_EV)) + 'Familien'
+        for n1, elemid in enumerate(familie.elems):
             if pb.cancelled:
                 script.exit()
             pb.update_progress(n1 + 1, len(familie.elems))
-            bauteil = Bauteil(elem,familie.Paras[familie.Selectedindex],familie.Arts[familie.Selectedart])
-            if not bauteil.Muster_Pruefen():
-                if bauteil.spaceid:
-                    if bauteil.spaceid not in MEP_Dict.keys():
-                        MEP_Dict[bauteil.spaceid] = []
-                    MEP_Dict[bauteil.spaceid].append(bauteil)
+            bauteil = EndverbraucherInstance(elemid,familie)
+            if not bauteil.ismuster:
+                if bauteil.raumnummer:
+                    if bauteil.vsr:
+                        if bauteil.vsr not in regel_komponent_dict.keys():
+                            regel_komponent_dict[bauteil.vsr] = [bauteil]
+                        else:
+                            regel_komponent_dict[bauteil.vsr].append(bauteil)
+                    if bauteil.rv:
+                        if bauteil.rv not in regel_komponent_dict.keys():
+                            regel_komponent_dict[bauteil.rv] = [bauteil]
+                        else:
+                            regel_komponent_dict[bauteil.rv].append(bauteil)
+                    if bauteil.wege_6:
+                        if bauteil.wege_6 not in regel_komponent_dict.keys():
+                            regel_komponent_dict[bauteil.wege_6] = [bauteil]
+                        else:
+                            regel_komponent_dict[bauteil.wege_6].append(bauteil)
 
-mep_liste = []
-
-MEP_Raum_Liste = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).ToElementIds()
-
-with forms.ProgressBar(title='{value}/{max_value} MEP-Räume',cancellable=True, step=10) as pb1:
-    for n, mep in enumerate(MEP_Raum_Liste):
+Liste_RV_Final = []
+with forms.ProgressBar(title='{value}/{max_value} Regelkomponent',cancellable=True, step=10) as pb1:
+    for n, elemid in enumerate(regel_komponent_dict.keys()):
         if pb1.cancelled:
             script.exit()
-        pb1.update_progress(n + 1, len(MEP_Raum_Liste))
-        if mep.IntegerValue in MEP_Dict.keys():
-            mepraum = MEPRaum(mep,MEP_Dict[mep.IntegerValue])
-        else:
-            mepraum = MEPRaum(mep,[])
-        mep_liste.append(mepraum)
+        pb1.update_progress(n + 1, len(regel_komponent_dict.keys()))
+        rv = RegelkomponentInstance(elemid,regel_komponent_dict[elemid])
+        if not rv.ismuster:Liste_RV_Final.append(rv)
 
 # Werte zurückschreiben + Abfrage
-if forms.alert("Berechnete Werte in MEP-Räume schreiben?", ok=False, yes=True, no=True):
-    with forms.ProgressBar(title="{value}/{max_value} MEP-Räume",cancellable=True, step=10) as pb2:
+if forms.alert("Einbauort & Wirkungsort an Regelkomponenten schreiben?", ok=False, yes=True, no=True):
+    with forms.ProgressBar(title="{value}/{max_value} Regelkomponenten",cancellable=True, step=10) as pb2:
         t = DB.Transaction(doc)
-        t.Start('Heizlast vs Heizleistung')
-        for n,mepraum in enumerate(mep_liste):
+        t.Start('Regelkomponent')
+        for n,bauteil_rv in enumerate(Liste_RV_Final):
             if pb2.cancelled:
                 t.RollBack()
                 script.exit()
-            pb2.update_progress(n+1, len(mep_liste))
-            mepraum.werte_schreiben()
+            pb2.update_progress(n+1, len(Liste_RV_Final))
+            bauteil_rv.werte_schreiben()
         t.Commit()
