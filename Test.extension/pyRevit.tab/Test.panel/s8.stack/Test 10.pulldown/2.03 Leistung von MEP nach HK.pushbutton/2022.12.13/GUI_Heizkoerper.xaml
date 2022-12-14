@@ -1,0 +1,223 @@
+<Window
+       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Heizkörper"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="1100" Height="600.3">
+    <TabControl Background="SkyBlue">
+        <TabItem >
+            <TabItem.Header>
+                <TextBlock Text ="Nennleistung" FontWeight="Bold"/>
+            </TabItem.Header>
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+                <DockPanel>
+                    <TextBlock Text="Suche:" Width="50" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    <TextBox TextChanged="textchanged" VerticalAlignment="Center" Height="24" Margin="0,0,5,0" x:Name="suche0"/>
+                </DockPanel>
+
+                <ListView x:Name="lv_HK" Background="LightBlue" ItemsSource="{Binding}"  Margin="2" Grid.Row="1" >
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding info}" Value="Typ nicht verwendet">
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                            <Setter Property="ToolTip" Value="{Binding info}"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.Resources>
+                        <Style TargetType="GridViewColumnHeader">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="FontSize" Value="10"/>
+                            <Setter Property="Height" Value="18"/>
+                        </Style>
+                    </ListView.Resources>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="30">
+                                <GridViewColumn.Header>
+                                    <CheckBox x:Name="checkbox1" Checked="familiecheckedchanged" Unchecked="familiecheckedchanged" ToolTip="nur ausgewählte Familie">
+
+                                    </CheckBox>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Checked="checkedchanged" Unchecked="checkedchanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="450" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Familie and Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding Familie}"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Familiename}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="155">
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Herstellerleistung" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_H_HK-Nennleistung"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = Nennleistung}" Width="140" PreviewTextInput="textinput1" TextChanged="nlchanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="155" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Herstellerübertemperatur" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_H_HK-Nennübertemperatur, Formel: (T_Vor+T_Rück)/2 - T_Raum" />
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = Nenntemperatur}" Width="140" PreviewTextInput="textinput1" TextChanged="ntchanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="155" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Herstellerexponent" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_H_HK-Exponent, Formel: ln(Q_Herssteller1/Q_Hersteller2)/ln(Übertemp_Hersteller1/Übertemp_Hersteller2)"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = Exponent}"  Width="140" PreviewTextInput="textinput" TextChanged="nechanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="Heizlast an Heizkörper verteilen" FontSize="14" Click="OK" Height="24" Margin="10,0,10,0" />
+                    <Button Content="schließen" FontSize="14" Click="cancel" Height="24" Grid.Column="1" Margin="10,0,10,0" />
+                </Grid>
+
+            </Grid>
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Text ="Beschriftung" FontWeight="Bold"/>
+            </TabItem.Header>
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+                <DockPanel>
+                    <TextBlock Text="Suche:" Width="50" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                    <TextBox TextChanged="textchanged" VerticalAlignment="Center" Height="24" Margin="0,0,5,0" x:Name="suche1"/>
+                </DockPanel>
+
+                <ListView x:Name="lv_HK1" Background="LightBlue" ItemsSource="{Binding}"  Margin="2" Grid.Row="1" >
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Style.Triggers>
+
+                                <DataTrigger Binding="{Binding info}" Value="Typ nicht verwendet">
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                </DataTrigger>
+
+                            </Style.Triggers>
+                            <Setter Property="ToolTip" Value="{Binding info}"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.Resources>
+                        <Style TargetType="GridViewColumnHeader">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="FontSize" Value="10"/>
+                            <Setter Property="Height" Value="18"/>
+                        </Style>
+                    </ListView.Resources>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="30">
+                                <GridViewColumn.Header>
+                                    <CheckBox x:Name="checkbox2" Checked="familiecheckedchanged" Unchecked="familiecheckedchanged" ToolTip="nur ausgewählte Familie">
+
+                                    </CheckBox>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Checked="checkedchanged1" Unchecked="checkedchanged1"/>
+                                    </DataTemplate>
+
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="350" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Familie and Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding Familie}"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Familiename}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="205">
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_H_HK-Nennleistung"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = typ}" Width="190" TextChanged="typchanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="205" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Größe" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_H_HK-Nennübertemperatur" />
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = size}" Width="190" TextChanged="sizechanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Width="205" >
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="Beschreibung" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Beschreibung" />
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Path = beschreibung}" Width="190" TextChanged="beschreibungchanged"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+
+
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="Beschriftungsdaten übernehmen" FontSize="14" Click="Beschriften" Height="24" Margin="10,0,10,0" />
+                    <Button Content="schließen" FontSize="14" Click="cancel" Height="24" Grid.Column="1" Margin="10,0,10,0" />
+
+                </Grid>
+
+            </Grid>
+        </TabItem>
+    </TabControl>
+
+</Window>
