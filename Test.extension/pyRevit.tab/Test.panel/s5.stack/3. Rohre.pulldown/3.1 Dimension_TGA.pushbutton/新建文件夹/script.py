@@ -3,8 +3,9 @@ from IGF_log import getlog,getloglocal
 from pyrevit import forms,script
 import os
 from eventhandler import config,ExternalEvent,_params,Externalliste
+from System.Text.RegularExpressions import Regex
 
-__title__ = "3.2 Dimension übernehmen (Schema)"
+__title__ = "3.1 Dimension übernehmen (TGA Modell)"
 __doc__ = """
 
 Parameter: 
@@ -32,6 +33,7 @@ class AktuelleBerechnung(forms.WPFWindow):
     def __init__(self):
         self.minvalue = 0
         self.maxvalue = 100
+        self.regex2 = Regex("[^0-9]+")
         self.value = 1
         self.PB_text = ''
         self._params = _params
@@ -46,9 +48,6 @@ class AktuelleBerechnung(forms.WPFWindow):
         self.set_icon(os.path.join(os.path.dirname(__file__), 'IGF.png'))
         self.btid.ItemsSource = sorted(self._params)
         self.read_config()
-        self.maxwert = 0
-
-        
 
     def read_config(self):
         try:
@@ -59,32 +58,33 @@ class AktuelleBerechnung(forms.WPFWindow):
                 self.btid.SelectedItem = param
         except:
             pass
+            
+        try:
+            excel = self.config.excel
+            self.excel.Text = excel
+        except:
+            pass
     
     def write_config(self):
         try:
-            self.config.param = self.btid.SelectedItem
+            self.config.param = self.btid.SelectedItem.ToString()
         except:
             pass
-
+        try:
+            self.config.excel = self.excel.Text
+        except:
+            pass
         self.script.save_config()
-
+    
+    def textinpuut(self, sender, args):   
+        try:
+            args.Handled = self.regex2.IsMatch(args.Text)
+        except:
+            args.Handled = True
 
     def durchsuchen(self, sender, args):
         self.externalliste.ExecuteApp = self.externalliste.ordnersclect
         self.externallisteevent.Raise()
-
-    def excel_textchanged(self,sender,e):
-        text = sender.Text
-        if text:
-            try:
-                if text.find('IGF_X_Information ans Schema_Rohre_') != -1:
-                    zahl = text[text.find('IGF_X_Information ans Schema_Rohre_'):text.find('.xlsx')].replace('IGF_X_Information ans Schema_Rohre_','')
-                    minzahl = zahl[:zahl.find('_')]
-                    maxzahl = zahl[zahl.find('_')+1:]
-                    self.maxwert = maxzahl
-                    self.startnr.Text = minzahl
-            except Exception as e:
-                print(e)
 
     def auswaehlen(self,sender,args):
         self.externalliste.ExecuteApp = self.externalliste.select
@@ -94,15 +94,9 @@ class AktuelleBerechnung(forms.WPFWindow):
         self.externalliste.ExecuteApp = self.externalliste.nummeriren
         self.externallisteevent.Raise()
 
-    def datenschreiben(self,sender,args):
-        self.externalliste.ExecuteApp = self.externalliste.Datenschreiben
+    def exportbauteilliste(self,sender,args):
+        self.externalliste.ExecuteApp = self.externalliste.Bauteillisteexport
         self.externallisteevent.Raise()
-
-    def dimensionieren(self,sender,args):
-        self.externalliste.ExecuteApp = self.externalliste.Dimensionieren
-        self.externallisteevent.Raise()
-       
-
        
 einstellung = AktuelleBerechnung()
 einstellung.externalliste.GUI = einstellung

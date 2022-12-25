@@ -4,12 +4,9 @@ from pyrevit import script
 import os
 from IGF_forms import ExcelSuche
 from rpw import revit,DB,UI
-import clr
-clr.AddReference("Microsoft.Office.Interop.Excel")
-import Microsoft.Office.Interop.Excel as ex
-from System.Runtime.InteropServices import Marshal
+from excel._EPPlus import FileAccess,FileMode,FileStream,ExcelPackage,LicenseContext
 
-__title__ = "2.1 Infos in Bauteile schreiben"
+__title__ = "2.1 Infos an Bauteile schreiben_neu"
 __doc__ = """
 
 es gilt nur für Bauteile (Ventile, HLS-Bauteile etc.) des Schema-Modells und nur in Bauteilliste-Ansicht.
@@ -19,8 +16,8 @@ Infos in HLS-Bauteile von TGA-Modell in Schema schreiben.
 Vorgehensweise:
 
 1. Eine Bauteilliste exportieren. Vorlage siehen Sie R:\pyRevit\10_Verknüpfung\02_Schema\Vorlage Bauteilinfos
-2. Exporteirte Excel anpassen (entsprechenden Parametername in 1. Zeile anpassen und dann die 2. Zeile löschen)
-3. Entsprechende Bauteilliste in Schema-Modell öffnen und das Skript durchlaufen.
+2. Exporteirte Excel anpassen (entsprechenden Parametername in 1. Zeile anpassen)
+3. Entsprechende Bauteilliste in Schema-Modell öffnen und das Skript durchlaufen lassen.
 
 [2022.08.03]
 Version: 1.0
@@ -39,7 +36,6 @@ except:
     pass
 
 logger = script.get_logger()
-exapplication = ex.ApplicationClass()
 
 uidoc = revit.uidoc
 doc = revit.doc
@@ -75,39 +71,39 @@ except:
     script.exit()
 
 Parameter_Dict = {}
-book1 = exapplication.Workbooks.Open(ExcelWPF.Adresse.Text)
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial
+fs = FileStream(ExcelWPF.Adresse.Text,FileMode.Open,FileAccess.Read)
+book = ExcelPackage(fs)
 Parameter_Liste = []
 Bauteilnummer = ''
 try:
-    for sheet in book1.Worksheets:
-        rows = sheet.UsedRange.Rows.Count
-        cols = sheet.UsedRange.Columns.Count
-        Bauteilnummer = sheet.Cells[1, 1].Value2
+    for sheet in book.Workbook.Worksheets:
+        rows = sheet.Dimension.End.Row
+        cols = sheet.Dimension.End.Column
+        Bauteilnummer = sheet.Cells[1, 1].Value
         for col in range(2, cols + 1):
-            para = sheet.Cells[1, col].Value2
+            para = sheet.Cells[1, col].Value
             if para == '' or  para == None:
                 break
             Parameter_Liste.append(para)
 
         for row in range(2, rows + 1):
             liste = []
-            nummer = sheet.Cells[row, 1].Value2
+            nummer = sheet.Cells[row, 1].Value
             if nummer == '' or  nummer == None:
                 continue
             for col in range(2, len(Parameter_Liste) + 2):
-                value = sheet.Cells[row, col].Value2
+                value = sheet.Cells[row, col].Value
                 liste.append(value)
             Parameter_Dict[nummer] = liste
 
-    book1.Save()
-    book1.Close()
+    book.Save()
+    book.Dispose()
 
 except Exception as e:
     logger.error(e)
-    Marshal.FinalReleaseComObject(sheet)
-    Marshal.FinalReleaseComObject(book1)
-    exapplication.Quit()
-    Marshal.FinalReleaseComObject(exapplication)
+    book.Save()
+    book.Dispose()
     script.exit()
 
 
@@ -129,7 +125,7 @@ for el in Parameter_Dict.keys():
     if el not in dict_neu.keys():
         logger.error('Bauteil {} existiert nur in TGA-Modell. Bitte einmal prüfen, ob der Bauteil in Schema-Modell gezeichnet wird.'.format(el))
 
-t =DB.Transaction(doc,'Bauteilnummer')
+t = DB.Transaction(doc,'Bauteilnummer')
 t.Start()
 for el in Bauteile:
     bauteil = el.LookupParameter(Bauteilnummer)
@@ -145,6 +141,10 @@ for el in Bauteile:
                 if param.StorageType.ToString() == 'String':
                     if param.IsReadOnly == False:param.Set(str(Parameter_Dict[Id][n]))
                     else:print('Parameter {} von Element {} ist schreibgeschützt.'.format(para,Id))
+                elif param.StorageType.ToString() == 'Integer':
+                    if param.IsReadOnly == False:param.Set(int(round(float(Parameter_Dict[Id][n]))))
+                    else:print('Parameter {} von Element {} ist schreibgeschützt.'.format(para,Id))
+                
                 else:
                     if param.IsReadOnly == False:param.SetValueString(str(Parameter_Dict[Id][n]))
                     else:print('Parameter {} von Element {} ist schreibgeschützt.'.format(para,Id))

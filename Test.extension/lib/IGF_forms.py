@@ -4,6 +4,7 @@ from System.Windows import Visibility
 import os
 from System.Windows.Forms import OpenFileDialog,DialogResult, SaveFileDialog
 import xlsxwriter
+import sys
 XAML_FILES_DIR = os.path.dirname(__file__)
 
 class abfrage(forms.WPFWindow):
@@ -62,6 +63,10 @@ class ExcelSuche(forms.WPFWindow):
 
     def ok(self, sender, args):
         self.Close()
+    def abbrechen(self, sender, args):
+        self.Close()
+        sys.exit()
+        
 
 class Texteingeben(forms.WPFWindow):
     def __init__(self,text = None,label = None):

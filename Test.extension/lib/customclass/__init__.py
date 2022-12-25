@@ -14,9 +14,3 @@ class RFIItem(RMitem):
         self.doc = doc
         self.elem = doc.GetElement(self.elemid)
         self.family = self.elem.Symbol.FamilyName
-        
-class RFTItem(RMitem):
-    def __init__(self,name,elemid,doc):
-        RMitem.__init__(self,name,elemid)
-        self.doc = doc
-        self.elem = doc.GetElement(self.elemid)

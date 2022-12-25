@@ -4,12 +4,10 @@ from pyrevit import script
 import os
 from IGF_forms import ExcelSuche
 from rpw import revit,DB,UI
-import clr
-clr.AddReference("Microsoft.Office.Interop.Excel")
-import Microsoft.Office.Interop.Excel as ex
-from System.Runtime.InteropServices import Marshal
+from excel._EPPlus import FileAccess,FileMode,FileStream,ExcelPackage,LicenseContext
 
-__title__ = "2.0 Id in HLS-Bauteile schreiben (nur HLS-Bauteile)"
+
+__title__ = "2.0 BauteilId übertragen nach Einbauort_neu"
 __doc__ = """
 
 es gilt nur für HLS-Bauteile des Schema-Modells und nur in Bauteilliste-Ansicht.
@@ -20,7 +18,7 @@ Vorgehensweise:
 
 1. Ein HLS-Bauteile-Bauteilliste exportieren. Vorlage siehen Sie R:\pyRevit\10_Verknüpfung\02_Schema\HLS-Bauteile Nummer
 2. Exporteirte Excel anpassen (entsprechenden Parametername in 1. Zeile anpassen und dann die 2. Zeile löschen)
-3. Entsprechende Bauteilliste in Schema-Modell öffnen und das Skript durchlaufen.
+3. Entsprechende Bauteilliste in Schema-Modell öffnen und das Skript durchlaufen lassen.
 
 [2022.08.02]
 Version: 1.0
@@ -39,7 +37,6 @@ except:
     pass
 
 logger = script.get_logger()
-exapplication = ex.ApplicationClass()
 
 uidoc = revit.uidoc
 doc = revit.doc
@@ -75,31 +72,31 @@ except:
     script.exit()
 
 Parameter_Dict = {}
-book1 = exapplication.Workbooks.Open(ExcelWPF.Adresse.Text)
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial
+fs = FileStream(ExcelWPF.Adresse.Text,FileMode.Open,FileAccess.Read)
+book = ExcelPackage(fs)
 Parameter = ''
 try:
-    for sheet in book1.Worksheets:
-        rows = sheet.UsedRange.Rows.Count
-        Parameter = sheet.Cells[1, 2].Value2
+    for sheet in book.Workbook.Worksheets:
+        rows = sheet.Dimension.End.Row
+        Parameter = sheet.Cells[1, 2].Value
 
         for row in range(2, rows + 1):
-            nummer = sheet.Cells[row, 1].Value2
-            Id = sheet.Cells[row, 2].Value2
+            nummer = sheet.Cells[row, 1].Value
+            Id = sheet.Cells[row, 2].Value
             if nummer == '' or  nummer == None:
                 continue
             if nummer not in Parameter_Dict.keys():
                 Parameter_Dict[nummer] = []
             Parameter_Dict[nummer].append(Id)
 
-    book1.Save()
-    book1.Close()
+    book.Save()
+    book.Dispose()
 
 except Exception as e:
     logger.error(e)
-    Marshal.FinalReleaseComObject(sheet)
-    Marshal.FinalReleaseComObject(book1)
-    exapplication.Quit()
-    Marshal.FinalReleaseComObject(exapplication)
+    book.Save()
+    book.Dispose()
     script.exit()
 
 
@@ -119,7 +116,7 @@ for el in Parameter_Dict.keys():
     if el not in dict_neu.keys():
         logger.error('Raum {} existiert nur in TGA-Modell. Bitte einmal prüfen, ob der Raum in Schema-Modell gezeichnet wird.'.format(el))
 
-t =DB.Transaction(doc,'Bauteilnummer')
+t = DB.Transaction(doc,'Bauteilnummer')
 t.Start()
 for el in dict_neu.keys():
     if el in Parameter_Dict.keys():
@@ -134,7 +131,7 @@ for el in dict_neu.keys():
             else:
                 logger.warning("Mehr als 1 Bauteil in MEP-Raum {} eingesetzt. Bitte Bauteilnummer in die Bauteile in disen Raum manuell eintragen".format(el))
         else:
-            logger.error('Anzahl der Bauteile für Raum {} stimmt nicht überein. Anzahl in TGA-Modell: {}; in Schema: {}'.format(el,len(Parameter_Dict[el]),len(dict_neu[el])))
+            logger.error('Anzahl der Bauteile für Raum {} passt nicht. Anzahl in TGA-Modell: {}; in Schema: {}'.format(el,len(Parameter_Dict[el]),len(dict_neu[el])))
     else:
         logger.error('Raum {} existiert nur in Schema-Modell. Bitte einmal prüfen, ob die Raumnummer in Schema-Modell richtig eingetragen wird.'.format(el))
 t.Commit()

@@ -5,24 +5,37 @@ from time import strftime, localtime
 from getpass import getuser
 import Autodesk.Revit.DB as DB
 
-import clr
-clr.AddReference("Microsoft.Office.Interop.Excel")
-from Microsoft.Office.Interop.Excel import ApplicationClass
-from System.Runtime.InteropServices import Marshal
-
 doc = __revit__.ActiveUIDocument.Document
+revitversion = __revit__.Application.VersionNumber
+
+if revitversion == '2020':
+    import excel._NPOI_2020 as _NPOI
+
+else:
+    import excel._NPOI_2022 as _NPOI
+
+def get_cell(sheet,row,column):
+    Row = sheet.CreateRow(row)
+    cell = Row.CreateCell(column)
+    return cell
 
 def getlog(Programmname):
-    exapp = ApplicationClass()
-    exapp.Visible = False
-    path = r'R:\pyRevit\xx_Skripte\Historie.xlsx'
+    path = r'R:\pyRevit\xx_SkripteLogs\Historie.xlsx'
     if not os.path.isfile(path):
-        workbook = xlsxwriter.Workbook(path)
-        worksheet = workbook.add_worksheet()
-        ueberschrift = ['Zeit', 'Benutzername', 'Name', 'Number', 'ClientName', 'Cloud-Modell',  "Programm"]
-        for col in range(len(ueberschrift)):
-            worksheet.write(0, col, ueberschrift[col])
-        workbook.close()
+        try:
+            workbook = xlsxwriter.Workbook(path)
+            worksheet = workbook.add_worksheet()
+            ueberschrift = ['Zeit', 'Benutzername', 'Name', 'Number', 'ClientName', 'Cloud-Modell',  "Programm"]
+            for col in range(len(ueberschrift)):
+                worksheet.write(0, col, ueberschrift[col])
+            workbook.close()
+        except:
+            try:getloglocal(Programmname)
+            except:pass
+    
+    fs = _NPOI.FileStream(path,_NPOI.FileMode.Open,_NPOI.FileAccess.Read)
+    book1 = _NPOI.np.XSSF.UserModel.XSSFWorkbook(fs)
+    sheet = book1.GetSheetAt(0)
 
     benutzername = getuser()
     zeit = strftime("%d.%m.%Y-%H:%M", localtime())
@@ -31,27 +44,15 @@ def getlog(Programmname):
     ClientName = doc.ProjectInformation.ClientName
     cloud = str(doc.IsModelInCloud)
     logdaten = [zeit, benutzername, name, number, ClientName,cloud, Programmname]
-    book = exapp.Workbooks.Open(path)
-    sheet = book.Worksheets[1]
-    rows = sheet.UsedRange.Rows.Count
-    try:
-        rows += 1
-        for col in range(1,len(logdaten)+1):
-            sheet.Cells[rows,col] = logdaten[col-1]
-        
-        book.Save()
-        book.Close()
-        Marshal.FinalReleaseComObject(sheet)
-        Marshal.FinalReleaseComObject(book)
-        exapp.Quit()
-        Marshal.FinalReleaseComObject(exapp)
-    except Exception as e:
-        book.Save()
-        book.Close()
-        Marshal.FinalReleaseComObject(sheet)
-        Marshal.FinalReleaseComObject(book)
-        exapp.Quit()
-        Marshal.FinalReleaseComObject(exapp)
+    rows = sheet.LastRowNum
+    row = sheet.CreateRow(rows+1)
+    for col in range(len(logdaten)):
+        cell = row.CreateCell(col)
+        cell.SetCellValue(logdaten[col])
+    fs = _NPOI.FileStream(path, _NPOI.FileMode.Create, _NPOI.FileAccess.Write)
+    book1.Write(fs)
+    book1.Close()
+    fs.Close()
 
 
 def getloglocal(Programmname):
