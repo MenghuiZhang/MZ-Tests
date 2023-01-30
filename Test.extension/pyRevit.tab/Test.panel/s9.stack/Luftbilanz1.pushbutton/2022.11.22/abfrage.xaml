@@ -1,0 +1,28 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Afrage" Height="110" Width="200" WindowStartupLocation="CenterScreen" WindowStyle="None" MouseLeftButtonDown="movewindow">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.ColumnSpan="2">
+            <TextBlock x:Name="maininfo" Text="Luftmennge in akt. Raum gleichmäßig verteilen?" TextWrapping="Wrap" Margin="5,5,5,5" HorizontalAlignment="Stretch" FontWeight="Bold"></TextBlock>
+            <CheckBox x:Name="bestaetigen" Click="checkedchanged" VerticalAlignment="Center">
+                <TextBlock Text="Beatätigen" FontWeight="Bold" TextDecorations="Underline" FontSize="14"/>
+            </CheckBox>
+        </StackPanel>
+        <Button Grid.Row="2" Height="20" Width="50" Content="Ja" Click="yes" x:Name="ja"/>
+        <Button Grid.Row="2" Grid.Column="1" Width="50" Height="20" Content="Nein" Click="no"/>
+
+
+
+
+    </Grid>
+</Window>
