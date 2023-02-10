@@ -80,7 +80,6 @@ class VSRHerstellerDaten:
             else:
                 self.dimension = ''
 
-
 class Luftauslassfuerexport:
     def __init__(self,art = '',slavevon = '',raumnummer = '',auslassart = '',nutzung = '', Luftmengenmin = '',Luftmengenmax = '',Luftmengennacht = '',Luftmengentnacht = '',bemerkung = '',anmerkung = '',):
         self.art = art
@@ -171,7 +170,6 @@ if os.path.exists(datenbankadresse):
         book.Save()
         book.Dispose()
         fs.Dispose()
-
 
 class Raumdaten:
     def __init__(self,raum,row = 0):
@@ -2022,7 +2020,7 @@ class VSR(FamilieExemplar):
                 self.anmerkung = ''
         else:self.anmerkung = 'kein passender Typ gefunden'
             
-    def vsrauswaelten(self):
+    def get_vsrListe(self):
         self.VSR_Hersteller = None
         self.Vmax = 0
         self.Vmin = 0
@@ -2066,7 +2064,7 @@ class VSR(FamilieExemplar):
                             for dimension in sorted(listetemp_vsr.keys()):
                                 for vsr_temp in listetemp_vsr[dimension]:
                                     if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
-                                        if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                        
                                         self.Liste_Herstellertyp.append(vsr_temp.typ)
                                         
                         else:
@@ -2074,7 +2072,7 @@ class VSR(FamilieExemplar):
                                 for min_a in sorted(listetemp_vsr[max_a].keys()):
                                     for vsr_temp in listetemp_vsr[max_a][min_a]:
                                         if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
-                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            
                                             self.Liste_Herstellertyp.append(vsr_temp.typ)
         elif self.art in ['RAB','LAB','24h']:
             if self.ispps:
@@ -2086,14 +2084,14 @@ class VSR(FamilieExemplar):
                             for dimension in sorted(listetemp_vsr.keys()):
                                 for vsr_temp in listetemp_vsr[dimension]:
                                     if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                        if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                        
                                         self.Liste_Herstellertyp.append(vsr_temp.typ)
                         else:
                             for max_a in sorted(listetemp_vsr.keys()):
                                 for min_a in sorted(listetemp_vsr[max_a].keys()):
                                     for vsr_temp in listetemp_vsr[max_a][min_a]:
                                         if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
-                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            
                                             self.Liste_Herstellertyp.append(vsr_temp.typ)
 
             else:
@@ -2106,19 +2104,34 @@ class VSR(FamilieExemplar):
                                 for dimension in sorted(listetemp_vsr.keys()):
                                     for vsr_temp in listetemp_vsr[dimension]:
                                         if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
-                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            
                                             self.Liste_Herstellertyp.append(vsr_temp.typ)
                             else:
                                 for max_a in sorted(listetemp_vsr.keys()):
                                     for min_a in sorted(listetemp_vsr[max_a].keys()):
                                         for vsr_temp in listetemp_vsr[max_a][min_a]:
                                             if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
-                                                if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                                
                                                 self.Liste_Herstellertyp.append(vsr_temp.typ)
+        
+    def vsrauswaelten(self):
+        if len(self.Liste_Herstellertyp) > 0:
+            if self.size.find('DN') != -1:
+                self.VSR_Hersteller = DICT_DatenBank[self.Liste_Herstellertyp[0]]
+            else:
+                temp_dict = {}
+                for typ in self.Liste_Herstellertyp:
+                    item_vsr = DICT_DatenBank[typ]
+                    temp_dict[item_vsr.dimension] = item_vsr
+                if self.size in temp_dict.keys():
+                    self.VSR_Hersteller = temp_dict[self.size]
+                else:
+                    self.VSR_Hersteller = DICT_DatenBank[self.Liste_Herstellertyp[0]]
+
         if self.VSR_Hersteller:
             if self.VSR_Hersteller.typ in self.Liste_Herstellertyp:
                 self.Herstellertypindex = self.Liste_Herstellertyp.index(self.VSR_Hersteller.typ)
-        
+
     def set_up(self):
         FamilieExemplar.set_up(self)
         self.istkvr()
@@ -3746,6 +3759,61 @@ class ExtenalEventListe(IExternalEventHandler):
         worksheet.set_footer('&C&p / &N')
         worksheet.set_header(header2, {'image_left': IGF_LOGO})
         e.close() 
+    
+    def ExportLuftmengenInSchacht(self,uiapp):
+        temp = RaumluftbilanzExport(self.GUI.path,self.GUI.ListeMEP)
+        temp.ShowDialog()
+        if not temp.result:
+            try:temp.Dispose()
+            except:pass
+            return
+        else:
+            self.GUI.path = temp.path
+        try:temp.Dispose()
+        except:pass
+        Liste = []
+        for el in self.GUI.ListeMEP:
+            if el.checked:
+                Liste.append(self.GUI.mepraum_liste[el.name])
+        path = self.GUI.path + '\\Luftmengen_Schacht.xlsx'
+        e = xlsxwriter.Workbook(path)
+        worksheet = e.add_worksheet()
+        
+        if len(Liste) > 0:
+            _dict = self.luftmengen_summieren(Liste)
+            raum = Liste[0]
+            cell_format = e.add_format()
+            cell_format.set_num_format('''0 "m³/h"''')
+            for n,schacht in enumerate(sorted(raum.liste_schacht)):
+                worksheet.merge_range(0,3*n+1,0,3*n+3,schacht)
+                worksheet.write(1, 3*n+1, 'Raumzuluft')
+                worksheet.write(1, 3*n+2, 'Raumabluft')
+                worksheet.write(1, 3*n+3, '24h-Abluft')
+            for n_ebene,ebene in enumerate(sorted(_dict.keys())):
+                worksheet.write(n_ebene+2,0, ebene)
+                for n_schahct,schacht in enumerate(sorted(_dict[ebene].keys())):
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+1, _dict[ebene][schacht][0],cell_format)
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+2, _dict[ebene][schacht][1],cell_format)
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+3, _dict[ebene][schacht][2],cell_format)
+        e.close() 
+    
+    def luftmengen_summieren(self,Liste_raum):
+        _dict = {}
+        for raum in Liste_raum:
+            if raum.ebene not in _dict.keys():
+                _dict[raum.ebene] = {}
+                for schacht in raum.liste_schacht:
+                    _dict[raum.ebene][schacht] = [0,0,0]
+            if raum.rzu_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.rzu_Schacht.nr][0] += raum.rzu_Schacht.menge
+            if raum.rab_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.rab_Schacht.nr][1] += raum.rab_Schacht.menge
+            if raum.lab_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.lab_Schacht.nr][1] += raum.lab_Schacht.menge
+            if raum._24h_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum._24h_Schacht.nr][2] += raum._24h_Schacht.menge
+        return _dict
+            
 
     def vsranpassen(self,uiapp):
         self.name = 'VSR anpassen' 

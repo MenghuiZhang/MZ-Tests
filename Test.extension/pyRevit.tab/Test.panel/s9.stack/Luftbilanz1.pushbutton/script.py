@@ -1158,6 +1158,12 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.externalevent.Raise()
         except Exception as e:print(e)
     
+    def exportieren_schacht(self, sender, args):
+        try:
+            self.externaleventliste.Executeapp = self.externaleventliste.ExportLuftmengenInSchacht
+            self.externalevent.Raise()
+        except Exception as e:print(e)
+    
     def raumanzeigen(self, sender, args):
         try:
             self.externaleventliste.Executeapp = self.externaleventliste.RaumAnzeigen
