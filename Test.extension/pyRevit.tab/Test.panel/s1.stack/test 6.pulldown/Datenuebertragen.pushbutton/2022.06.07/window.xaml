@@ -1,7 +1,7 @@
 <Window 
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Height="530" Width="800" Background="SkyBlue" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" MouseLeftButtonDown="movewindow">
+        Height="480" Width="800" Background="SkyBlue" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" MouseLeftButtonDown="movewindow">
     <Window.Resources>
         <Style x:Key="mybutton" TargetType="Button">
             <Setter Property="Background" Value="#39385D "/>
@@ -171,10 +171,10 @@
                         </GroupBox.Header>
                         <StackPanel>
                             <StackPanel>
-                                <RadioButton Content="Nach Ansicht" x:Name="ansicht" IsChecked="True" Click="changetoansichtmass" Margin="0,0,0,2"/>
+                                <RadioButton Content="Nach Ansicht" x:Name="ansicht" Height="20" IsChecked="True" Click="changetoansichtmass" Margin="0,0,0,2"/>
                                 <DockPanel>
-                                    <RadioButton Content="Maßstabswert 1:" x:Name="manuell" VerticalAlignment="Center" Click="changetomanuellMass"/>
-                                    <TextBox InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" x:Name="Massstabmanuell" Margin="5,0,10,0" Height="22" VerticalAlignment="Center" Width="100" HorizontalAlignment="Right" Text="100" IsEnabled="False"/>
+                                    <RadioButton Content="Maßstabswert 1:" x:Name="manuell" Height="20" VerticalAlignment="Center" Click="changetomanuellMass"/>
+                                    <TextBox InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" x:Name="Massstabmanuell" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Width="100" HorizontalAlignment="Right" Text="100" IsEnabled="False"/>
                                 </DockPanel>
                             </StackPanel>
                         </StackPanel>
@@ -187,15 +187,16 @@
                             <StackPanel>
                                 <DockPanel>
                                     <CheckBox Content="äußere Linie: " x:Name="auline" Height="20" VerticalAlignment="Center" IsChecked="True"/>
-                                    <ComboBox x:Name="linie" Margin="5,0,10,2" Height="22" VerticalAlignment="Center" Width="120" HorizontalAlignment="Right" SelectedIndex="0"/>
+                                    <ComboBox x:Name="linie" Margin="5,0,10,2" Height="20" VerticalAlignment="Center" Width="120" HorizontalAlignment="Right" SelectedIndex="0"/>
                                 </DockPanel>
                                 <DockPanel>
                                     <CheckBox Content="innere Linie: " x:Name="inline" Height="20" VerticalAlignment="Center" IsChecked="True"/>
-                                    <ComboBox x:Name="linie2" Margin="5,0,10,0" Height="22" VerticalAlignment="Center" Width="120" HorizontalAlignment="Right" SelectedIndex="0"/>
+                                    <ComboBox x:Name="linie2" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Width="120" HorizontalAlignment="Right" SelectedIndex="0"/>
                                 </DockPanel>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
+
                 </StackPanel>
                 <StackPanel Margin="20,0,0,0" HorizontalAlignment="Left">
                     <GroupBox Width="210">
@@ -205,17 +206,17 @@
                         <StackPanel>
                             <GroupBox Header="Ansichtsrichtung">
                                 <StackPanel Margin="0">
-                                    <RadioButton Content="Nach Ansicht" x:Name="comansicht" IsChecked="True" Click="changetoansichtkom" Margin="0"/>
+                                    <RadioButton Content="Nach Ansicht" x:Name="comansicht" Height="20" IsChecked="True" Click="changetoansichtkom" Margin="0"/>
                                     <DockPanel>
-                                        <RadioButton Content="Manuell" x:Name="commanuell" VerticalAlignment="Center" Click="changetomanuellkom"/>
-                                        <ComboBox x:Name="comauswahlmanuell" Margin="5,0,10,0" Height="22" VerticalAlignment="Center" Width="100" HorizontalAlignment="Right" IsEnabled="False"/>
+                                        <RadioButton Content="Manuell" x:Name="commanuell" Height="20" VerticalAlignment="Center" Click="changetomanuellkom"/>
+                                        <ComboBox x:Name="comauswahlmanuell" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Width="100" HorizontalAlignment="Right" IsEnabled="False"/>
                                     </DockPanel>
                                 </StackPanel>
 
                             </GroupBox>
 
                             <GroupBox Header="Bauteile" Margin="0,2,0,0">
-                                <StackPanel Margin="0,2,0,0">
+                                <StackPanel>
                                     <RadioButton x:Name="family" Content=" Familie" ToolTip="Für jede Familie ein Legendensymbol erstellen." IsChecked="True"></RadioButton>
                                     <RadioButton x:Name="typ" Content=" Familietyp" ToolTip="Für jeden Typ ein Legendensymbol erstellen."></RadioButton>
                                 </StackPanel>
@@ -227,17 +228,17 @@
                 <GroupBox Margin="20,0,0,0" Width="270
                           ">
                     <GroupBox.Header>
-                        <TextBlock Text="Beschreibung" FontWeight="Bold"/>
+                        <TextBlock Text="Text" FontWeight="Bold"/>
                     </GroupBox.Header>
                     <StackPanel>
                         <StackPanel>
                             <DockPanel Margin="5,0,0,0">
                                 <TextBlock Text="Textstyp:" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="tn" Margin="5,0,10,2" Height="22" VerticalAlignment="Center" Width="160" HorizontalAlignment="Right" SelectedIndex="0"/>
+                                <ComboBox x:Name="tn" Margin="5,0,10,2" Height="20" VerticalAlignment="Center" Width="160" HorizontalAlignment="Right" SelectedIndex="0"/>
                             </DockPanel>
                             <DockPanel Margin="5,0,0,0">
-                                <TextBlock Text="Parameter:" Height="20" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="beschreibung" IsEditable="True" Margin="5,0,10,0" Height="22" VerticalAlignment="Center" Width="160" HorizontalAlignment="Right" Text="Familie"/>
+                                <TextBlock Text="Beschreibung:" Height="20" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="beschreibung" IsEditable="True" Margin="5,0,10,0" Height="20" VerticalAlignment="Center" Width="160" HorizontalAlignment="Right" Text="Familie"/>
                             </DockPanel>
                             <TextBlock Text="Vorschlag für Beschreibung: Familie, Typ, Familie and Typ..." TextWrapping="Wrap" Padding="5,3,0,0" Foreground="#FFB20A0A"/>
                             <TextBlock Text="Hinweis: Die Beschreibung muss Typparemeter sein." TextWrapping="Wrap" Padding="5,3,0,0" Foreground="#FFB20A0A"/>
@@ -245,19 +246,6 @@
                     </StackPanel>
                 </GroupBox>
             </DockPanel>
-            <GroupBox Margin="20,5,20,0">
-                <GroupBox.Header>
-                    <TextBlock Text="Überschrift" FontWeight="Bold"/>
-                </GroupBox.Header>
-                <DockPanel>
-                    <CheckBox x:Name="tit" Content="Überschrift erstellen?" VerticalAlignment="Center" Margin="5,0,40,0" Click="titelchange"/>
-                    <TextBlock Text="Texttyp:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <ComboBox x:Name="texttyp_tit" Width="180" Margin="10,0" IsEnabled="False" SelectedIndex="0"/>
-                    <TextBlock Text="Übershcrift:" Margin="30,0,5,0" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="ueberauswahl" IsEditable="True" Margin="10,0,0,0" Width="180" HorizontalAlignment="Left" IsEnabled="False" SelectedIndex="0"/>
-                </DockPanel>
-
-            </GroupBox>
             <Button Content=" Legende erstellen" Margin="0,10,0,0" Width="600" Style="{StaticResource mybutton1}" Click="start"/>
 
         </StackPanel>

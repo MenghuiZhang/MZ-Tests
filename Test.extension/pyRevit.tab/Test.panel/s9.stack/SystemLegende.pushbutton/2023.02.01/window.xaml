@@ -1,0 +1,269 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Height="800" Width="800" Background="SkyBlue" WindowStyle="None" ResizeMode="CanResize" WindowStartupLocation="CenterScreen" MouseLeftButtonDown="movewindow">
+    <Window.Resources>
+        <Style x:Key="mybutton" TargetType="Button">
+            <Setter Property="Background" Value="#39385D "/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="1" Background="{TemplateBinding Background}">
+                            <ContentPresenter  VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFFF6464"/>
+                </Trigger>
+            </Style.Triggers>
+
+
+
+        </Style>
+        <Style x:Key="myTextbox" TargetType="TextBox">
+            <Setter Property="ItemsControl.Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border CornerRadius="3" Background="{TemplateBinding Background}">
+                            <ContentPresenter  VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+        </Style>
+        <Style x:Key="mybutton1" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="5" Background="{TemplateBinding Background}">
+                            <ContentPresenter  VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFFF6464"/>
+                </Trigger>
+            </Style.Triggers>
+
+
+
+        </Style>
+        <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3"/>
+        <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA"/>
+        <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5"/>
+        <Style x:Key="TextBoxStyle1" TargetType="{x:Type TextBox}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource TextBox.Static.Border}"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="KeyboardNavigation.TabNavigation" Value="None"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="AllowDrop" Value="true"/>
+            <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True" CornerRadius="5">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsInactiveSelectionHighlightEnabled" Value="true"/>
+                        <Condition Property="IsSelectionActive" Value="false"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="SelectionBrush" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}"/>
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <!-->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Header-->
+        <StackPanel Background="White" Grid.ColumnSpan="2" Height="22" VerticalAlignment="Top"></StackPanel>
+        <Border Margin="20,2,0,0" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Width="29" BorderBrush="#FFA40404" BorderThickness="2">
+            <TextBlock Height="20" Text="IGF" FontWeight="Bold" TextAlignment="Center" Grid.ColumnSpan="2" VerticalAlignment="Center"  HorizontalAlignment="Left" Foreground="#FFA40404" FontFamily="Lucida Sans Unicode" Margin="3,1,0,0"/>
+        </Border>
+
+        <TextBlock Height="20" Text=" Systemlegende erstellen" FontWeight="Bold" TextAlignment="Center" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="0,1,0,0"></TextBlock>
+        <Button Height="16" Style="{StaticResource mybutton}" FontWeight="Bold" HorizontalAlignment="Right" Width="16" Grid.Column="1" Margin="0,3,10,0" VerticalAlignment="Top" Content="X" Click="close"/>
+        <!-->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>View-->
+        <Grid Margin="0,22,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition/>
+                <RowDefinition Height="6"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="200"/>
+                <RowDefinition Height="30"/>
+
+            </Grid.RowDefinitions>
+            <DockPanel Margin="20,5,20,0">
+                <TextBlock Text="Filter:" Margin="0,0,20,0" VerticalAlignment="Center"/>
+                <TextBox TextChanged="suchchanged" x:Name="filter" Style="{DynamicResource TextBoxStyle1}" IsEnabled="True" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+            </DockPanel>
+            <Grid Margin="20,5,0,0" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <DockPanel>
+                    <CheckBox x:Name="grundcheck" IsChecked="True" Content="Grundriss" Margin="0,0,0,0" Click="checkedchanged" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="schnittcheck" IsChecked="True" Content="Schnitt" Margin="20,0,0,0" Click="checkedchanged" VerticalAlignment="Center"/>
+                </DockPanel>
+
+                <TextBlock Text="System:" HorizontalAlignment="Left" FontWeight="Bold" VerticalAlignment="Center" Grid.Column="2" Margin="10,0,0,0"/>
+            </Grid>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <DataGrid x:Name="LB_Views" Margin="20,5,0,0" Background="SkyBlue"  HorizontalAlignment="Left">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding checked, UpdateSourceTrigger=PropertyChanged}" Click="viewscheckedchanged" Width="30" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Ansicht" Binding="{Binding name}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <DataGrid x:Name="LB_System" Margin="10,5,20,0" Background="SkyBlue"  HorizontalAlignment="Right" Grid.Column="1" >
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding checked, UpdateSourceTrigger=PropertyChanged}" Click="systemcheckedchanged" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Systemtyp" Binding="{Binding name}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <Rectangle Height="2" Stroke="Black" Margin="20,0,20,0" VerticalAlignment="Center" Grid.Row="3"/>
+            <TextBlock Text="Einstellungen:" VerticalAlignment="Center" Height="20" Margin="20,0,0,0" Width="100" HorizontalAlignment="Left" FontWeight="Bold" Grid.Row="4"/>
+            <Grid Margin="20,0,20,0" Grid.Row="5" >
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <GroupBox>
+                    <GroupBox.Header>
+                        <TextBlock Text="Modus" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <RadioButton Content="für jede Ansicht eine enzelne Legende erstellen" x:Name="einzeln" VerticalContentAlignment="Center"/>
+                        <RadioButton Grid.Column="1" Content="nur eine gemeinsame Legende erstellen" IsChecked="True" x:Name="gesamt" VerticalContentAlignment="Center"/>
+
+
+
+
+                    </Grid>
+
+                </GroupBox>
+                <GroupBox Grid.Row="1">
+                    <GroupBox.Header>
+                        <TextBlock Text="Form" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <DockPanel>
+                            <CheckBox Content="außen Kanten: " x:Name="auline" Height="20" VerticalAlignment="Center" IsChecked="True" Width="100" VerticalContentAlignment="Center" HorizontalAlignment="Center"/>
+                            <ComboBox x:Name="linie" Height="22" VerticalAlignment="Center" HorizontalAlignment="Stretch" SelectedIndex="0" Margin="0,0,10,0"/>
+                        </DockPanel>
+                        <DockPanel Grid.Column="1">
+                            <CheckBox Content="mittel Linie: " x:Name="inline" Height="20" VerticalAlignment="Center" IsChecked="True" Width="90" VerticalContentAlignment="Center"/>
+                            <ComboBox x:Name="linie2" Height="22" VerticalAlignment="Center" HorizontalAlignment="Stretch" SelectedIndex="0"/>
+                        </DockPanel>
+                        <DockPanel Grid.Column="2" >
+                            <TextBlock Text="Texttyp:" VerticalAlignment="Center" Width="90" HorizontalAlignment="Stretch" TextAlignment="Center"/>
+                            <ComboBox x:Name="tn" Height="22" VerticalAlignment="Center" Width="160" HorizontalAlignment="Stretch" SelectedIndex="0"/>
+                        </DockPanel>
+
+                    </Grid>
+                </GroupBox>
+                <GroupBox Grid.Row="2">
+                    <GroupBox.Header>
+                        <TextBlock Text="Aufbau" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <DockPanel>
+                            <RadioButton Content="Systemweise Getrennt" x:Name="systemgetrennt" Height="20" VerticalAlignment="Center" IsChecked="True" VerticalContentAlignment="Center" HorizontalAlignment="Left" Margin="30,0,0,0"/>
+
+                        </DockPanel>
+                        <DockPanel Grid.Column="1">
+                            <RadioButton Content="Gewerkweise Getrennt" Height="20" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left" Margin="30,0,0,0"/>
+
+                        </DockPanel>
+
+
+                    </Grid>
+                </GroupBox>
+                <GroupBox Grid.Row="3">
+                    <GroupBox.Header>
+                        <TextBlock Text="Überschrift" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="tit" Content="Überschrift erstellen?" VerticalAlignment="Center" Click="titelchange"/>
+                        <DockPanel Grid.Column="1">
+                            <TextBlock Text="Texttyp:" VerticalAlignment="Center" Width="90" TextAlignment="Center"/>
+                            <ComboBox x:Name="texttyp_tit" IsEnabled="False" SelectedIndex="0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Grid.Column="2">
+                            <TextBlock Text="Überschrift:" VerticalAlignment="Center" Width="90" TextAlignment="Center"/>
+                            <ComboBox x:Name="ueberauswahl" IsEditable="True" HorizontalAlignment="Stretch" IsEnabled="False" SelectedIndex="0" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+
+
+                    </Grid>
+
+                </GroupBox>
+            </Grid>
+            <Button Content=" Legende erstellen" Style="{StaticResource mybutton1}" Click="start" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="20,0,20,0"/>
+
+        </Grid>
+    </Grid>
+</Window>

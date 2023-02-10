@@ -27,7 +27,9 @@ config = script.get_config(name+number+'Raumluftbilanz')
 
 Liste_Datenbank = {}
 Liste_Datenbank1 = {}
+DICT_DatenBank = {}
 datenbankadresse = r'R:\pyRevit\03_Lüftung\02_Luftungsbilanz\IGF_RLT_Volumenstromregler_Datenbank.xlsx'
+Liste_Fabrikat = []
 
 def get_value(param):
     """gibt den gesuchten Wert ohne Einheit zurück"""
@@ -74,7 +76,7 @@ class VSRHerstellerDaten:
             self.dimension = 'DN '+str(D)
         else:
             if self.A and self.B:
-                self.dimension = str(self.A)+'x'+str(self.B)
+                self.dimension = str(int(self.B))+'x'+str(int(self.A))
             else:
                 self.dimension = ''
 
@@ -102,7 +104,9 @@ if os.path.exists(datenbankadresse):
         try:
             fabrikat = sheet.Name
             Liste_Datenbank[fabrikat] = {}
+
             Liste_Datenbank1[fabrikat] = {}
+            Liste_Fabrikat.append(fabrikat)
             maxRowNum = sheet.Dimension.End.Row
             for row in range(3,maxRowNum+1):
                 luftart = 0 # 0:Zu/Abluft,1:Zuluft,2:Abluft,3:PPS
@@ -142,10 +146,11 @@ if os.path.exists(datenbankadresse):
                         if vsrart not in Liste_Datenbank1[fabrikat][luftart].keys():
                             Liste_Datenbank1[fabrikat][luftart][vsrart] = {}
                         if maxi not in Liste_Datenbank1[fabrikat][luftart][vsrart].keys():
-                            Liste_Datenbank1[fabrikat][luftart][vsrart][mini] = {}
+                            Liste_Datenbank1[fabrikat][luftart][vsrart][maxi] = {}
                         if mini not in Liste_Datenbank1[fabrikat][luftart][vsrart][maxi].keys():
                             Liste_Datenbank1[fabrikat][luftart][vsrart][maxi][mini] = []
                         Liste_Datenbank1[fabrikat][luftart][vsrart][maxi][mini].append(daten)
+                        DICT_DatenBank[daten.typ] = daten
 
                     else:
                         daten = VSRHerstellerDaten(fabrikat,Typ,None,None,int(D),Spannung,Nennstrom,Leistung,vmin,vmax,vnenn,Bemerkung)
@@ -156,6 +161,7 @@ if os.path.exists(datenbankadresse):
                         if int(D) not in Liste_Datenbank[fabrikat][luftart][vsrart].keys():
                             Liste_Datenbank[fabrikat][luftart][vsrart][int(D)] = []
                         Liste_Datenbank[fabrikat][luftart][vsrart][int(D)].append(daten)
+                        DICT_DatenBank[daten.typ] = daten
 
         except Exception as e:
             logger.error(e)
@@ -165,6 +171,7 @@ if os.path.exists(datenbankadresse):
         book.Save()
         book.Dispose()
         fs.Dispose()
+
 
 class Raumdaten:
     def __init__(self,raum,row = 0):
@@ -727,9 +734,10 @@ class Raumdaten:
         
         for auslass in self.raum.list_auslass:
             if auslass not in RAB_Luftauslass and auslass.art == 'RAB':
-                datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
-                    'RAB',auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
-                RAB_Luftauslass.append(auslass)
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        'RAB',auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    RAB_Luftauslass.append(auslass)
         
         datenforexport.append(['TRENNUNG','Labor Abluft'])
         if len(LAB_1) > 0:
@@ -750,6 +758,7 @@ class Raumdaten:
                     for auslass in vsr.Auslass:
                         if self.raum.list_auslass.Contains(auslass):
                             if auslass.art == 'LAB' and auslass not in LAB_Luftauslass:
+                                
                                 datenforexport.append(['AUSLASS',Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
                                     'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
                                 LAB_Luftauslass.append(auslass)
@@ -762,9 +771,10 @@ class Raumdaten:
                     for auslass in vsr.Auslass:LAB_Luftauslass.append(auslass)
         for auslass in self.raum.list_auslass:
             if auslass not in LAB_Luftauslass and auslass.art == 'LAB':
-                datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
-                    'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
-                LAB_Luftauslass.append(auslass)
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    LAB_Luftauslass.append(auslass)
 
         datenforexport.append(['TRENNUNG','24h-Abluft'])
         if len(H24_1) > 0:
@@ -800,10 +810,11 @@ class Raumdaten:
         
         for auslass in self.raum.list_auslass:
             if auslass not in H24_Luftauslass and auslass.art == '24h':
-                datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
-                    '',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
-                H24_Luftauslass.append(auslass)
-        
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        '',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    H24_Luftauslass.append(auslass)
+            
         
         datenforexport.append(['TRENNUNG','Überströmung in'])
 
@@ -998,7 +1009,7 @@ class Raumdaten:
             if vsr.VSR_Hersteller.dimension != vsr.size:
                 self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2,font_ground='#FF0000'))
             else:
-                self.sheet.write(row, 20, '',self.cellformat('center',False,10,right=2))
+                self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2))
         else:self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2,font_ground='#FF0000'))
     
     def exportluftauslass(self,row,luftauslass):
@@ -1781,6 +1792,8 @@ class Luftauslass(FamilieExemplar):
                             if owner.Category.Name == 'Luftkanalzubehör':
                                 faminame = owner.Symbol.FamilyName
                                 typname = owner.Name
+                                if faminame == 'CAx RU Absperrklappe' and typname == 'mit Stellantrieb':
+                                    return
                                 if faminame in VSR_FAMILIE_LISTE:
                                     conns_temp = owner.MEPModel.ConnectorManager.Connectors
                                     for conn_temp in conns_temp:
@@ -1850,11 +1863,16 @@ class VSR(FamilieExemplar):
         self.List_Iris = ObservableCollection[VSR]()
         self.List_VSR = ObservableCollection[VSR]()
         self.List_Haupt = ObservableCollection[VSR]()
-        self._Hersteller = 'Wildeboer'
+        self._Liste_Herstellertyp = []
+        self.DICT_DatenBank = DICT_DatenBank
+        self._Liste_Fabrikat = Liste_Fabrikat
+        self._Herstellerindex = 0
+        self._Herstellertypindex = 0
+
         self.Datenbank_rund = Liste_Datenbank 
         self.Datenbank_eck = Liste_Datenbank1 
         self.VSR_Hersteller = None
-        self._VSR_HerstellerTyp = ''
+
         self._anmerkung = 'kein passender Typ gefunden'
         self.material = self.elem.LookupParameter('IGF_X_Material_Text')
         self._dict = {
@@ -1898,26 +1916,62 @@ class VSR(FamilieExemplar):
         self.vsrart = 'VVR'
         self.istppspruefen()
         self.istkvr()
+        self._Vmin = ''
+        self._Vmax = ''
 
         self.nutzung = ''
         
     
     @property
-    def Hersteller(self):
-        return self._Hersteller
-    @Hersteller.setter
-    def Hersteller(self,value):
-        if value != self._Hersteller:
-            self._Hersteller = value
-            self.RaisePropertyChanged('Hersteller')
+    def Vmin(self):
+        return self._Vmin
+    @Vmin.setter
+    def Vmin(self,value):
+        if value != self._Vmin:
+            self._Vmin = value
+            self.RaisePropertyChanged('Vmin')
     @property
-    def VSR_HerstellerTyp(self):
-        return self._VSR_HerstellerTyp
-    @VSR_HerstellerTyp.setter
-    def VSR_HerstellerTyp(self,value):
-        if value != self._VSR_HerstellerTyp:
-            self._VSR_HerstellerTyp = value
-            self.RaisePropertyChanged('VSR_HerstellerTyp')
+    def Vmax(self):
+        return self._Vmax
+    @Vmax.setter
+    def Vmax(self,value):
+        if value != self._Vmax:
+            self._Vmax = value
+            self.RaisePropertyChanged('Vmax')
+    @property
+    def Herstellerindex(self):
+        return self._Herstellerindex
+    @Herstellerindex.setter
+    def Herstellerindex(self,value):
+        if value != self._Herstellerindex:
+            self._Herstellerindex = value
+            self.RaisePropertyChanged('Herstellerindex')
+    @property
+    def Liste_Herstellertyp(self):
+        return self._Liste_Herstellertyp
+    @Liste_Herstellertyp.setter
+    def Liste_Herstellertyp(self,value):
+        if value != self._Liste_Herstellertyp:
+            self._Liste_Herstellertyp = value
+            self.RaisePropertyChanged('Liste_Herstellertyp')
+    @property
+    def Liste_Fabrikat(self):
+        return self._Liste_Fabrikat
+    @Liste_Fabrikat.setter
+    def Liste_Fabrikat(self,value):
+        if value != self._Liste_Fabrikat:
+            self._Liste_Fabrikat = value
+            self.RaisePropertyChanged('Liste_Fabrikat')
+    @property
+    def Herstellertypindex(self):
+        return self._Herstellertypindex
+    @Herstellertypindex.setter
+    def Herstellertypindex(self,value):
+        if value != self._Herstellertypindex:
+            self._Herstellertypindex = value
+            self.RaisePropertyChanged('Herstellertypindex')
+
+
     @property
     def anmerkung(self):
         return self._anmerkung
@@ -1945,33 +1999,23 @@ class VSR(FamilieExemplar):
             self.vsrart = 'VVR'
     
     def changetype(self):
-        # if self.art != 'RZU':
-        # if self.art == '24h':
-        #     try:self.material.Set('PPs')
-        #     except:pass
-        # elif self.art == 'RZU':
-        #     try:self.material.Set('Blech')
-        #     except:pass
-        # elif self.art == 'RAB':
-        #     try:self.material.Set('Blech')
-        #     except:pass
-        # else:
-        #     if self.ispps:
-        #         try:self.material.Set('PPs')
-        #         except:pass
-        #     else:
-        #         try:self.material.Set('Blech')
-        #         except:pass
-        if self.VSR_HerstellerTyp in self._dict.keys():
-            try:self.elem.ChangeTypeId(self._dict[self.VSR_HerstellerTyp])
-            except:pass
+        if self.art == 'RZU':
+            self.material.Set('Blech')
+        if self.art == '24h':
+            self.material.Set('PPs')
+        if self.VSR_Hersteller:
+
+            if self.VSR_Hersteller.typ in self._dict.keys():
+                try:self.elem.ChangeTypeId(self._dict[self.VSR_Hersteller.typ])
+                except Exception as e:logger.error(e)
         try:
             self.set_up()
-        except:
-            pass
+        except Exception as e:logger.error(e)
+    
     def vsrueberpruefen(self):
         if self.VSR_Hersteller:
-            self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
+            self.Vmin = self.VSR_Hersteller.vmin
+            self.Vmax = self.VSR_Hersteller.vmax
             if self.VSR_Hersteller.dimension != self.size:
                 self.anmerkung = 'In Projekt {} modelliert'.format(self.size)
             else:
@@ -1979,28 +2023,37 @@ class VSR(FamilieExemplar):
         else:self.anmerkung = 'kein passender Typ gefunden'
             
     def vsrauswaelten(self):
+        self.VSR_Hersteller = None
+        self.Vmax = 0
+        self.Vmin = 0
+        self.Liste_Herstellertyp = []
+
         liste_volumen = [self.Luftmengenmax,self.Luftmengenmin,self.Luftmengennacht,self.Luftmengentnacht]
         while( 0 in liste_volumen):
             liste_volumen.remove(0)
         if not liste_volumen:
             self.VSR_Hersteller = None
-            self.VSR_HerstellerTyp = ''
+            self.Herstellertypindex = -1
             return
 
         minvol = min(liste_volumen)
         maxvol = max(liste_volumen)
+        
+
+        if self.Herstellerindex != -1:
+            Hersteller = self.Liste_Fabrikat[self.Herstellerindex]
 
         if self.size.find('DN') != -1:
-            if self.Hersteller in self.Datenbank_rund.keys():liste = self.Datenbank_rund[self.Hersteller]
+            if Hersteller in self.Datenbank_rund.keys():liste = self.Datenbank_rund[Hersteller]
             else:
                 self.VSR_Hersteller = None
-                self.VSR_HerstellerTyp = ''
+                self.Herstellertypindex = -1
                 return
         else:
-            if self.Hersteller in self.Datenbank_eck.keys():liste = self.Datenbank_eck[self.Hersteller]
+            if Hersteller in self.Datenbank_eck.keys():liste = self.Datenbank_eck[Hersteller]
             else:
                 self.VSR_Hersteller = None
-                self.VSR_HerstellerTyp = ''
+                self.Herstellertypindex = -1
                 return
 
         if self.art == 'RZU':
@@ -2012,18 +2065,17 @@ class VSR(FamilieExemplar):
                         if self.size.find('DN') != -1:
                             for dimension in sorted(listetemp_vsr.keys()):
                                 for vsr_temp in listetemp_vsr[dimension]:
-                                    if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                        self.VSR_Hersteller = vsr_temp
-                                        self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                        return
+                                    if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                        if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                        self.Liste_Herstellertyp.append(vsr_temp.typ)
+                                        
                         else:
                             for max_a in sorted(listetemp_vsr.keys()):
                                 for min_a in sorted(listetemp_vsr[max_a].keys()):
                                     for vsr_temp in listetemp_vsr[max_a][min_a]:
-                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                            self.VSR_Hersteller = vsr_temp
-                                            self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                            return
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
         elif self.art in ['RAB','LAB','24h']:
             if self.ispps:
                 if 3 in liste.keys():
@@ -2034,17 +2086,15 @@ class VSR(FamilieExemplar):
                             for dimension in sorted(listetemp_vsr.keys()):
                                 for vsr_temp in listetemp_vsr[dimension]:
                                     if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                        self.VSR_Hersteller = vsr_temp
-                                        self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                        return
+                                        if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                        self.Liste_Herstellertyp.append(vsr_temp.typ)
                         else:
                             for max_a in sorted(listetemp_vsr.keys()):
                                 for min_a in sorted(listetemp_vsr[max_a].keys()):
                                     for vsr_temp in listetemp_vsr[max_a][min_a]:
-                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                            self.VSR_Hersteller = vsr_temp
-                                            self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                            return
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
 
             else:
                 for art in [2,0]:
@@ -2055,21 +2105,19 @@ class VSR(FamilieExemplar):
                             if self.size.find('DN') != -1:
                                 for dimension in sorted(listetemp_vsr.keys()):
                                     for vsr_temp in listetemp_vsr[dimension]:
-                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                            self.VSR_Hersteller = vsr_temp
-                                            self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                            return
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
                             else:
                                 for max_a in sorted(listetemp_vsr.keys()):
                                     for min_a in sorted(listetemp_vsr[max_a].keys()):
                                         for vsr_temp in listetemp_vsr[max_a][min_a]:
-                                            if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
-                                                self.VSR_Hersteller = vsr_temp
-                                                self.VSR_HerstellerTyp = self.VSR_Hersteller.typ
-                                                return
-        self.VSR_Hersteller = None
-        self.VSR_HerstellerTyp = ''
-        return
+                                            if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                                if not self.VSR_Hersteller:self.VSR_Hersteller = vsr_temp
+                                                self.Liste_Herstellertyp.append(vsr_temp.typ)
+        if self.VSR_Hersteller:
+            if self.VSR_Hersteller.typ in self.Liste_Herstellertyp:
+                self.Herstellertypindex = self.Liste_Herstellertyp.index(self.VSR_Hersteller.typ)
         
     def set_up(self):
         FamilieExemplar.set_up(self)
@@ -2166,7 +2214,6 @@ class VSR(FamilieExemplar):
                 self.nutzung = auslass.nutzung
                 break
 
-    
     def wert_schreiben(self):
         try:self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMin').SetValueString(str(self.Luftmengenmin).replace(',','.'))
         except Exception as e:pass
@@ -3713,7 +3760,7 @@ class ExtenalEventListe(IExternalEventHandler):
         #             except:pass
         for vsr in self.GUI.mepraum.list_vsr:
             try:vsr.changetype()
-            except:pass
+            except Exception as e:logger.error(e)
         t.Commit()
         t.Dispose()
         doc.Dispose()

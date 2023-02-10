@@ -8,7 +8,7 @@ from pyrevit import script, forms
 from System.Collections.Generic import List
 from System.Windows.Input import ModifierKeys,Keyboard,Key
 
-__title__ = "Systemlegenden erstellen"
+__title__ = "Legenden erstellen"
 __doc__ = """
 
 Legenden für ausgewählte Ansicht erstellen
@@ -46,8 +46,14 @@ if legend is None:
     dialog.Show()
     script.exit()
 
-all_lines = doc.Settings.Categories.get_Item(DB.BuiltInCategory.OST_Lines)
-LINES = {i.Name: i  for i in all_lines.SubCategories if i.Id.ToString() not in ['-2000066','-2000831','-2000079','-2009018','-2000045','-2009019','-2000077','-2000065']}
+
+    
+legendelement = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_LegendComponents).WhereElementIsNotElementType().FirstElement()
+if legendelement is None:
+    dialog = UI.TaskDialog('Legendenkomponente')
+    dialog.MainContent = 'Bitte eine Legendenkomponente erstellen. Es funktioniert nur wenn in Projekt zumindest eine Legendenkomponente vonhanden ist. \nLegendensymbol: Beschriften -> Detail -> Bauteil -> Legendenbauteil'
+    dialog.Show()
+    script.exit()
 
 class Ansicht(object):
     def __init__(self,elemid,Family,name):
@@ -90,6 +96,15 @@ def GetAllViews():
 
 GetAllViews()
 
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_GenericModel,'Allgemeines Modell'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_ElectricalEquipment,'Elektrische Ausstattung'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_MechanicalEquipment,'HLS-Bauteile'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_DuctTerminal,'Luftdurchlässe'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_DuctAccessory,'Luftkanalzubehör'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_PipeAccessory,'Rohrzubehör'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_PlumbingFixtures,'Sanitärinstallationen'))
+VS_Cate.Add(Kategorien(DB.BuiltInCategory.OST_Sprinklers,'Sprinkler'))
+
 # Texttyp
 all_text_types = DB.FilteredElementCollector(doc).OfClass(DB.TextNoteType).WhereElementIsElementType().ToElements()
 TEXTTYPE = {i.get_Parameter(DB.BuiltInParameter.ALL_MODEL_TYPE_NAME).AsString(): i for i in all_text_types}
@@ -107,6 +122,7 @@ class LEGENDEN(forms.WPFWindow):
         self.allgrundriss = VS_Grundriss
         self.allschnitt = VS_Schnitt
         self.legend_template = legend
+        self.legengcomkonente_template = legendelement
         self.richtung = {'Grundriss':-8,'Vorne':-7,'Hinter':-6,'Links':-10,'Rechts':-9} #  -5: Schnitt
         self.detailgrad = {'Fine':3,'Medium':2,'Coarse':1,'Undefined':3}
         self.tempob = ObservableCollection[Ansicht]()
@@ -117,12 +133,10 @@ class LEGENDEN(forms.WPFWindow):
         self.LB_Views.ItemsSource = self.allviews
         self.LB_Kate.ItemsSource = self.allcate
         self.tn.ItemsSource = sorted(self.alltyxttyp.keys())
-        self.texttyp_tit.ItemsSource = sorted(self.alltyxttyp.keys())
         self.linie.ItemsSource = sorted(self.alllinetype.keys())
         self.linie2.ItemsSource = sorted(self.alllinetype.keys())
         self.comauswahlmanuell.ItemsSource = self.richtung.keys()
         self.beschreibung.ItemsSource = ['Familie','Typ','Familie und Typ']
-        self.ueberauswahl.ItemsSource = ['Legende Lüftung','Legende Heizung/Kälte','Legende GA','Legende Sanitär','Legende LB Medien','Legende Gase']
 
     def suchchanged(self, sender, args):
         self.tempob.Clear()
@@ -231,15 +245,6 @@ class LEGENDEN(forms.WPFWindow):
 
         return line
     
-    def titelchange(self, sender, args):
-        if not sender.IsChecked:
-            self.texttyp_tit.IsEnabled = False
-            self.ueberauswahl.IsEnabled = False
-        else:
-            self.texttyp_tit.IsEnabled = True
-            self.ueberauswahl.IsEnabled = True
-
-    
     def Setkey(self, sender, args):   
         if ((args.Key >= Key.D0 and args.Key <= Key.D9) or (args.Key >= Key.NumPad0 and args.Key <= Key.NumPad9) \
             or args.Key == Key.Delete or args.Key == Key.Back or args.Key == Key.Enter):
@@ -323,7 +328,6 @@ class LEGENDEN(forms.WPFWindow):
                 except:
                     
                     _View_RvtLegend.Scale = doc.GetElement(el_customView.elemid).Scale
-            
             #######################################
             try:
                 sourcev = legendelement.OwnerViewId
@@ -351,32 +355,32 @@ class LEGENDEN(forms.WPFWindow):
                     if self.comansicht.IsChecked:
                         if el_customView.family == 'Grundriss':
                             try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(-8)
-                            except Exception as e:print(e)
+                            except:pass
                         else:
                             el_RvtView_Richtung = doc.GetElement(el_customView.elemid).ViewDirection
                             if el_RvtView_Richtung.X == 1:
                                 try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(-9)
-                                except Exception as e:print(e)
+                                except:pass
                             elif el_RvtView_Richtung.X == -1:
                                 try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(-10)
-                                except Exception as e:print(e)
+                                except:pass
                             elif el_RvtView_Richtung.Y == -1:
                                 try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(-7)
-                                except Exception as e:print(e)
+                                except:pass
                             elif el_RvtView_Richtung.Y == 1:
                                 try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(-6)
-                                except Exception as e:print(e)
-                            else:pass
+                                except:pass
+                            else:
+                                pass
                     elif self.commanuell.IsChecked:
                         richtung = self.richtung[self.comauswahlmanuell.SelectedItem.ToString()]
                         try:el_Rvt_Legendensymbol.get_Parameter(DB.BuiltInParameter.LEGEND_COMPONENT_VIEW).Set(richtung)
-                        except Exception as e:print(e)
+                        except:pass
                     
                     ################################
 
                     # Create Beschreibung 
                     textnote = self.create_text(_View_RvtLegend,0,0,text,self.alltyxttyp[self.tn.SelectedItem.ToString()])
-                    
                     Liste_TextNote.append(textnote)
                     Liste_TextNoteWithSymbol.append([textnote,el_Rvt_Legendensymbol])
                     doc.Regenerate()
@@ -414,22 +418,6 @@ class LEGENDEN(forms.WPFWindow):
                     maxY_OuterLine = max(maxY_OuterLine,box0.Max.Y,box1.Max.Y)
                     minY_OuterLine = min(minY_OuterLine,box0.Min.Y,box1.Min.Y)
                 
-                maxY_OuterLine_temp = maxY_OuterLine
-                if self.tit.IsChecked:
-                    ueberschrift = self.create_text(_View_RvtLegend,0,0,self.ueberauswahl.Text,self.alltyxttyp[self.texttyp_tit.SelectedItem.ToString()])
-                    doc.Regenerate()
-                    box = ueberschrift.get_BoundingBox(_View_RvtLegend)
-                    height = (box.Max.Y-box.Min.Y)/2
-                    x = (box.Max.X+box.Min.X)/2
-                    y = (box.Max.Y+box.Min.Y)/2
-                    ueberschrift.Location.Move(DB.XYZ((maxX_OuterLine+minX_OuterLine)/2-x,maxY_OuterLine+2+height-y,0))
-                    doc.Regenerate()
-                    box_neu = ueberschrift.get_BoundingBox(_View_RvtLegend)
-                    maxX_OuterLine = max(maxX_OuterLine,box_neu.Max.X)
-                    maxY_OuterLine = max(maxY_OuterLine,box_neu.Max.Y)
-                    minX_OuterLine = min(minX_OuterLine,box_neu.Min.X)
-
-                
                 # Create Linie
                 if self.auline.IsChecked:
                     LineStyle_out = self.alllinetype[self.linie.SelectedItem.ToString()]
@@ -437,7 +425,6 @@ class LEGENDEN(forms.WPFWindow):
                     line1 = self.create_line(_View_RvtLegend,DB.XYZ(minX_OuterLine-1,minY_OuterLine-1,0),DB.XYZ(minX_OuterLine-1,maxY_OuterLine+1,0))
                     line2 = self.create_line(_View_RvtLegend,DB.XYZ(maxX_OuterLine+1,maxY_OuterLine+1,0),DB.XYZ(minX_OuterLine-1,maxY_OuterLine+1,0))
                     line3 = self.create_line(_View_RvtLegend,DB.XYZ(maxX_OuterLine+1,minY_OuterLine-1,0),DB.XYZ(minX_OuterLine-1,minY_OuterLine-1,0))
-                    line4 = self.create_line(_View_RvtLegend,DB.XYZ(maxX_OuterLine+1,maxY_OuterLine_temp+1,0),DB.XYZ(minX_OuterLine-1,maxY_OuterLine_temp+1,0))
                     try:line0.LineStyle = doc.GetElement(LineStyle_out)
                     except:pass
                     try:line1.LineStyle = doc.GetElement(LineStyle_out)
@@ -446,12 +433,10 @@ class LEGENDEN(forms.WPFWindow):
                     except:pass
                     try:line3.LineStyle = doc.GetElement(LineStyle_out)
                     except:pass
-                    try:line4.LineStyle = doc.GetElement(LineStyle_out)
-                    except:pass
                 
                 if self.inline.IsChecked:
                     LineStyle_in = self.alllinetype[self.linie2.SelectedItem.ToString()]
-                    line_temp = self.create_line(_View_RvtLegend,DB.XYZ(maxX+1,minY_OuterLine-1,0),DB.XYZ(maxX+1,maxY_OuterLine_temp+1,0))
+                    line_temp = self.create_line(_View_RvtLegend,DB.XYZ(maxX+1,minY_OuterLine-1,0),DB.XYZ(maxX+1,maxY_OuterLine+1,0))
                     try:line_temp.LineStyle = doc.GetElement(LineStyle_in)
                     except:pass
 

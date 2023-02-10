@@ -95,6 +95,24 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
     def TextBox_GotFocus(self,sender,e):
         tb = sender
         tb.SelectAll()
+    
+    def vsr_selectedfabrikat_changed(self,sender,e):
+        if self.lv_vsr1_getrennt.SelectedItem:
+            try:
+                item = sender.DataContext
+                item.vsrauswaelten()
+                item.vsrueberpruefen()
+            except Exception as e:
+                pass
+    
+    def vsr_selectedtyp_changed(self,sender,e):
+        if self.lv_vsr1_getrennt.SelectedItem:
+            try:
+                item = sender.DataContext
+                item.VSR_Hersteller = item.DICT_DatenBank[item.Liste_Herstellertyp[item.Herstellertypindex]]
+                item.vsrueberpruefen()
+            except Exception as e:
+                pass
 
     def set_up(self):
         self.bezugsname.IsEnabled = True
@@ -1154,7 +1172,14 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
     
     def Berechnen(self, sender, args):
         try:
-            #self.externaleventliste.Executeapp = self.externaleventliste.RaumluftBerechnen
+            self.externaleventliste.Executeapp = self.externaleventliste.RaumluftBerechnen
+
+            self.externalevent.Raise()
+        except Exception as e:print(e)
+
+    def changevsrtype(self, sender, args):
+        try:
+            
             self.externaleventliste.Executeapp = self.externaleventliste.vsranpassen
             self.externalevent.Raise()
         except Exception as e:print(e)
