@@ -992,13 +992,13 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
                     if el.art == '24h':
                         el.Luftmengentnacht = item.Luftmengenmin
                         el.Luftmengenmax = item.Luftmengenmin
-                        el.Luftmengennacht = item.Luftmengenmin
+                        if self.mepraum.tiefenachtbetrieb:el.Luftmengennacht = item.Luftmengenmin
                     self.Auslass_Volumen_changed(el)
         else:
             if item.art == '24h':
                 item.Luftmengentnacht = item.Luftmengenmin
                 item.Luftmengenmax = item.Luftmengenmin
-                item.Luftmengennacht = item.Luftmengenmin
+                if self.mepraum.tiefenachtbetrieb:item.Luftmengennacht = item.Luftmengenmin
             self.Auslass_Volumen_changed(item)
     
     def Auslass_Volumen_changed_nacht(self,sender,args):
