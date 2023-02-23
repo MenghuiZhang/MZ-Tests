@@ -11,212 +11,25 @@ from System.Collections.Generic import List
 from System.Windows.Media import Brushes
 from clr import GetClrType
 from System.ComponentModel import INotifyPropertyChanged ,PropertyChangedEventArgs
+from excel._EPPlus import FileAccess,FileMode,FileStream,ExcelPackage,LicenseContext
+import os
+from System.Windows.Forms import FolderBrowserDialog,DialogResult
 
-IGF_LOGO = 'C:\Users\Zhang\Documents\GitHub\MZ-Tools\Test.extension\pyRevit.tab\Test.panel\s9.stack\Luftbilanz.pushbutton\icon.png'
+IGF_LOGO = os.path.dirname(__file__) + '\\' + 'icon.png'
 
+logger = script.get_logger()
+doc = revit.doc
+uidoc = revit.uidoc
 
-class Raumdaten:
-    def __init__(self,raum,row = 0):
-        self.row = row
-        self.book = None
-        self.sheet = None
-        self.raum = raum
-        self.raumnummer = self.raum.elem.Number
-        self.raumname = self.raum.elem.LookupParameter('Name').AsString()
-        self.ebene = self.raum.ebene
+name = doc.ProjectInformation.Name
+number = doc.ProjectInformation.Number
+config = script.get_config(name+number+'Raumluftbilanz')
 
-        self.flaeche = self.raum.flaeche
-        self.personen = self.raum.personen
-        self.hoehe = self.raum.hoehe
-        self.volumen = self.raum.volumen
-
-        self.meplabmin = self.raum.ab_lab_min.soll     
-        self.meplabmax = self.raum.ab_lab_max.soll
-        self.mepab24h = self.raum.ab_24h.soll
-        self.mepdruck = self.raum.Druckstufe.soll
-        self.mepueber = self.raum.ueber_in_manuell.soll + self.raum.ueber_in.soll - self.raum.ueber_aus.soll - self.raum.ueber_aus_manuell.soll 
-
-        self.bezugsname = self.raum.bezugsname
-        self.faktor = self.raum.faktor
-        self.einheit = self.raum.einheit
-        self.mepminzu = self.raum.zu_min.soll
-        self.mepmaxzu = self.raum.zu_max.soll
-        self.mepminab = self.raum.ab_min.soll + self.raum.ab_24h.soll + self.raum.ab_lab_min.soll
-        self.mepmaxab = self.raum.ab_max.soll + self.raum.ab_24h.soll + self.raum.ab_lab_max.soll
-
-        self.isnachtbetrieb = 'Ja' if self.raum.nachtbetrieb  else 'Nein'
-        self.LW_nacht = self.raum.NB_LW
-        self.mepnb_zu = self.raum.nb_zu.soll
-        self.mepnb_ab = self.raum.nb_ab.soll + self.raum.ab_24h.soll + self.raum.ab_lab_min.soll
-
-        self.istiefenachtbetrieb = 'Ja' if self.raum.tiefenachtbetrieb  else 'Nein'
-        self.LW_tnacht = self.raum.T_NB_LW
-        self.meptnb_zu = self.raum.tnb_zu.soll
-        self.meptnb_ab = self.raum.tnb_ab.soll + self.raum.ab_24h.soll + self.raum.ab_lab_min.soll
-
-        self.istminzu = self.raum.zu_min.ist
-        self.istmaxzu = self.raum.zu_max.ist
-        self.istnachtzu = self.raum.nb_zu.ist
-        self.isttnachtzu = self.raum.tnb_zu.ist
-        
-        self.istminab = self.raum.ab_min.ist
-        self.istmaxab = self.raum.ab_max.ist
-        self.istnachtab = self.raum.nb_ab.ist
-        self.isttnachtab = self.raum.tnb_ab.ist
-
-        self.istminlab = self.raum.ab_lab_min.ist
-        self.istmaxlab = self.raum.ab_lab_max.ist
-        self.istnachtlab = self.raum.ab_lab_min.ist
-        self.isttnachtlab = self.raum.ab_lab_min.ist
-
-        self.istmin24h = self.raum.ab_24h.ist
-        self.istmax24h = self.raum.ab_24h.ist
-        self.istnacht24h = self.raum.ab_24h.ist
-        self.isttnacht24h = self.raum.ab_24h.ist
-
-        self.istueber = self.raum.ueber_in_manuell.ist + self.raum.ueber_in.ist - self.raum.ueber_aus.ist - self.raum.ueber_aus_manuell.ist 
-        self.istminueber = self.istueber
-        self.istmaxueber = self.istueber
-        self.istnachtueber = self.istueber
-        self.isttnachtueber = self.istueber
-
-        self.istminsumme = self.istminzu - self.istminab - self.istminlab - self.istmin24h + self.istueber - self.mepdruck
-        self.istmaxsumme = self.istmaxzu - self.istmaxab - self.istmaxlab - self.istmax24h + self.istueber - self.mepdruck
-        self.istnachtsumme = self.istnachtzu - self.istnachtab - self.istminlab - self.istmin24h + self.istueber - self.mepdruck
-        self.isttnachtsumme = self.isttnachtzu - self.isttnachtab - self.istminlab - self.istmin24h + self.istueber - self.mepdruck
-
-        self.istmin = 'OK' if abs(self.istminsumme) < 3 else 'Passt nicht'
-        self.istmax = 'OK' if abs(self.istmaxsumme) < 3 else 'Passt nicht'
-        self.istnacht = 'OK' if abs(self.istnachtsumme) < 3 else 'Passt nicht'
-        self.isttnacht = 'OK' if abs(self.isttnachtsumme) < 3 else 'Passt nicht'
-
-    def exportheader(self):
-        if not self.sheet:
-            return
-        
-        self.sheet.merge_range(self.row,1,self.row,4,projektname,self.book.add_format({'align': 'left', 'bold': True, 'font_size': 16}))
-        self.sheet.merge_range(self.row,7,self.row,9,projektnummer,self.book.add_format({'align': 'center', 'bold': True, 'font_size': 16}))
-        self.sheet.merge_range(self.row,10,self.row+1,14,'',self.book.add_format())
-        self.sheet.merge_range(self.row+1,2,self.row+1,9,'Gewerk: Lüftung',self.book.add_format({'align': 'left', 'bold': True, 'font_size': 12}))
-        self.sheet.merge_range(self.row+2,2,self.row+2,9,'Raumdaten aus den Raumbuch',self.book.add_format({'align': 'center', 'bold': True, 'font_size': 12}))
-        self.sheet.write(self.row, 0, 'Projekt:',self.book.add_format({'align': 'left', 'bold': True, 'font_size': 16}))
-        self.sheet.merge_range(self.row,5,self.row,6,'Projektnummer:',self.book.add_format({'align': 'center', 'bold': True, 'font_size': 16}))
-        self.sheet.insert_image('K'+str(self.row), IGF_LOGO)
-        self.sheet.write(self.row+1, 0, 'Raumdaten',self.book.add_format({'align': 'left', 'bold': True, 'font_size': 10}))
-        self.sheet.write(self.row+2, 0, 'Nummer',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+3, 0, 'Name',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 0, 'Ebene',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 0, 'Personen',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 0, 'Fläche',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 0, 'Höhe',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+8, 0, 'Volumen',self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+2, 1, self.raumnummer,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+3, 1, self.raumname,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 1, self.ebene,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 1, self.personen,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 1, self.flaeche,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" m²"'''}))
-        self.sheet.write(self.row+7, 1, self.hoehe,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" mm"'''}))
-        self.sheet.write(self.row+8, 1, self.volumen,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" m³"'''}))
-
-        self.sheet.merge_range(self.row+3, 2, self.row+3, 3,'Grundinfos',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 2, 'Druckstufe',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 2, 'Labmin',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 2, 'Labmax',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 2, '24h-Abluft',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+8, 2, 'Überstrom',self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+4, 3, self.mepdruck,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 3, self.meplabmin,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 3, self.meplabmax,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 3, self.mepab24h,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+8, 3, self.mepueber,self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.merge_range(self.row+3, 4, self.row+3, 5,'Tagbetrieb',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 4, 'Berechnung nach',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 4, 'Faktor',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 4, 'min Zu',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 4, 'min Ab',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+8, 4, 'max Zu',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+9, 4, 'max Ab',self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+4, 5, self.bezugsname,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 5, self.faktor,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" {}"'''.format(self.einheit)}))
-        self.sheet.write(self.row+6, 5, self.mepminzu,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 5, self.mepminab,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+8, 5, self.mepmaxzu,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+9, 5, self.mepmaxab,self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.merge_range(self.row+3, 6, self.row+3, 7,'Nachtbetrieb',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 6, 'Nachtbetrieb',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 6, 'Faktor',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 6, 'Zuluft',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 6, 'Abluft',self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+4, 7, self.isnachtbetrieb,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 7, self.LW_nacht,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" {}"'''.format(self.einheit)}))
-        self.sheet.write(self.row+6, 7, self.mepnb_zu,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 7, self.mepnb_ab,self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.merge_range(self.row+3, 8, self.row+3, 9,'TiefeNachtbetrieb',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+4, 8, 'TiefeNachtbetrieb',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 8, 'Faktor',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+6, 8, 'Zuluft',self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 8, 'Abluft',self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+4, 9, self.istiefenachtbetrieb,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+5, 9, self.LW_tnacht,self.book.add_format({'align': 'left', 'font_size': 10, 'num_format': '''" {}"'''.format(self.einheit)}))
-        self.sheet.write(self.row+6, 9, self.meptnb_zu,self.book.add_format({'align': 'left', 'font_size': 10}))
-        self.sheet.write(self.row+7, 9, self.meptnb_ab,self.book.add_format({'align': 'left', 'font_size': 10}))
-
-        self.sheet.write(self.row+2, 10, 'IST-Werte',self.book.add_format({'align': 'center', 'font_size': 10}))
-        self.sheet.write(self.row+2, 11, 'min',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+2, 12, 'max',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+2, 13, 'nacht',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+2, 14, 'tnacht',self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+3, 10, 'RZU',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+4, 10, 'RAB',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+5, 10, 'LAB',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+6, 10, '24H',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+7, 10, 'Über',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+8, 10, 'Bilanz',self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+9, 10, 'Überprüfung',self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+3, 11, self.istminzu,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+3, 12, self.istmaxzu,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+3, 13, self.istnachtzu,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+3, 14, self.isttnachtzu,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+4, 11, self.istminab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+4, 12, self.istmaxab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+4, 13, self.istnachtab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+4, 14, self.isttnachtab,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+5, 11, self.istminlab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+5, 12, self.istmaxlab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+5, 13, self.istnachtlab,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+5, 14, self.isttnachtlab,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+6, 11, self.istmin24h,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+6, 12, self.istmax24h,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+6, 13, self.istnacht24h,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+6, 14, self.isttnacht24h,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+7, 11, self.istminueber,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+7, 12, self.istmaxueber,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+7, 13, self.istnachtueber,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+7, 14, self.isttnachtueber,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+8, 11, self.istminsumme,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+8, 12, self.istmaxsumme,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+8, 13, self.istnachtsumme,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+8, 14, self.isttnachtsumme,self.book.add_format({'align': 'right', 'font_size': 10}))
-
-        self.sheet.write(self.row+9, 11, self.istmin,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+9, 12, self.istmax,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+9, 13, self.istnacht,self.book.add_format({'align': 'right', 'font_size': 10}))
-        self.sheet.write(self.row+9, 14, self.isttnacht,self.book.add_format({'align': 'right', 'font_size': 10}))
+Liste_Datenbank = {}
+Liste_Datenbank1 = {}
+DICT_DatenBank = {}
+datenbankadresse = r'R:\pyRevit\03_Lüftung\02_Luftungsbilanz\IGF_RLT_Volumenstromregler_Datenbank.xlsx'
+Liste_Fabrikat = []
 
 def get_value(param):
     """gibt den gesuchten Wert ohne Einheit zurück"""
@@ -245,14 +58,1014 @@ def get_value(param):
 
     return value
 
-logger = script.get_logger()
-doc = revit.doc
-uidoc = revit.uidoc
+class VSRHerstellerDaten:
+    def __init__(self,fabrikat,typ,A,B,D,spannung,nennstrom,leistung,vmin,vmax,vnenn,bemerkung):
+        self.fabrikat = fabrikat
+        self.typ = typ
+        self.A = A
+        self.B = B
+        self.D = D
+        self.spannung = spannung
+        self.nennstrom = nennstrom
+        self.leistung = leistung
+        self.vmin = vmin
+        self.vmax = vmax
+        self.vnenn = vnenn
+        self.bemerkung = bemerkung
+        if self.D:
+            self.dimension = 'DN '+str(D)
+        else:
+            if self.A and self.B:
+                self.dimension = str(int(self.B))+'x'+str(int(self.A))
+            else:
+                self.dimension = ''
 
-name = doc.ProjectInformation.Name
-number = doc.ProjectInformation.Number
-config = script.get_config(name+number+'Raumluftbilanz')
+class Luftauslassfuerexport:
+    def __init__(self,art = '',slavevon = '',raumnummer = '',auslassart = '',nutzung = '', Luftmengenmin = '',Luftmengenmax = '',Luftmengennacht = '',Luftmengentnacht = '',bemerkung = '',anmerkung = '',):
+        self.art = art
+        self.slavevon = slavevon
+        self.raumnummer = raumnummer
+        self.auslassart = auslassart
+        self.nutzung = nutzung
+        self.Luftmengenmin = Luftmengenmin
+        self.Luftmengenmax = Luftmengenmax
+        self.Luftmengennacht = Luftmengennacht
+        self.Luftmengentnacht = Luftmengentnacht
+        self.bemerkung = bemerkung
+        self.anmerkung = anmerkung
 
+if os.path.exists(datenbankadresse):
+    ExcelPackage.LicenseContext = LicenseContext.NonCommercial
+    fs = FileStream(datenbankadresse,FileMode.Open,FileAccess.Read)
+    book = ExcelPackage(fs)
+    
+    for sheet in book.Workbook.Worksheets:
+        try:
+            fabrikat = sheet.Name
+            Liste_Datenbank[fabrikat] = {}
+
+            Liste_Datenbank1[fabrikat] = {}
+            Liste_Fabrikat.append(fabrikat)
+            maxRowNum = sheet.Dimension.End.Row
+            for row in range(3,maxRowNum+1):
+                luftart = 0 # 0:Zu/Abluft,1:Zuluft,2:Abluft,3:PPS
+                vsrart = 'VVR'
+                art = sheet.Cells[row, 1].Value
+                A = sheet.Cells[row, 2].Value
+                B = sheet.Cells[row, 3].Value
+                D = sheet.Cells[row, 4].Value
+                Bezeichnung = sheet.Cells[row, 5].Value
+                Typ = sheet.Cells[row, 7].Value
+                Spannung = sheet.Cells[row, 8].Value
+                Nennstrom = sheet.Cells[row, 9].Value
+                Leistung = sheet.Cells[row, 10].Value
+                vmin = sheet.Cells[row, 11].Value
+                vmax = sheet.Cells[row, 12].Value
+                vnenn = sheet.Cells[row, 13].Value
+                Bemerkung = sheet.Cells[row, 16].Value
+                
+                if any([A,B,D]):
+                    if Bemerkung and Bemerkung.upper().find('PPS') != -1:
+                        luftart = 3
+                    else:
+                        if art:
+                            if art.upper().find('ZU') != -1:
+                                luftart = 1
+                            elif art.upper().find('AB') != -1:
+                                luftart = 2
+                    if Bemerkung:
+                        if Bemerkung.upper().find('VARI') == -1:
+                            vsrart = 'KVR'
+                    if A and B:
+                        mini = min([int(A),int(B)])
+                        maxi = max([int(A),int(B)])
+                        daten = VSRHerstellerDaten(fabrikat,Typ,mini,maxi,None,Spannung,Nennstrom,Leistung,vmin,vmax,vnenn,Bemerkung)
+                        if luftart not in Liste_Datenbank1[fabrikat].keys():
+                            Liste_Datenbank1[fabrikat][luftart] = {}
+                        if vsrart not in Liste_Datenbank1[fabrikat][luftart].keys():
+                            Liste_Datenbank1[fabrikat][luftart][vsrart] = {}
+                        if maxi not in Liste_Datenbank1[fabrikat][luftart][vsrart].keys():
+                            Liste_Datenbank1[fabrikat][luftart][vsrart][maxi] = {}
+                        if mini not in Liste_Datenbank1[fabrikat][luftart][vsrart][maxi].keys():
+                            Liste_Datenbank1[fabrikat][luftart][vsrart][maxi][mini] = []
+                        Liste_Datenbank1[fabrikat][luftart][vsrart][maxi][mini].append(daten)
+                        DICT_DatenBank[daten.typ] = daten
+
+                    else:
+                        daten = VSRHerstellerDaten(fabrikat,Typ,None,None,int(D),Spannung,Nennstrom,Leistung,vmin,vmax,vnenn,Bemerkung)
+                        if luftart not in Liste_Datenbank[fabrikat].keys():
+                            Liste_Datenbank[fabrikat][luftart] = {}
+                        if vsrart not in Liste_Datenbank[fabrikat][luftart].keys():
+                            Liste_Datenbank[fabrikat][luftart][vsrart] = {}
+                        if int(D) not in Liste_Datenbank[fabrikat][luftart][vsrart].keys():
+                            Liste_Datenbank[fabrikat][luftart][vsrart][int(D)] = []
+                        Liste_Datenbank[fabrikat][luftart][vsrart][int(D)].append(daten)
+                        DICT_DatenBank[daten.typ] = daten
+
+        except Exception as e:
+            logger.error(e)
+            TaskDialog.Show('Fehler','Fehler beim Lesen der Excel-Datei')        
+            break   
+
+        book.Save()
+        book.Dispose()
+        fs.Dispose()
+
+class Raumdaten:
+    def __init__(self,raum,row = 0):
+        self.bemerkung = ''
+        self.anmerkung = ''
+        self.row = row
+        self.rowende = row + 20
+        self.book = None
+        self.sheet = None
+        self.raum = raum
+        self.raumnummer = self.raum.elem.Number
+        self.raumname = self.raum.elem.LookupParameter('Name').AsString()
+        self.ebene = self.raum.ebene
+        self.rowbreaks = []
+
+        self.flaeche = self.raum.flaeche
+        self.personen = self.raum.personen
+        self.hoehe = self.raum.hoehe/1000.0
+        self.volumen = self.raum.volumen
+
+        self.meplabmin = self.raum.ab_lab_min.soll     
+        self.meplabmax = self.raum.ab_lab_max.soll
+        self.mepab24h = self.raum.ab_24h.soll
+        self.mepdruck = self.raum.Druckstufe.soll
+        self.mepueber = self.raum.ueber_in_manuell.soll + self.raum.ueber_in.soll - self.raum.ueber_aus.soll - self.raum.ueber_aus_manuell.soll 
+        self.mepnachtdruck = self.mepdruck
+        self.meptnachtdruck = self.mepdruck
+        self.mepnacht24h = self.mepab24h
+        self.meptnacht24h = self.mepab24h
+
+        self.bezugsname = self.raum.bezugsname
+        self.faktor = self.raum.faktor
+        self.einheit = self.raum.einheit
+        self.mepminzu = self.raum.zu_min.soll
+        self.mepmaxzu = self.raum.zu_max.soll
+        self.mepminab = self.raum.ab_min.soll
+        self.mepmaxab = self.raum.ab_max.soll
+        self.mepnachtueber = self.mepueber
+        self.meptnachtueber = self.mepueber
+        # self.mepminab = self.raum.ab_min.soll + self.raum.ab_24h.soll + self.raum.ab_lab_min.soll
+        # self.mepmaxab = self.raum.ab_max.soll + self.raum.ab_24h.soll + self.raum.ab_lab_max.soll
+
+        self.isnachtbetrieb = 'Ja' if self.raum.nachtbetrieb  else 'Nein'
+        self.istiefenachtbetrieb = 'Ja' if self.raum.tiefenachtbetrieb  else 'Nein'
+        if self.isnachtbetrieb == 'Nein':
+            self.LW_nacht = '-'
+            self.mepnb_zu = '-'
+            self.mepnb_ab = '-'
+            self.meplabnacht = '-'
+        else:
+            self.LW_nacht = self.raum.NB_LW
+            self.mepnb_zu = self.raum.nb_zu.soll
+            self.meplabnacht = self.meplabmin
+            self.mepnb_ab = self.raum.nb_ab.soll
+            
+        
+        if self.istiefenachtbetrieb == 'Nein':
+            self.tLW_nacht = '-'
+            self.meptnb_zu = '-'
+            self.meptnb_ab = '-'
+            self.meplabtnacht = '-'
+            self.meptnacht24h = '-'
+        else:
+            self.tLW_nacht = self.raum.T_NB_LW
+            self.meptnb_zu = self.raum.tnb_zu.soll
+            self.meplabtnacht = self.meplabmin
+            self.meptnb_ab = self.raum.tnb_ab.soll
+
+        # self.istiefenachtbetrieb = 'Ja' if self.raum.tiefenachtbetrieb  else 'Nein'
+        # self.LW_tnacht = self.raum.T_NB_LW
+        # self.meptnb_zu = self.raum.tnb_zu.soll
+        # self.meptnb_ab = self.raum.tnb_ab.soll + self.raum.ab_24h.soll + self.raum.ab_lab_min.soll
+
+        self.istminzu = self.raum.zu_min.ist
+        self.istmaxzu = self.raum.zu_max.ist
+        self.istnachtzu = self.raum.nb_zu.ist
+        self.isttnachtzu = self.raum.tnb_zu.ist
+        
+        self.istminab = self.raum.ab_min.ist
+        self.istmaxab = self.raum.ab_max.ist
+        self.istnachtab = self.raum.nb_ab.ist
+        self.isttnachtab = self.raum.tnb_ab.ist
+
+        self.istminlab = self.raum.ab_lab_min.ist
+        self.istmaxlab = self.raum.ab_lab_max.ist
+        self.istnachtlab = self.raum.labnacht
+        self.isttnachtlab = self.raum.labtnacht
+
+        self.istmin24h = self.raum.ab_24h.ist
+        self.istmax24h = self.raum.ab_24h.ist
+        self.istnacht24h = self.raum.ab24nacht
+        self.isttnacht24h = self.raum.ab24tnacht
+
+        self.istueber = self.raum.ueber_in_manuell.ist + self.raum.ueber_in.ist - self.raum.ueber_aus.ist - self.raum.ueber_aus_manuell.ist 
+        self.istminueber = self.istueber
+        self.istmaxueber = self.istueber
+        self.istnachtueber = self.istueber
+        self.isttnachtueber = self.istueber
+
+        self.istminsumme = self.istminzu - self.istminab - self.istminlab - self.istmin24h + self.istminueber
+        self.istmaxsumme = self.istmaxzu - self.istmaxab - self.istmaxlab - self.istmax24h + self.istmaxueber
+        self.istmin = 'OK' if abs(self.istminsumme-self.mepdruck) < 3 else 'Passt nicht'
+        self.istmax = 'OK' if abs(self.istmaxsumme-self.mepdruck) < 3 else 'Passt nicht'
+
+        self.mepminsumme = self.mepminzu - self.mepminab - self.meplabmin - self.mepab24h + self.mepueber
+        self.mepmaxsumme = self.mepmaxzu - self.mepmaxab - self.meplabmax - self.mepab24h + self.mepueber
+        self.mepmin = 'OK' if abs(self.mepminsumme-self.mepdruck) < 3 else 'Passt nicht'
+        self.mepmax = 'OK' if abs(self.mepmaxsumme-self.mepdruck) < 3 else 'Passt nicht'
+
+        if self.isnachtbetrieb == 'Nein':
+            self.istnachtzu = '-'
+            self.istnachtab = '-'
+            self.istnachtsumme = '-'
+            self.istnachtab = '-'
+            self.istnachtueber = '-'
+            self.istnachtlab = '-'
+            self.istnacht = '-'
+
+            self.mepnachtdruck = '-'
+            
+            self.mepnachtzu = '-'
+            self.mepnachtab = '-'
+            self.mepnachtsumme = '-'
+            self.mepnachtab = '-'
+            self.mepnachtueber = '-'
+            self.mepnacht = '-'
+            if self.istnacht24h == 0:
+                self.istnacht24h = '-'
+                self.mepnacht24h = '-'
+            else:
+                self.istnacht = 'Passt nicht'
+                self.mepnacht = 'Passt nicht'
+        else:
+            self.istnachtsumme = self.istnachtzu - self.istnachtab - self.istnachtlab - self.istnacht24h + self.istnachtueber
+            self.istnacht = 'OK' if abs(self.istnachtsumme-self.mepnachtdruck) < 3 else 'Passt nicht'
+            self.mepnachtsumme = self.mepnb_zu - self.mepnb_ab - self.meplabnacht - self.mepnacht24h + self.mepnachtueber
+            self.mepnacht = 'OK' if abs(self.mepnachtsumme-self.mepnachtdruck) < 3 else 'Passt nicht'
+
+
+        if self.istiefenachtbetrieb == 'Nein':
+            self.isttnachtzu = '-'
+            self.isttnachtab = '-'
+            self.isttnachtsumme = '-'
+            self.isttnachtab = '-'
+            self.isttnachtueber = '-'
+            self.isttnacht = '-'
+            self.isttnachtlab = '-'
+
+            self.meptnachtzu = '-'
+            self.meptnachtab = '-'
+            self.meptnachtsumme = '-'
+            self.meptnachtab = '-'
+            self.meptnachtueber = '-'
+            self.meptnachtdruck = '-'
+            self.meptnacht = '-'
+            if self.isttnacht24h == 0:
+                self.isttnacht24h = '-'
+                self.meptnacht24h = '-'
+            else:
+                self.isttnacht = 'Passt nicht'
+                self.meptnacht = 'Passt nicht'
+        else:
+            self.isttnachtsumme = self.isttnachtzu - self.isttnachtab - self.isttnachtlab - self.isttnacht24h + self.isttnachtueber
+            self.isttnacht = 'OK' if abs(self.isttnachtsumme-self.meptnachtdruck) < 3 else 'Passt nicht'
+            self.meptnachtsumme = self.meptnb_zu - self.meptnb_ab - self.meplabtnacht - self.meptnacht24h + self.meptnachtueber
+            self.meptnacht = 'OK' if abs(self.meptnachtsumme-self.meptnachtdruck) < 3 else 'Passt nicht'
+                 
+    def cellformat(self,align = 'left',Bold = True, font_size = 12, num_format = None,background = None,left=None,right=None,buttom = None,top = None,font_ground = None,textwrap=False,valigh = 3):
+        '''1: Top, 2: center, 3: bottom'''
+        cell_format = self.book.add_format()
+        cell_format.set_text_v_align(valigh)
+        cell_format.set_align(align)
+        if Bold:cell_format.set_bold()
+        cell_format.set_font_size(font_size)
+        if num_format:cell_format.set_num_format(num_format)
+        if background:
+            cell_format.set_bg_color(background)
+        if font_ground:
+            cell_format.set_font_color(font_ground)
+
+        if left:cell_format.set_left(left)
+        if right:cell_format.set_right(right)
+        if buttom:cell_format.set_bottom(buttom)
+        if top:cell_format.set_top(top)
+        if textwrap:cell_format.set_text_wrap()
+        return cell_format
+
+    def exportheader(self):
+        if not self.sheet:
+            return
+        self.sheet.set_row(self.row,22)
+        self.sheet.merge_range(self.row,0,self.row,5,'Projekt: ' + name,self.cellformat('center',font_size=16,left = 2,right=1,buttom=2,top=2))
+        self.sheet.merge_range(self.row,6,self.row,12,'Projektnummer: '+number,self.cellformat('center',font_size=16,buttom=2,top=2,right=1))
+        self.sheet.merge_range(self.row,13,self.row,19,'Gewerk: Lüftung',self.cellformat('center',font_size=16,buttom=2,top=2,right=2))
+        self.sheet.write(self.row, 20, '',self.cellformat('center',False,10,buttom=2,right=2,top=2))
+
+        self.sheet.merge_range(self.row+1,0,self.row+1,14,'Raumdaten aus den Raumbuch',self.cellformat('center',left = 2,right=2,buttom=1))
+        self.sheet.merge_range(self.row+1,15,self.row+1,18,'Luftsumme der Luftauslässe',self.cellformat('center',right=2,buttom=1))
+        self.sheet.write(self.row+1, 19, 'Bemerkung Raum',self.cellformat('center',left=1,buttom=1,right=2))
+        self.sheet.write(self.row+1, 20, 'Anmerkung Raum',self.cellformat('center',buttom=1,right=2))
+
+        self.sheet.merge_range(self.row+2,0,self.row+2,8,'Raumdaten',self.cellformat('center',False,10,left=2,buttom=1,right=1))
+        self.sheet.merge_range(self.row+2, 9,self.row+2, 10, '',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.merge_range(self.row+2,11,self.row+2,12,'Tagbetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.merge_range(self.row+2, 13, self.row+3, 13,'Nacht- \nbetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=1,textwrap=True,valigh=2))
+        self.sheet.merge_range(self.row+2, 14, self.row+3, 14,'abgesenkter \nBetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=2,textwrap=True,valigh=2))
+        self.sheet.merge_range(self.row+2,15,self.row+2,16,'Tagbetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.merge_range(self.row+2, 17,self.row+3, 17, 'Nacht- \nbetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=1,textwrap=True,valigh=2))
+        self.sheet.merge_range(self.row+2, 18,self.row+3, 18, 'abgesenkter \nBetrieb',self.cellformat('center',False,10,left=1,buttom=1,right=2,textwrap=True,valigh=2))
+        self.sheet.merge_range(self.row+2, 19,self.row+3, 19, '',self.cellformat('center',False,10,left=1,buttom=1,right=2))
+        self.sheet.merge_range(self.row+2, 20,self.row+3, 20, '',self.cellformat('center',False,10,buttom=1,right=2))
+
+        self.sheet.merge_range(self.row+3,9,self.row+3,10,'',self.cellformat('center',left=1,buttom=1,right=1))
+        self.sheet.write(self.row+3, 11, 'min',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.write(self.row+3, 12, 'max',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.write(self.row+3, 15, 'min',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+        self.sheet.write(self.row+3, 16, 'max',self.cellformat('center',False,10,left=1,buttom=1,right=1))
+
+        self.sheet.write(self.row+3, 0,'Nummer',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+4, 0,'Name',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+5, 0,'Ebene',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+6, 0,'Personen',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+7, 0,'Fläche',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+8, 0,'Höhe',self.cellformat('left',False,10,right=1,left=2))
+        self.sheet.write(self.row+9, 0,'Volumen',self.cellformat('left',False,10,right=1,left=2,buttom=1))
+        self.sheet.merge_range(self.row+10, 0,self.row+11, 4,'',self.cellformat('left',False,10,right=1,left=2,buttom=1))
+
+        self.sheet.merge_range(self.row+3, 1, self.row+3, 4, self.raumnummer,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+4, 1, self.row+4, 4,self.raumname,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+5, 1, self.row+5, 4,self.ebene,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+6, 1, self.row+6, 4,self.personen,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+7, 1, self.row+7, 4,self.flaeche,self.cellformat('left',False,10,right=1,num_format='''0.00 "m²"'''))
+        self.sheet.merge_range(self.row+8, 1, self.row+8, 4,self.hoehe,self.cellformat('left',False,10,right=1,num_format='''0.00 "m"'''))
+        self.sheet.merge_range(self.row+9, 1, self.row+9, 4,self.volumen,self.cellformat('left',False,10,right=1,buttom=1,num_format='''0.00 "m³"'''))
+
+        self.sheet.merge_range(self.row+3, 5,self.row+3, 8,'Tagbetrieb',self.cellformat('center',False,10,right=1,buttom=1))
+        self.sheet.merge_range(self.row+4, 5,self.row+4, 6,'Berechnung nach:',self.cellformat('left',False,10,right=4))
+        self.sheet.merge_range(self.row+4, 7,self.row+4, 8,self.bezugsname,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+5, 5,self.row+5, 6,'Faktor:',self.cellformat('left',False,10,right=4))
+        self.sheet.merge_range(self.row+5, 7,self.row+5, 8,self.faktor,self.cellformat('left',False,10,right=1,num_format='''0 "{}"'''.format(self.einheit)))
+
+        self.sheet.merge_range(self.row+6, 5,self.row+6, 8,'Nachtbetrieb',self.cellformat('center',False,10,right=1,top=1,buttom=1))
+        self.sheet.merge_range(self.row+7, 5,self.row+7, 6,'ist Nachtbetrieb',self.cellformat('left',False,10,right=4))
+        self.sheet.merge_range(self.row+7, 7,self.row+7, 8,self.isnachtbetrieb,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+8, 5,self.row+8, 6,'Faktor',self.cellformat('left',False,10,right=4))
+        self.sheet.merge_range(self.row+8, 7,self.row+8, 8,self.LW_nacht,self.cellformat('left',False,10,right=1,num_format='''0 "-1/h"'''))
+
+        self.sheet.merge_range(self.row+9, 5,self.row+9, 8,'abgesenkter Betrieb',self.cellformat('center',False,10,right=1,top=1,buttom=1))
+        self.sheet.merge_range(self.row+10, 5,self.row+10,6,'ist angesenkter Betrieb:',self.cellformat('left',False,10,right=4))
+        self.sheet.merge_range(self.row+10, 7,self.row+10, 8,self.istiefenachtbetrieb,self.cellformat('left',False,10,right=1))
+        self.sheet.merge_range(self.row+11, 5,self.row+11, 6,'Faktor:',self.cellformat('left',False,10,right=4,buttom=1))
+        self.sheet.merge_range(self.row+11, 7,self.row+11, 8,self.tLW_nacht,self.cellformat('left',False,10,right=1,num_format='''0 "-1/h"''',buttom=1))
+
+        self.sheet.merge_range(self.row+4, 9, self.row+4, 10,'Raum Zuluft',self.cellformat('left',False,10,background='#A2E0F4',right=1))
+        self.sheet.merge_range(self.row+5, 9, self.row+5, 10, 'Raum Abluft',self.cellformat('left',False,10,background='#F1EF8D',right=1))
+        self.sheet.merge_range(self.row+6, 9, self.row+6, 10, 'Labor Abluft',self.cellformat('left',False,10,background='#F1EF8D',right=1))
+        self.sheet.merge_range(self.row+7, 9, self.row+7, 10, '24h-Abluft',self.cellformat('left',False,10,background='#FFD757',right=1))
+        self.sheet.merge_range(self.row+8, 9, self.row+8, 10, 'Übertrömung',self.cellformat('left',False,10,background='#BFBFBF',right=1))
+        self.sheet.merge_range(self.row+9, 9, self.row+9, 10, 'Druckstufe',self.cellformat('left',False,10,background='#ADD8E6',right=1))
+        self.sheet.merge_range(self.row+10, 9, self.row+10, 10, 'Luftbilanz',self.cellformat('left',False,10,right=1,buttom=1))
+        self.sheet.merge_range(self.row+11, 9, self.row+11, 10, 'Überprüfung',self.cellformat('left',True,10,buttom=1,right=1))       
+
+        self.sheet.write(self.row+4, 11, self.mepminzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 11, self.mepminab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 11, self.meplabmin,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 11, self.mepab24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 11, self.mepueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 11, self.mepdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 11, self.mepminsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.mepmin == 'OK':self.sheet.write(self.row+11, 11, self.mepmin,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=1))
+        else:self.sheet.write(self.row+11, 11, self.mepmin,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+
+        self.sheet.write(self.row+4, 12, self.mepmaxzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 12, self.mepmaxab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 12, self.meplabmax,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 12, self.mepab24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 12, self.mepueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 12, self.mepdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 12, self.mepmaxsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.mepmax == 'OK':self.sheet.write(self.row+11, 12, self.mepmax,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=1))
+        else:self.sheet.write(self.row+11, 12, self.mepmax,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+
+        self.sheet.write(self.row+4, 13, self.mepnb_zu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 13, self.mepnb_ab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 13, self.meplabnacht,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 13, self.mepnacht24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 13, self.mepnachtueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 13, self.mepnachtdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 13, self.mepnachtsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.mepnacht == 'OK':self.sheet.write(self.row+11, 13, self.mepnacht,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=1))
+        elif self.mepnacht == 'Passt nicht':self.sheet.write(self.row+11, 13, self.mepnacht,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+        else:self.sheet.write(self.row+11, 13, self.mepnacht,self.cellformat('center',True,10,buttom=1,right=1))
+
+        self.sheet.write(self.row+4, 14, self.meptnb_zu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+5, 14, self.meptnb_ab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+6, 14, self.meplabtnacht,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+7, 14, self.meptnacht24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+8, 14, self.meptnachtueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+9, 14, self.meptnachtdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+10, 14, self.meptnachtsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=2,buttom=1))
+        if self.meptnacht == 'OK':self.sheet.write(self.row+11, 14, self.meptnacht,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=2))
+        elif self.meptnacht == 'Passt nicht':self.sheet.write(self.row+11, 14, self.meptnacht,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=2))
+        else:self.sheet.write(self.row+11, 14, self.meptnacht,self.cellformat('center',True,10,buttom=1,right=2))
+
+        self.sheet.write(self.row+4, 15, self.istminzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 15, self.istminab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 15, self.istminlab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 15, self.istmin24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 15, self.istminueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 15, self.mepdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 15, self.istminsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.istmin == 'OK':self.sheet.write(self.row+11, 15, self.istmin,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=1))
+        else:self.sheet.write(self.row+11, 15, self.istmin,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+
+        self.sheet.write(self.row+4, 16, self.istmaxzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 16, self.istmaxab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 16, self.istmaxlab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 16, self.istmax24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 16, self.istmaxueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 16, self.mepdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 16, self.istmaxsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.istmax == 'OK':self.sheet.write(self.row+11, 16, self.istmax,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=1))
+        else:self.sheet.write(self.row+11, 16, self.istmax,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+
+        self.sheet.write(self.row+4, 17, self.istnachtzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+5, 17, self.istnachtab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+6, 17, self.istnachtlab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+7, 17, self.istnacht24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+8, 17, self.istnachtueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+9, 17, self.mepnachtdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=1))
+        self.sheet.write(self.row+10, 17, self.istnachtsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=1,buttom=1))
+        if self.istnacht == 'OK':self.sheet.write(self.row+11, 17, self.istnacht,self.cellformat('center',True,10,buttom=1,font_ground='#17A241',right=1))
+        elif self.istnacht == 'Passt nicht':self.sheet.write(self.row+11, 17, self.istnacht,self.cellformat('center',True,10,buttom=1,font_ground = '#FF0000',right=1))
+        else:self.sheet.write(self.row+11, 17, self.istnacht,self.cellformat('center',True,10,buttom=1,right=1))
+
+        self.sheet.write(self.row+4, 18, self.isttnachtzu,self.cellformat('right',False,10,background='#A2E0F4',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+5, 18, self.isttnachtab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+6, 18, self.isttnachtlab,self.cellformat('right',False,10,background='#F1EF8D',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+7, 18, self.isttnacht24h,self.cellformat('right',False,10,background='#FFD757',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+8, 18, self.isttnachtueber,self.cellformat('right',False,10,background='#BFBFBF',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+9, 18, self.meptnachtdruck,self.cellformat('right',False,10,background='#ADD8E6',num_format='''0 "m³/h"''',right=2))
+        self.sheet.write(self.row+10, 18, self.isttnachtsumme,self.cellformat('right',False,10,num_format='''0 "m³/h"''',right=2,buttom=1))
+        if self.isttnacht == 'OK':self.sheet.write(self.row+11, 18, self.isttnacht,self.cellformat('center',True,10,buttom=1,font_ground='#16A241',right=2))
+        elif self.isttnacht == 'Passt nicht':self.sheet.write(self.row+11, 18, self.isttnacht,self.cellformat('center',True,10,buttom=1,font_ground='#FF0000',right=2))
+        else:self.sheet.write(self.row+11, 18, self.isttnacht,self.cellformat('center',True,10,buttom=1,right=2))
+
+        self.sheet.merge_range(self.row+4,19,self.row+11,19,self.bemerkung,self.cellformat('center',False,10,left=1,buttom=1,right=2,textwrap=True))
+        self.sheet.merge_range(self.row+4,20,self.row+11,20,self.anmerkung,self.cellformat('center',False,10,buttom=1,right=2,textwrap=True))
+
+    def create_art(self,row,Text,background = None):
+        self.sheet.merge_range(row, 0, row, 19,Text,self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background=background))
+        self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background=background))
+
+    def create_last(self,row):
+        self.sheet.merge_range(row, 0, row, 20,'',self.cellformat('left',True,10,top=2))
+        
+    def create_neue_ueberschrift(self,n):
+        # if n >= 36:
+        #     n = n-36
+        #     self.row = self.row+36
+        #     self.exportueberschrift1(self.row)
+        #     n = n+3
+        return n
+
+    def exportueberschrift(self):
+        if not self.sheet:
+            return
+        self.sheet.set_row(self.row+12,30)
+
+        self.sheet.write(self.row+12, 0, 'VSR Id',self.cellformat('center',True,10,left=2,buttom=1,top=6,right=4))
+        self.sheet.write(self.row+12, 1, 'Slave von',self.cellformat('center',True,10,buttom=1,top=6,right=4))
+        # self.sheet.write(self.row+12, 2, 'BKS-Schild',self.cellformat('center',True,10,buttom=1,top=6,right=4))
+        self.sheet.write(self.row+12, 2, 'Einbauort',self.cellformat('center',True,10,buttom=1,top=6,right=4))
+        self.sheet.write(self.row+12, 3, 'Bezeichnung',self.cellformat('center',True,10,buttom=1,top=6,right=4))
+        self.sheet.write(self.row+12, 4, 'Fabrikat',self.cellformat('center',True,10,buttom=1,top=6,right=4))
+        self.sheet.merge_range(self.row+12, 5,self.row+12, 7, 'Typ[Nutzung]',self.cellformat('center',True,10,buttom=1,top=6,right=1))
+        self.sheet.write(self.row+12, 8, 'Spann- \nung',self.cellformat('center',True,10,buttom=1,top=6,right=4,textwrap=True))
+        self.sheet.write(self.row+12, 9, 'Nenn- \nstrom',self.cellformat('center',True,10,buttom=1,top=6,right=4,textwrap=True))
+        self.sheet.write(self.row+12, 10, 'Leist- \nung',self.cellformat('center',True,10,buttom=1,top=6,right=1,textwrap=True))
+        self.sheet.merge_range(self.row+12, 11, self.row+12, 12,'Tagbetrieb',self.cellformat('center',True,10,buttom=1,top = 6,right=4))
+        self.sheet.write(self.row+12, 13, 'Nacht- \nbetrieb',self.cellformat('center',True,10,buttom=1,top = 6,right=4,textwrap=True))
+        self.sheet.write(self.row+12, 14, 'abgesenkter \nBetrieb',self.cellformat('center',True,10,buttom=1,top = 6,right=1,textwrap=True))
+        self.sheet.write(self.row+12, 15, 'Regler \nmin.',self.cellformat('center',True,10,buttom=1,top = 6,right=4,textwrap=True))
+        self.sheet.write(self.row+12, 16, 'max. \ngewünscht',self.cellformat('center',True,10,buttom=1,top = 6,right=4,textwrap=True))
+        self.sheet.write(self.row+12, 17, 'Regler \nVnenn ',self.cellformat('center',True,10,buttom=1,top = 6,right=1,textwrap=True))
+        self.sheet.merge_range(self.row+12, 18, self.row+12, 19,'Bemerkung Antrieb',self.cellformat('center',True,10,top = 6,buttom=1,right=2))
+        self.sheet.write(self.row+12, 20, 'Anmerkung',self.cellformat('center',True,10,right=2,top = 6,buttom=1))
+
+        self.sheet.merge_range(self.row+13, 0, self.row+14, 0, '',self.cellformat(left=2,right=4))
+        self.sheet.merge_range(self.row+13, 1, self.row+14, 1, '',self.cellformat(right=4))
+        self.sheet.merge_range(self.row+13, 2, self.row+14, 2, '',self.cellformat(right=4))
+        self.sheet.merge_range(self.row+13, 3, self.row+14, 3, '',self.cellformat(right=4))
+        self.sheet.merge_range(self.row+13, 4, self.row+14, 4, '',self.cellformat(right=4))
+        # self.sheet.merge_range(self.row+13, 5, self.row+14, 5, '',self.cellformat(right=4))
+        self.sheet.merge_range(self.row+13, 5, self.row+14, 7, '',self.cellformat('center',right=1))
+        self.sheet.merge_range(self.row+13, 8, self.row+14, 8, 'V',self.cellformat('center', True, 10, right=4))
+        self.sheet.merge_range(self.row+13, 9, self.row+14, 9, 'A',self.cellformat('center', True, 10, right=4))
+        self.sheet.merge_range(self.row+13, 10, self.row+14, 10, 'kW',self.cellformat('center', True, 10, right=1))
+        self.sheet.write(self.row+13, 11, 'min',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(self.row+13, 12, 'max',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(self.row+14, 11, 'm³/h',self.cellformat('center',True,10,right=4,))
+        self.sheet.write(self.row+14, 12, 'm³/h',self.cellformat('center',True,10,right=4,))
+        self.sheet.merge_range(self.row+13, 13, self.row+14, 13, 'm³/h',self.cellformat('center',True,10,right=4))
+        self.sheet.merge_range(self.row+13, 14, self.row+14, 14, 'm³/h',self.cellformat('center',True,10,right=1))
+        self.sheet.merge_range(self.row+13, 15, self.row+14, 15, 'm³/h',self.cellformat('center',True,10,right=4))
+        self.sheet.write(self.row+13, 16, 'bei 6m/s',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(self.row+13, 17, 'bei 10V',self.cellformat('center',True,10,right=1,buttom=4))
+        self.sheet.write(self.row+14, 16, 'm³/h',self.cellformat('center',True,10,right=4))
+        self.sheet.write(self.row+14, 17, 'm³/h',self.cellformat('center',True,10,right=1))
+        self.sheet.merge_range(self.row+13, 18, self.row+14, 19,'',self.cellformat(right=2))
+        self.sheet.merge_range(self.row+13, 20, self.row+14, 20,'',self.cellformat(right=2))
+
+    def exportueberschrift1(self,row,daten):
+        if not self.sheet:
+            return
+        if daten != '1':
+            return
+        self.sheet.set_row(row,30)
+
+        self.sheet.write(row, 0, 'VSR Id',self.cellformat('center',True,10,left=2,buttom=1,top=2,right=4))
+        self.sheet.write(row, 1, 'Slave von',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        # self.sheet.write(row, 2, 'BKS-Schild',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        self.sheet.write(row, 2, 'Einbauort',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        self.sheet.write(row, 3, 'Bezeichnung',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        self.sheet.write(row, 4, 'Fabrikat',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        self.sheet.merge_range(row, 5,row, 7, 'Typ[Nutzung]',self.cellformat('center',True,10,buttom=1,top=2,right=1))
+        self.sheet.write(row, 8, 'Spann- \nung',self.cellformat('center',True,10,buttom=1,top=2,right=4,textwrap=True))
+        self.sheet.write(row, 9, 'Nenn- \nstrom',self.cellformat('center',True,10,buttom=1,top=2,right=4,textwrap=True))
+        self.sheet.write(row, 10, 'Leist- \nung',self.cellformat('center',True,10,buttom=1,top=2,right=1,textwrap=True))
+        self.sheet.merge_range(row, 11, row, 12,'Tagbetrieb',self.cellformat('center',True,10,buttom=1,top=2,right=4))
+        self.sheet.write(row, 13, 'Nacht- \nbetrieb',self.cellformat('center',True,10,buttom=1,top=2,right=4,textwrap=True))
+        self.sheet.write(row, 14, 'abgesenkter \nBetrieb',self.cellformat('center',True,10,buttom=1,top=2,right=1,textwrap=True))
+        self.sheet.write(row, 15, 'Regler \nmin.',self.cellformat('center',True,10,buttom=1,top=2,right=4,textwrap=True))
+        self.sheet.write(row, 16, 'max. \ngewünscht',self.cellformat('center',True,10,buttom=1,top=2,right=4,textwrap=True))
+        self.sheet.write(row, 17, 'Regler \nVnenn ',self.cellformat('center',True,10,buttom=1,top=2,right=1,textwrap=True))
+        self.sheet.merge_range(row, 18, row, 19,'Bemerkung Antrieb',self.cellformat('center',True,10,top=2,buttom=1,right=2))
+        self.sheet.write(row, 20, 'Anmerkung',self.cellformat('center',True,10,right=2,top=2,buttom=1))
+
+        self.sheet.merge_range(row+1, 0, row+2, 0, '',self.cellformat(left=2,right=4,buttom=1))
+        self.sheet.merge_range(row+1, 1, row+2, 1, '',self.cellformat(right=4,buttom=1))
+        self.sheet.merge_range(row+1, 2, row+2, 2, '',self.cellformat(right=4,buttom=1))
+        self.sheet.merge_range(row+1, 3, row+2, 3, '',self.cellformat(right=4,buttom=1))
+        self.sheet.merge_range(row+1, 4, row+2, 4, '',self.cellformat(right=4,buttom=1))
+        # self.sheet.merge_range(row+1, 5, row+2, 5, '',self.cellformat(right=4,buttom=1))
+        self.sheet.merge_range(row+1, 5, row+2, 7, '',self.cellformat('center',right=1,buttom=1))
+        self.sheet.merge_range(row+1, 8, row+2, 8, 'V',self.cellformat('center', True, 10, right=4,buttom=1))
+        self.sheet.merge_range(row+1, 9, row+2, 9, 'A',self.cellformat('center', True, 10, right=4,buttom=1))
+        self.sheet.merge_range(row+1, 10, row+2, 10, 'kW',self.cellformat('center', True, 10, right=1,buttom=1))
+        self.sheet.write(row+1, 11, 'min',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(row+1, 12, 'max',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(row+2, 11, 'm³/h',self.cellformat('center',True,10,right=4,buttom=1))
+        self.sheet.write(row+2, 12, 'm³/h',self.cellformat('center',True,10,right=4,buttom=1))
+        self.sheet.merge_range(row+1, 13, row+2, 13, 'm³/h',self.cellformat('center',True,10,right=4,buttom=1))
+        self.sheet.merge_range(row+1, 14, row+2, 14, 'm³/h',self.cellformat('center',True,10,right=1,buttom=1))
+        self.sheet.merge_range(row+1, 15, row+2, 15, 'm³/h',self.cellformat('center',True,10,right=4,buttom=1))
+        self.sheet.write(row+1, 16, 'bei 6m/s',self.cellformat('center',True,10,right=4,buttom=4))
+        self.sheet.write(row+1, 17, 'bei 10V',self.cellformat('center',True,10,right=1,buttom=4))
+        self.sheet.write(row+2, 16, 'm³/h',self.cellformat('center',True,10,right=4,buttom=1))
+        self.sheet.write(row+2, 17, 'm³/h',self.cellformat('center',True,10,right=1,buttom=1))
+        self.sheet.merge_range(row+1, 18, row+2, 19,'',self.cellformat(right=2,buttom=1))
+        self.sheet.merge_range(row+1, 20, row+2, 20,'',self.cellformat(right=2,buttom=1))
+        
+    def GetExportdaten(self):
+        datenforexport = []
+        datenforexport.append(['TRENNUNG','Raum Zuluft'])
+        LAB = []
+        H24 = []
+        LAB_1 = []
+        H24_1 = []
+        RZU = []
+        RAB = []
+        RZU_Luftauslass = []
+        RAB_Luftauslass = []
+        H24_Luftauslass = []
+        LAB_Luftauslass = []
+        H24_1_Luftauslass = []
+        LAB_1_Luftauslass = []
+        
+        if self.raum.list_vsr0.Count > 0:
+            for vsr in self.raum.list_vsr0:
+                if vsr.art == 'RZU':
+                    datenforexport.append(['VSR',vsr])
+                    for subvsr in vsr.List_VSR:
+                        if self.raum.list_vsr1.Contains(subvsr):
+                            datenforexport.append(['VSR',subvsr])
+                            RZU.append(subvsr)
+                            for auslass in subvsr.Auslass:RZU_Luftauslass.append(auslass)
+
+                    for auslass in vsr.Auslass:
+                        if self.raum.list_auslass.Contains(auslass) and auslass not in RZU_Luftauslass:
+                            datenforexport.append(['AUSLASS',Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                'RZU',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                            RZU_Luftauslass.append(auslass)
+    
+        if self.raum.list_vsr1.Count > 0:
+            for vsr in self.raum.list_vsr1:
+                if vsr.art == 'RZU' and vsr not in RZU:
+                    datenforexport.append(['VSR',vsr])
+                    for auslass in vsr.Auslass:RZU_Luftauslass.append(auslass)
+
+        for auslass in self.raum.list_auslass:
+            if auslass not in RZU_Luftauslass and auslass.art == 'RZU':
+                datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                    'RZU',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+
+                RZU_Luftauslass.append(auslass)
+        
+        datenforexport.append(['TRENNUNG','Raum Abluft'])
+
+        if self.raum.list_vsr0.Count > 0:
+            for vsr in self.raum.list_vsr0:
+                if vsr.art == 'RAB':
+                    datenforexport.append(['VSR',vsr])
+                    for subvsr in vsr.List_VSR:
+                        if self.raum.list_vsr1.Contains(subvsr):
+                            if subvsr.art == 'LAB':
+                                LAB_1.append(subvsr)
+                                for auslass in subvsr.Auslass:
+                                    LAB_Luftauslass.append(auslass)
+                            elif subvsr.art == '24h':
+                                H24_1.append(subvsr)
+                                for auslass in subvsr.Auslass:
+                                    H24_Luftauslass.append(auslass)
+                            else:
+                                datenforexport.append(['VSR',subvsr])
+                                RAB.append(subvsr)
+                                for auslass in subvsr.Auslass:RAB_Luftauslass.append(auslass)
+                    for auslass in vsr.Auslass:
+                        if self.raum.list_auslass.Contains(auslass):
+                            if auslass.art == 'RAB' and auslass not in RAB_Luftauslass:
+                                datenforexport.append(['AUSLASS',Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    'RAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                                RAB_Luftauslass.append(auslass)
+                            
+                            elif auslass.art == 'LAB' and auslass not in LAB_Luftauslass:
+                                LAB_Luftauslass.append(auslass)
+                                LAB_1_Luftauslass.append(Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'',''))
+                            
+                            elif auslass.art == '24h' and auslass not in H24_Luftauslass:
+                                H24_Luftauslass.append(auslass)
+                                H24_1_Luftauslass.append(Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    '24h',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'',''))
+                            
+        if self.raum.list_vsr1.Count > 0:
+            for vsr in self.raum.list_vsr1:
+                if vsr.art == 'RAB' and vsr not in RAB:
+                    datenforexport.append(['VSR',vsr])
+                    for auslass in vsr.Auslass:
+                        if auslass.art == 'RAB':RAB_Luftauslass.append(auslass)
+                        elif auslass.art == 'LAB':
+                            LAB_Luftauslass.append(auslass)
+                            LAB_1_Luftauslass.append(Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'',''))
+                        elif auslass.art == '24h':
+                            H24_Luftauslass.append(auslass)
+                            H24_1_Luftauslass.append(Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    '24h',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'',''))
+                
+        
+        for auslass in self.raum.list_auslass:
+            if auslass not in RAB_Luftauslass and auslass.art == 'RAB':
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        'RAB',auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    RAB_Luftauslass.append(auslass)
+        
+        datenforexport.append(['TRENNUNG','Labor Abluft'])
+        if len(LAB_1) > 0:
+            for vsr in LAB_1:datenforexport.append(['VSR',vsr])
+        
+        if len(LAB_1_Luftauslass) > 0:
+            for auslass in LAB_1_Luftauslass:datenforexport.append(['AUSLASS',auslass])
+
+        if self.raum.list_vsr0.Count > 0:
+            for vsr in self.raum.list_vsr0:
+                if vsr.art == 'LAB':
+                    datenforexport.append(['VSR',vsr])
+                    for subvsr in vsr.List_VSR:
+                        if self.raum.list_vsr1.Contains(subvsr):
+                            datenforexport.append(['VSR',subvsr])
+                            LAB.append(subvsr)
+                            for auslass in subvsr.Auslass:LAB_Luftauslass.append(auslass)
+                    for auslass in vsr.Auslass:
+                        if self.raum.list_auslass.Contains(auslass):
+                            if auslass.art == 'LAB' and auslass not in LAB_Luftauslass:
+                                
+                                datenforexport.append(['AUSLASS',Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                                LAB_Luftauslass.append(auslass)
+
+        if self.raum.list_vsr1.Count > 0:
+            for vsr in self.raum.list_vsr1:
+                if vsr.art == 'LAB' and vsr not in LAB and vsr not in LAB_1:
+                    datenforexport.append(['VSR',vsr])
+
+                    for auslass in vsr.Auslass:LAB_Luftauslass.append(auslass)
+        for auslass in self.raum.list_auslass:
+            if auslass not in LAB_Luftauslass and auslass.art == 'LAB':
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        'LAB',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    LAB_Luftauslass.append(auslass)
+
+        datenforexport.append(['TRENNUNG','24h-Abluft'])
+        if len(H24_1) > 0:
+            for vsr in H24_1:datenforexport.append(['VSR',vsr])
+
+        if len(H24_1_Luftauslass) > 0:
+            for auslass in H24_1_Luftauslass:datenforexport.append(['AUSLASS',auslass])
+                
+        if self.raum.list_vsr0.Count > 0:
+            for vsr in self.raum.list_vsr0:
+                if vsr.art == '24h':
+                    datenforexport.append(['VSR',vsr])
+                    
+                    for subvsr in vsr.List_VSR:
+                        if self.raum.list_vsr1.Contains(subvsr):
+                            datenforexport.append(['VSR',subvsr])
+                            H24.append(subvsr)
+                            
+                            for auslass in subvsr.Auslass: H24_Luftauslass.append(auslass)
+                    for auslass in vsr.Auslass:
+                        if self.raum.list_auslass.Contains(auslass):
+                            if auslass.art == '24h' and auslass not in H24_Luftauslass:
+                                datenforexport.append(['AUSLASS',Luftauslassfuerexport('-->Optional',vsr.vsrid,self.raumnummer,\
+                                    '',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+
+                                H24_Luftauslass.append(auslass)
+
+        if self.raum.list_vsr1.Count > 0:
+            for vsr in self.raum.list_vsr1:
+                if vsr.art == '24h' and vsr not in H24 and vsr not in H24_1:
+                    datenforexport.append(['VSR',vsr])
+                    for auslass in vsr.Auslass:H24_Luftauslass.append(auslass)
+        
+        for auslass in self.raum.list_auslass:
+            if auslass not in H24_Luftauslass and auslass.art == '24h':
+                if auslass.familyandtyp.upper().find('VORHALTUNG') == -1:
+                    datenforexport.append(['AUSLASS',Luftauslassfuerexport('Durchlass Ohne VR','',self.raumnummer,\
+                        '',auslass.nutzung,auslass.Luftmengenmin,auslass.Luftmengenmax,auslass.Luftmengennacht,auslass.Luftmengentnacht,'','')])
+                    H24_Luftauslass.append(auslass)
+            
+        
+        datenforexport.append(['TRENNUNG','Überströmung in'])
+
+        liste_ein = self.raum.list_ueber['Ein']
+        liste_aus = self.raum.list_ueber['Aus']
+        dict_ein = {}
+        dict_aus = {}
+        for el in liste_ein:
+            if el.anderesraum not in dict_ein.keys():
+                dict_ein[el.anderesraum] = 0
+            dict_ein[el.anderesraum] += el.menge
+        for el in liste_aus:
+            if el.anderesraum not in dict_aus.keys():
+                dict_aus[el.anderesraum] = 0
+            dict_aus[el.anderesraum] += el.menge
+        
+        if self.raum.ueber_in_manuell.ist > 0:
+            uebermanuell = self.raum.ueber_in_manuell.ist
+            ueberinnacht = uebermanuell 
+            ueberintnacht = uebermanuell
+
+            if self.isnachtbetrieb == 'Nein':
+                ueberinnacht = '0'
+
+            if self.istiefenachtbetrieb == 'Nein':
+                ueberintnacht = '0'
+            datenforexport.append(['ÜEBERSTROM',['Manuelle Eingabe',uebermanuell,ueberinnacht,ueberintnacht]])
+
+        for raumnummer in sorted(dict_ein.keys()):
+            uebermanuell = dict_ein[raumnummer]
+            ueberinnacht = uebermanuell 
+            ueberintnacht = uebermanuell
+
+            if self.isnachtbetrieb == 'Nein':
+                ueberinnacht = '0'
+
+            if self.istiefenachtbetrieb == 'Nein':
+                ueberintnacht = '0'
+            datenforexport.append(['ÜEBERSTROM',['aus dem Raum: ' + raumnummer,uebermanuell,ueberinnacht,ueberintnacht]])
+
+        datenforexport.append(['TRENNUNG','Überströmung aus'])
+
+        if self.raum.ueber_aus_manuell.ist > 0:
+            uebermanuell = self.raum.ueber_aus_manuell.ist
+            ueberinnacht = uebermanuell 
+            ueberintnacht = uebermanuell
+
+            if self.isnachtbetrieb == 'Nein':
+                ueberinnacht = '0'
+
+            if self.istiefenachtbetrieb == 'Nein':
+                ueberintnacht = '0'
+            datenforexport.append(['ÜEBERSTROM',['Manuelle Eingabe',uebermanuell,ueberinnacht,ueberintnacht]])
+
+        for raumnummer in sorted(dict_aus.keys()):
+            uebermanuell = dict_aus[raumnummer]
+            ueberinnacht = uebermanuell 
+            ueberintnacht = uebermanuell
+
+            if self.isnachtbetrieb == 'Nein':
+                ueberinnacht = '0'
+
+            if self.istiefenachtbetrieb == 'Nein':
+                ueberintnacht = '0'
+            datenforexport.append(['ÜEBERSTROM',['in dem Raum: ' + raumnummer,uebermanuell,ueberinnacht,ueberintnacht]])
+        return datenforexport      
+    
+    def GetFinalExportdaten(self):
+        datenforexport_temp = self.GetExportdaten()
+        anzahl = len(datenforexport_temp)+15
+        if anzahl <= 45:
+            self.exportgesamtdaten(datenforexport_temp)
+            return
+        else:
+            Liste = []
+            for n, daten in enumerate(datenforexport_temp):
+                if daten[0] == 'TRENNUNG':
+                    Liste.append(n)
+            for n1,nummer in enumerate(Liste):
+                if nummer >= 30:
+                    break
+            nummer = Liste[n1-1]
+            datenforexport_temp.insert(nummer,['Überschrift',''])
+            datenforexport_temp.insert(nummer,['Überschrift',''])
+            datenforexport_temp.insert(nummer,['Überschrift','1'])
+            self.exportgesamtdaten(datenforexport_temp)
+            return
+    
+    def exportgesamtdaten(self,datengesamt):
+        self.exportheader()
+        self.exportueberschrift()
+        for n, daten in enumerate(datengesamt):
+            if daten[0] == 'TRENNUNG':
+                self.exporttrennung(self.row+n+15,daten[1])
+            elif daten[0] == 'VSR':
+                self.exportvsr(self.row+n+15,daten[1])
+            elif daten[0] == 'AUSLASS':
+                self.exportluftauslass(self.row+n+15,daten[1])
+            elif daten[0] == 'ÜEBERSTROM':
+                self.exportueberstromeinzeln(self.row+n+15,daten[1])
+            else:
+                if daten[1] == '1':self.rowbreaks.append(self.row+n+15)
+                self.exportueberschrift1(self.row+n+15,daten[1])
+        self.rowbreaks.append(self.row+len(datengesamt)+16)
+        self.create_last(self.row+len(datengesamt)+15)
+        self.rowende = self.row+len(datengesamt)+16
+    
+    def exporttrennung(self,row,daten):
+        bold = self.book.add_format()
+        bold.set_bold()
+        normal = self.book.add_format()
+        if daten == 'Raum Zuluft':
+            self.sheet.merge_range(row, 0, row, 19,daten,self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#A2E0F4'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#A2E0F4'))
+        elif daten == 'Raum Abluft':
+            self.sheet.merge_range(row, 0, row, 19,daten,self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#F1EF8D'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#F1EF8D'))
+        elif daten == 'Labor Abluft':
+            self.sheet.merge_range(row, 0, row, 19,daten,self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#F1EF8D'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#F1EF8D'))
+        elif daten == '24h-Abluft':
+            self.sheet.merge_range(row, 0, row, 19,daten,self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#FFD757'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#FFD757'))
+        elif daten == 'Überströmung in':
+            self.sheet.merge_range(row, 0, row, 19,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+            self.sheet.write_rich_string(row, 0,normal,'Überströmung ', bold, 'in', ' dem Raum',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+  
+        elif daten == 'Überströmung aus':
+            self.sheet.merge_range(row, 0, row, 19,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+            self.sheet.write(row, 20,'',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+            self.sheet.write_rich_string(row, 0,normal,'Überströmung ', bold, 'aus', ' dem Raum',self.cellformat('left',True,10,top=1,buttom=1,left=2,right=2,background='#BFBFBF'))
+
+    def exportvsr(self,row,vsr):
+        if not self.sheet:
+            return
+        self.sheet.set_row(row,26)
+        vsr.vsrauswaelten()
+        self.sheet.write(row, 0, vsr.vsrid,self.cellformat('left',False,10,left=2,right=4))
+        self.sheet.write(row, 1, vsr.slavevon,self.cellformat('left',False,10,right=4))
+        # self.sheet.write(row, 2, vsr.BKSschild,self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 2, vsr.raumnummer,self.cellformat('left',False,10,right=4))
+        
+        self.sheet.write(row, 3, vsr.vsrart,self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 4, vsr.VSR_Hersteller.fabrikat,self.cellformat('center',False,10,right=4))
+        else:self.sheet.write(row, 4, '',self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:
+            if vsr.nutzung:
+                self.sheet.merge_range(row, 5, row, 7, vsr.VSR_Hersteller.typ+'\n[{}]'.format(vsr.nutzung),self.cellformat('left',False,10,right=1,textwrap=True))
+            else:
+                self.sheet.merge_range(row, 5, row, 7, vsr.VSR_Hersteller.typ,self.cellformat('left',False,10,right=1,textwrap=True))
+        else:
+            if vsr.ispps:
+                self.sheet.merge_range(row, 5, row, 7, '{} [PPs]'.format(vsr.size),self.cellformat('left',False,10,right=1,textwrap=True))
+            else:
+                self.sheet.merge_range(row, 5, row, 7, '{} [Blech]'.format(vsr.size),self.cellformat('left',False,10,right=1,textwrap=True))
+   
+            
+        if vsr.VSR_Hersteller:self.sheet.write(row, 8, vsr.VSR_Hersteller.spannung,self.cellformat('center',False,10,right=4))
+        else:self.sheet.write(row, 8, '-',self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 9, vsr.VSR_Hersteller.nennstrom,self.cellformat('center',False,10,right=4))
+        else:self.sheet.write(row, 9, '-',self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 10, vsr.VSR_Hersteller.leistung,self.cellformat('center',False,10,right=1))
+        else:self.sheet.write(row, 10, '-',self.cellformat('center',False,10,right=1))
+
+        if vsr.Luftmengenmin > vsr.Luftmengenmax:
+            try:self.sheet.write(row, 11, round(vsr.Luftmengenmax,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 11, vsr.Luftmengenmax,self.cellformat('center',False,10,right=4))
+            try:self.sheet.write(row, 12, round(vsr.Luftmengenmin,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 12, vsr.Luftmengenmin,self.cellformat('center',False,10,right=4))
+
+        else:
+            try:self.sheet.write(row, 11, round(vsr.Luftmengenmin,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 11, vsr.Luftmengenmin,self.cellformat('center',False,10,right=4))
+            try:self.sheet.write(row, 12, round(vsr.Luftmengenmax,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 12, vsr.Luftmengenmax,self.cellformat('center',False,10,right=4))
+        
+        try:self.sheet.write(row, 13, round(vsr.Luftmengennacht,2),self.cellformat('center',False,10,right=4))
+        except:self.sheet.write(row, 13, vsr.Luftmengennacht,self.cellformat('center',False,10,right=4))
+        try:self.sheet.write(row, 14, round(vsr.Luftmengentnacht,2),self.cellformat('center',False,10,right=1))
+        except:self.sheet.write(row, 14, vsr.Luftmengentnacht,self.cellformat('center',False,10,right=1))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 15, vsr.VSR_Hersteller.vmin,self.cellformat('center',False,10,right=4))
+        else:self.sheet.write(row, 15, '',self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 16, vsr.VSR_Hersteller.vmax,self.cellformat('center',False,10,right=4))
+        else:self.sheet.write(row, 16, '',self.cellformat('center',False,10,right=4))
+        if vsr.VSR_Hersteller:self.sheet.write(row, 17, vsr.VSR_Hersteller.vnenn,self.cellformat('center',False,10,right=1))
+        else:self.sheet.write(row, 17, '',self.cellformat('center',False,10,right=1))
+        if vsr.VSR_Hersteller:
+            self.sheet.merge_range(row, 18, row, 19,vsr.VSR_Hersteller.bemerkung,self.cellformat('center',False,10,right=2,textwrap=True))
+        else:self.sheet.merge_range(row, 18,row, 19, '',self.cellformat('center',False,10,right=2,textwrap=True))
+        if vsr.VSR_Hersteller:
+            if vsr.VSR_Hersteller.dimension != vsr.size:
+                self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2,font_ground='#FF0000'))
+            else:
+                self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2))
+        else:self.sheet.write(row, 20, vsr.anmerkung,self.cellformat('center',False,10,right=2,font_ground='#FF0000'))
+    
+    def exportluftauslass(self,row,luftauslass):
+        if not self.sheet:
+            return
+        self.sheet.set_row(row,24)
+        self.sheet.write(row, 0, luftauslass.art,self.cellformat('left',False,10,left=2,right=4))
+        self.sheet.write(row, 1, luftauslass.slavevon,self.cellformat('left',False,10,right=4))
+        # self.sheet.write(row, 2, '-',self.cellformat('left',False,10,right=4))
+        self.sheet.write(row, 2, luftauslass.raumnummer,self.cellformat('left',False,10,right=4))
+        self.sheet.write(row, 3, luftauslass.auslassart,self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 4, '-',self.cellformat('center',False,10,right=4))
+        self.sheet.merge_range(row, 5, row, 7, luftauslass.nutzung,self.cellformat('left',False,10,right=1,textwrap=True))
+        self.sheet.write(row, 8, '-',self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 9, '-',self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 10, '-',self.cellformat('center',False,10,right=1))
+
+        if luftauslass.Luftmengenmin > luftauslass.Luftmengenmax:
+            try:self.sheet.write(row, 11, round(luftauslass.Luftmengenmax,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 11, luftauslass.Luftmengenmax,self.cellformat('center',False,10,right=4))
+            try:self.sheet.write(row, 12, round(luftauslass.Luftmengenmin,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 12, luftauslass.Luftmengenmin,self.cellformat('center',False,10,right=4))
+
+        else:
+            try:self.sheet.write(row, 11, round(luftauslass.Luftmengenmin,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 11, luftauslass.Luftmengenmin,self.cellformat('center',False,10,right=4))
+            try:self.sheet.write(row, 12, round(luftauslass.Luftmengenmax,2),self.cellformat('center',False,10,right=4))
+            except:self.sheet.write(row, 12, luftauslass.Luftmengenmax,self.cellformat('center',False,10,right=4))
+
+        try:self.sheet.write(row, 13, round(luftauslass.Luftmengennacht,2),self.cellformat('center',False,10,right=4))
+        except:self.sheet.write(row, 13, luftauslass.Luftmengennacht,self.cellformat('center',False,10,right=4))
+        try:self.sheet.write(row, 14, round(luftauslass.Luftmengentnacht,2),self.cellformat('center',False,10,right=1))
+        except:self.sheet.write(row, 14, luftauslass.Luftmengentnacht,self.cellformat('center',False,10,right=1))
+        self.sheet.write(row, 15, '-',self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 16, '-',self.cellformat('center',False,10,right=4))
+        self.sheet.write(row, 17, '-',self.cellformat('center',False,10,right=1))
+        self.sheet.merge_range(row, 18,row, 19, '',self.cellformat('center',False,8,right=2,textwrap=True))
+        self.sheet.write(row, 20, '',self.cellformat('center',False,10,right=2))
+
+    def exportueberstromeinzeln(self,row,daten):
+        Raumnummer,lufttag,luftnacht,lufttnacht = daten
+        self.sheet.merge_range(row, 0,row, 10, Raumnummer,self.cellformat('right',False,10,left=2,right=1))  
+        try:self.sheet.write(row, 11, round(lufttag),self.cellformat('center',False,10,left=1,right=4))
+        except:self.sheet.write(row, 11, lufttag,self.cellformat('center',False,10,left=1,right=4))
+        try:self.sheet.write(row, 12, round(lufttag),self.cellformat('center',False,10,right=4))
+        except:self.sheet.write(row, 12, lufttag,self.cellformat('center',False,10,right=4))
+        try:self.sheet.write(row, 13, round(luftnacht),self.cellformat('center',False,10,right=4))
+        except:self.sheet.write(row, 13, luftnacht,self.cellformat('center',False,10,right=4))
+        try:self.sheet.write(row, 14, round(lufttnacht),self.cellformat('center',False,10,right=1))
+        except:self.sheet.write(row, 14, lufttnacht,self.cellformat('center',False,10,right=1))
+        self.sheet.merge_range(row, 15,row, 17, '',self.cellformat('center',False,10,right=1))  
+        self.sheet.merge_range(row, 18,row, 19, '',self.cellformat('center',False,10,right=2))
+        self.sheet.write(row, 20, '',self.cellformat('center',False,10,right=2))
+
+    def exportuberstrom(self,row):
+        if not self.sheet:
+            return
+            
 RED = Brushes.Red
 BLACK = Brushes.Black
 BLUE = Brushes.Blue
@@ -284,7 +1097,7 @@ for el in views:
 
 active_view = uidoc.ActiveView
 if active_view.Name != 'Berechnungsmodell_L_KG4xx_IGF':
-    logger.error('die Ansicht "Berechnungsmodell_L_KG4xx_IGF" nicht gefunden!')
+    logger.error('die Ansicht "Berechnungsmodell_L_KG4xx_IGF "nicht gefunden!')
     script.exit()
 
 class ABFRAGE(forms.WPFWindow):
@@ -525,6 +1338,7 @@ class Familien(forms.WPFWindow):
     def schliessen(self,sender,e):
         self.Close()
         script.exit()
+
         
 familien = Familien(IS_AUSLASS,IS_AUSLASS_D,IS_AUSLASS_LAB,IS_AUSLASS_24H,IS_VSR,IS_DOSSEL)
 try:familien.ShowDialog()
@@ -533,6 +1347,88 @@ except Exception as e:
     familien.Close()
     script.exit()
 
+class MEPFOREXPORTITEM(Itemtemplate):
+    def __init__(self, name, berechnungnach,checked=False):
+        Itemtemplate.__init__(self,name, checked)
+        self.berechnng = berechnungnach
+
+class RaumluftbilanzExport(forms.WPFWindow):
+    def __init__(self,path,Liste_MEP):
+        self.path = path
+        forms.WPFWindow.__init__(self,'einstellung.xaml')
+        self.Liste_MEP = Liste_MEP
+        self.liste_temp = ObservableCollection[MEPFOREXPORTITEM]()
+        if os.path.exists(self.path):
+            self.ordner.Text = self.path
+        else:
+            self.path = ''
+        self.result = False
+        self.LV_MEP.ItemsSource = self.Liste_MEP
+    def suchetextchanged(self,sender,e):
+        text = sender.Text
+        self.liste_temp.Clear()
+        if not text:
+            self.LV_MEP.ItemsSource = self.Liste_MEP
+            return
+        else:
+            for el in self.Liste_MEP:
+                if el.name.upper().find(text.upper()) != -1:
+                    self.liste_temp.Add(el)
+            self.LV_MEP.ItemsSource = self.liste_temp
+            return    
+    def checkedchanged(self,sender,e):
+        Checked = sender.IsChecked
+        if self.LV_MEP.SelectedItem is not None:
+            try:
+                if sender.DataContext in self.LV_MEP.SelectedItems:
+                    for item in self.LV_MEP.SelectedItems:
+                        try:item.checked = Checked
+                        except:pass
+                else:pass
+            except:pass
+
+    def alle(self,sender,e):
+        for el in self.LV_MEP.Items:
+            el.checked = True
+
+    def keine(self,sender,e):
+        for el in self.LV_MEP.Items:
+            el.checked = False
+    
+    def nur(self,sender,e):
+        for el in self.LV_MEP.Items:
+            if el.berechnng != 'keine':
+                el.checked = True
+    
+    def ok(self,sender,e):
+        if not self.ordner.Text:
+            UI.TaskDialog.Show('Info.','Kein Ordner ausgewählt')
+            return
+        elif os.path.exists(self.ordner.Text) is False:
+            UI.TaskDialog.Show('Info.','Ordner nicht vorhanden')
+            self.ordner.Text = ''
+            return
+        self.result = True
+        self.Close()
+        return
+    def schliessen(self,sender,e):
+
+        self.result = False
+        self.Close()
+        return
+    
+    def movewindow(self, sender, args):
+        self.DragMove()
+    
+    def durchsuchen(self,sender,args):
+        dialog = FolderBrowserDialog()
+        dialog.Description = "Ordner auswählen"
+        dialog.ShowNewFolderButton = True
+        if dialog.ShowDialog() == DialogResult.OK:
+            folder = dialog.SelectedPath
+            self.ordner.Text = folder
+            self.path = folder
+        
 VSR_AUSLASS_LISTE = config.auslass
 DRO_AUSLASS_LISTE = config.auslassd
 LAB_AUSLASS_LISTE = config.auslasslab
@@ -704,9 +1600,9 @@ class FamilieExemplar(TemplateItemBase):
                 try:
                     return 'DN ' + str(int(round(conn.Radius*609.6)))
                 except:
-                    Height = str(int(round(conn.Height*304.8)))
-                    Width = str(int(round(conn.Width*304.8)))
-                    return Width + 'x' + Height
+                    Height = int(round(conn.Height*304.8))
+                    Width = int(round(conn.Width*304.8))
+                    return str(max([Width,Height])) + 'x' + str(min([Width,Height]))
         except:return
     
     def wert_schreiben(self):
@@ -822,6 +1718,12 @@ class Luftauslass(FamilieExemplar):
         self.VSR_Class = None
         self.Haupt_Class = None
         self.IRIS_Class = None
+        self.nutzung = ''
+        self.slavevon = ''
+        try:
+            self.nutzung = self.elem.Symbol.LookupParameter('Beschreibung').AsString() + ', ' + self.elem.Symbol.LookupParameter('Typenkommentare').AsString()
+        except:
+            pass
         self.Luftmengenermitteln()
         self.size = self.get_Size()
         try:self.System = self.elem.LookupParameter('Systemtyp').AsValueString()
@@ -832,6 +1734,7 @@ class Luftauslass(FamilieExemplar):
       
         if self.familyandtyp not in VSR_AUSLASS_LISTE:
             self.get_RountingListe(self.elem)   
+
         self.get_Art()
         if self.familyname in DRO_AUSLASS_LISTE:
             if self.iris in [-1,'']:
@@ -846,6 +1749,9 @@ class Luftauslass(FamilieExemplar):
         
         if not self.vsr:
             self.Anmerkung = 'Kein VSR.'
+        else:
+            try:self.slavevon = doc.GetElement(DB.ElementId(int(self.vsr))).LookupParameter('SBI_Bauteilnummerierung').AsString()
+            except:pass
     
     def set_up(self):
         FamilieExemplar.set_up(self)
@@ -855,13 +1761,21 @@ class Luftauslass(FamilieExemplar):
 
     def Luftmengenermitteln(self):
         try:self.Luftmengenmin = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMin'))),1)
-        except:pass
+        except:
+            try:self.Luftmengenmin = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromMin'))),1)
+            except:pass
         try:self.Luftmengennacht = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromNacht'))),1)
-        except:pass
+        except:
+            try:self.Luftmengennacht = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromNacht'))),1)
+            except:pass
         try:self.Luftmengenmax = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMax'))),1)
-        except:pass
+        except:
+            try:self.Luftmengenmax = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromMax'))),1)
+            except:pass
         try:self.Luftmengentnacht = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromTiefeNacht'))),1)
-        except:pass
+        except:
+            try:self.Luftmengentnacht = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromTiefeNacht'))),1)
+            except:pass
 
     def get_RountingListe(self,element):
         if self.RoutingListe.Count > 500:return
@@ -884,6 +1798,8 @@ class Luftauslass(FamilieExemplar):
                             if owner.Category.Name == 'Luftkanalzubehör':
                                 faminame = owner.Symbol.FamilyName
                                 typname = owner.Name
+                                if faminame == 'CAx RU Absperrklappe' and typname == 'mit Stellantrieb':
+                                    return
                                 if faminame in VSR_FAMILIE_LISTE:
                                     conns_temp = owner.MEPModel.ConnectorManager.Connectors
                                     for conn_temp in conns_temp:
@@ -945,6 +1861,7 @@ class VSR(FamilieExemplar):
         self.checked = False
         self.Auslass = ObservableCollection[Luftauslass]()
         self.liste_Raum = []
+        self.slavevon = '-'
         self.liste_Raum_nurNummer = []
         self.size = self.get_Size()
         self.IsHaupt = False
@@ -952,11 +1869,286 @@ class VSR(FamilieExemplar):
         self.List_Iris = ObservableCollection[VSR]()
         self.List_VSR = ObservableCollection[VSR]()
         self.List_Haupt = ObservableCollection[VSR]()
+        self._Liste_Herstellertyp = []
+        self.DICT_DatenBank = DICT_DatenBank
+        self._Liste_Fabrikat = Liste_Fabrikat
+        self._Herstellerindex = 0
+        self._Herstellertypindex = 0
+
+        self.Datenbank_rund = Liste_Datenbank 
+        self.Datenbank_eck = Liste_Datenbank1 
+        self.VSR_Hersteller = None
+
+        self._anmerkung = 'kein passender Typ gefunden'
+        self.material = self.elem.LookupParameter('IGF_X_Material_Text')
+        self._dict = {
+            'VR1-80':DB.ElementId(40884949),
+            'VR1-100':DB.ElementId(30817223),
+            'VR1-125':DB.ElementId(30817226),
+            'VR1-160':DB.ElementId(30817239),
+            'VR1-200':DB.ElementId(30817229),
+            'VR1-250':DB.ElementId(30817232),
+            'VR1-315':DB.ElementId(30817235),
+            'VRE1-100':DB.ElementId(30778826),
+            'VRE1-125':DB.ElementId(30781828),
+            'VRE1-160':DB.ElementId(30784831),
+            'VRE1-200':DB.ElementId(29973863),
+            'VRE1-250':DB.ElementId(29970867),
+            'VRE1-315':DB.ElementId(29960042),
+            'VRL1-80':DB.ElementId(40884949),
+            'VRL1-100':DB.ElementId(30817223),
+            'VRL1-125':DB.ElementId(30817226),
+            'VRL1-160':DB.ElementId(30817239),
+            'VRL1-200':DB.ElementId(30817229),
+            'VRL1-250':DB.ElementId(30817232),
+        }
+        try:
+            self.vsrid = self.elem.LookupParameter('SBI_Bauteilnummerierung').AsString()
+        except:
+            self.vsrid = ''
+        try:
+            self.BKSschild = self.elem.LookupParameter('IGF_GA_BKS-Schild').AsString()
+        except:
+            self.BKSschild = ''
+        
+        self.ispps = False
+        
+        
+        # try:
+        #     self.spannung = get_value(self.elem.Symbol.LookupParameter('IGF_GA_Spannung'))
+        # except:
+        #     self.spannung = '24'
+
+        self.vsrart = 'VVR'
+        self.istppspruefen()
+        self.istkvr()
+        self._Vmin = ''
+        self._Vmax = ''
+
+        self.nutzung = ''
+        
     
+    @property
+    def Vmin(self):
+        return self._Vmin
+    @Vmin.setter
+    def Vmin(self,value):
+        if value != self._Vmin:
+            self._Vmin = value
+            self.RaisePropertyChanged('Vmin')
+    @property
+    def Vmax(self):
+        return self._Vmax
+    @Vmax.setter
+    def Vmax(self,value):
+        if value != self._Vmax:
+            self._Vmax = value
+            self.RaisePropertyChanged('Vmax')
+    @property
+    def Herstellerindex(self):
+        return self._Herstellerindex
+    @Herstellerindex.setter
+    def Herstellerindex(self,value):
+        if value != self._Herstellerindex:
+            self._Herstellerindex = value
+            self.RaisePropertyChanged('Herstellerindex')
+    @property
+    def Liste_Herstellertyp(self):
+        return self._Liste_Herstellertyp
+    @Liste_Herstellertyp.setter
+    def Liste_Herstellertyp(self,value):
+        if value != self._Liste_Herstellertyp:
+            self._Liste_Herstellertyp = value
+            self.RaisePropertyChanged('Liste_Herstellertyp')
+    @property
+    def Liste_Fabrikat(self):
+        return self._Liste_Fabrikat
+    @Liste_Fabrikat.setter
+    def Liste_Fabrikat(self,value):
+        if value != self._Liste_Fabrikat:
+            self._Liste_Fabrikat = value
+            self.RaisePropertyChanged('Liste_Fabrikat')
+    @property
+    def Herstellertypindex(self):
+        return self._Herstellertypindex
+    @Herstellertypindex.setter
+    def Herstellertypindex(self,value):
+        if value != self._Herstellertypindex:
+            self._Herstellertypindex = value
+            self.RaisePropertyChanged('Herstellertypindex')
+
+
+    @property
+    def anmerkung(self):
+        return self._anmerkung
+    @anmerkung.setter
+    def anmerkung(self,value):
+        if value != self._anmerkung:
+            self._anmerkung = value
+            self.RaisePropertyChanged('anmerkung')
+    
+    def istppspruefen(self):
+        if self.material:
+            try:
+                # material = self.familyandtyp
+                if self.material.AsString().upper().find('PPS') != -1:
+                    self.ispps = True
+                else:
+                    self.ispps = False
+            except:
+                self.ispps = False
+    
+    def istkvr(self):
+        if self.familyandtyp.upper().find('KONST') != -1 or self.familyandtyp.upper().find('KVR') != -1:
+            self.vsrart = 'KVR'
+        else:
+            self.vsrart = 'VVR'
+    
+    def changetype(self):
+        if self.art == 'RZU':
+            self.material.Set('Blech')
+        if self.art == '24h':
+            self.material.Set('PPs')
+        if self.VSR_Hersteller:
+
+            if self.VSR_Hersteller.typ in self._dict.keys():
+                try:self.elem.ChangeTypeId(self._dict[self.VSR_Hersteller.typ])
+                except Exception as e:logger.error(e)
+        try:
+            self.set_up()
+        except Exception as e:logger.error(e)
+    
+    def vsrueberpruefen(self):
+        if self.VSR_Hersteller:
+            self.Vmin = self.VSR_Hersteller.vmin
+            self.Vmax = self.VSR_Hersteller.vmax
+            if self.VSR_Hersteller.dimension != self.size:
+                self.anmerkung = 'In Projekt {} modelliert'.format(self.size)
+            else:
+                self.anmerkung = ''
+        else:self.anmerkung = 'kein passender Typ gefunden'
+            
+    def get_vsrListe(self):
+        self.VSR_Hersteller = None
+        self.Vmax = 0
+        self.Vmin = 0
+        self.Liste_Herstellertyp = []
+
+        liste_volumen = [self.Luftmengenmax,self.Luftmengenmin,self.Luftmengennacht,self.Luftmengentnacht]
+        while( 0 in liste_volumen):
+            liste_volumen.remove(0)
+        if not liste_volumen:
+            self.VSR_Hersteller = None
+            self.Herstellertypindex = -1
+            return
+
+        minvol = min(liste_volumen)
+        maxvol = max(liste_volumen)
+        
+
+        if self.Herstellerindex != -1:
+            Hersteller = self.Liste_Fabrikat[self.Herstellerindex]
+
+        if self.size.find('DN') != -1:
+            if Hersteller in self.Datenbank_rund.keys():liste = self.Datenbank_rund[Hersteller]
+            else:
+                self.VSR_Hersteller = None
+                self.Herstellertypindex = -1
+                return
+        else:
+            if Hersteller in self.Datenbank_eck.keys():liste = self.Datenbank_eck[Hersteller]
+            else:
+                self.VSR_Hersteller = None
+                self.Herstellertypindex = -1
+                return
+
+        if self.art == 'RZU':
+            for art in [1,0]:
+                if art in liste.keys():
+                    listetemp = liste[art]
+                    if self.vsrart in listetemp.keys():
+                        listetemp_vsr = listetemp[self.vsrart]
+                        if self.size.find('DN') != -1:
+                            for dimension in sorted(listetemp_vsr.keys()):
+                                for vsr_temp in listetemp_vsr[dimension]:
+                                    if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                        
+                                        self.Liste_Herstellertyp.append(vsr_temp.typ)
+                                        
+                        else:
+                            for max_a in sorted(listetemp_vsr.keys()):
+                                for min_a in sorted(listetemp_vsr[max_a].keys()):
+                                    for vsr_temp in listetemp_vsr[max_a][min_a]:
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
+        elif self.art in ['RAB','LAB','24h']:
+            if self.ispps:
+                if 3 in liste.keys():
+                    listetemp = liste[3]
+                    if self.vsrart in listetemp.keys():
+                        listetemp_vsr = listetemp[self.vsrart]
+                        if self.size.find('DN') != -1:
+                            for dimension in sorted(listetemp_vsr.keys()):
+                                for vsr_temp in listetemp_vsr[dimension]:
+                                    if vsr_temp.vmin <= minvol and vsr_temp.vmax >= maxvol:
+                                        
+                                        self.Liste_Herstellertyp.append(vsr_temp.typ)
+                        else:
+                            for max_a in sorted(listetemp_vsr.keys()):
+                                for min_a in sorted(listetemp_vsr[max_a].keys()):
+                                    for vsr_temp in listetemp_vsr[max_a][min_a]:
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
+
+            else:
+                for art in [2,0]:
+                    if art in liste.keys():
+                        listetemp = liste[art]
+                        if self.vsrart in listetemp.keys():
+                            listetemp_vsr = listetemp[self.vsrart]
+                            if self.size.find('DN') != -1:
+                                for dimension in sorted(listetemp_vsr.keys()):
+                                    for vsr_temp in listetemp_vsr[dimension]:
+                                        if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                            
+                                            self.Liste_Herstellertyp.append(vsr_temp.typ)
+                            else:
+                                for max_a in sorted(listetemp_vsr.keys()):
+                                    for min_a in sorted(listetemp_vsr[max_a].keys()):
+                                        for vsr_temp in listetemp_vsr[max_a][min_a]:
+                                            if vsr_temp.vmin <= minvol and vsr_temp.vmax > maxvol:
+                                                
+                                                self.Liste_Herstellertyp.append(vsr_temp.typ)
+        
+    def vsrauswaelten(self):
+        if len(self.Liste_Herstellertyp) > 0:
+            if self.size.find('DN') != -1:
+                self.VSR_Hersteller = DICT_DatenBank[self.Liste_Herstellertyp[0]]
+            else:
+                temp_dict = {}
+                for typ in self.Liste_Herstellertyp:
+                    item_vsr = DICT_DatenBank[typ]
+                    temp_dict[item_vsr.dimension] = item_vsr
+                if self.size in temp_dict.keys():
+                    self.VSR_Hersteller = temp_dict[self.size]
+                else:
+                    self.VSR_Hersteller = DICT_DatenBank[self.Liste_Herstellertyp[0]]
+
+        if self.VSR_Hersteller:
+            if self.VSR_Hersteller.typ in self.Liste_Herstellertyp:
+                self.Herstellertypindex = self.Liste_Herstellertyp.index(self.VSR_Hersteller.typ)
+
     def set_up(self):
         FamilieExemplar.set_up(self)
+        self.istkvr()
+        self.istppspruefen()
+        
         self.size = self.get_Size()
         self.get_Art()
+        self.vsrauswaelten()
+        self.vsrueberpruefen()
 
     def Luftmengenermitteln(self):
         if self.art == 'RUM':
@@ -1037,7 +2229,12 @@ class VSR(FamilieExemplar):
                 print(self.elemid.ToString(),art_liste)
         elif art_liste.Count == 3 and '24h' in art_liste and 'LAB' in art_liste and 'RAB' in art_liste:self.art = 'RAB'
         else:print(self.elemid.ToString(),art_liste)
-    
+
+        if self.art == 'LAB' or self.art == '24h':
+            for auslass in self.Auslass:
+                self.nutzung = auslass.nutzung
+                break
+
     def wert_schreiben(self):
         try:self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMin').SetValueString(str(self.Luftmengenmin).replace(',','.'))
         except Exception as e:pass
@@ -1220,6 +2417,8 @@ def Get_Auslass_Info():
                         vsr.Auslass.Add(terminal)
             vsr.get_Art()
             vsr.Luftmengenermitteln()
+            vsr.vsrauswaelten()
+            vsr.vsrueberpruefen()
             vsr.liste_Raum = DICT_VSR_MEP[vsrid]
             vsr.liste_Raum_nurNummer = DICT_VSR_MEP_NUR_NUMMER[vsrid]
             
@@ -1244,6 +2443,7 @@ class MEPGrundInfo(TemplateItemBase):
         self.name = name
         self._soll = soll
         self._ist = ''
+        self._reduziert = ''
         self.tooltip = tooltip
     @property
     def soll(self):
@@ -1253,6 +2453,14 @@ class MEPGrundInfo(TemplateItemBase):
         if value != self._soll:
             self._soll = value
             self.RaisePropertyChanged('soll')
+    @property
+    def reduziert(self):
+        return self._reduziert
+    @reduziert.setter
+    def reduziert(self,value):
+        if value != self._reduziert:
+            self._reduziert = value
+            self.RaisePropertyChanged('reduziert')
     @property
     def ist(self):
         return self._ist
@@ -1428,12 +2636,27 @@ class MEPRaum(object):
                             if el.List_Iris.Contains(iris) == False:
                                 el.List_Iris.Add(iris)
                                 iris.List_VSR.Add(el)
+        if self.list_vsr0.Count > 0:
+            for mainvsr in self.list_vsr0:
+                for subvsr in mainvsr.List_VSR:
+                    if self.list_vsr1.Contains(subvsr):
+                        if subvsr.slavevon != '-':
+                            if subvsr.slavevon != mainvsr.vsrid:
+                                logger.error('VSR {} hat zwei Haupt VSR {}, {}. Bitte überprüfen.'.format(subvsr.vsrid,mainvsr.vsrid,subvsr.slavevon))
+                        subvsr.slavevon = mainvsr.vsrid
+                        if subvsr.vsrid.find('-->') == -1:
+                            subvsr.vsrid = '--> ' + subvsr.vsrid
+                        
 
         # self.angezuluft = 0
         # self.angeabluft = 0
 
         self.IsTierRaum = (self.get_element('IGF_RLT_Tierkäfig_raumunabhängig') != 0)
         self.IsSchacht = (self.get_element('TGA_RLT_InstallationsSchacht') != 0)
+        self.IsReduziert = self.get_element('IGF_RLT_istReduziert')
+        self.reduziertfaktor = self.get_element('IGF_RLT_Raum-ReduziertFaktor')
+        if not self.reduziertfaktor or self.reduziertfaktor == 0:
+            self.reduziertfaktor = 1
         self.list_auslass = ObservableCollection[Luftauslass]()
         if self.elemid.ToString() in DICT_MEP_AUSLASS.keys():
              for art in sorted(DICT_MEP_AUSLASS[self.elemid.ToString()].keys()):
@@ -1453,13 +2676,19 @@ class MEPRaum(object):
         except:self.bezugsname = 'keine'
         try:self.ebene = self.elem.LookupParameter('Ebene').AsValueString()
         except:self.ebene = ''
-        self.flaeche = round(self.get_element('Fläche')+0.5, 0)
-        self.volumen = round(self.get_element('Volumen'),1)
+        self.flaeche = round(self.get_element('Fläche'), 2)
+        # self.volumen = round(self.get_element('IGF_A_Volumen'),2)
         self.personen = round(self.get_element('Personenzahl'),1)
         self.faktor = self.get_element('TGA_RLT_VolumenstromProFaktor')
         try:self.einheit = self.einheit_liste[self.bezugsnummer]
         except:self.einheit = ''
-        self.hoehe = int(self.get_element('Lichte Höhe'))
+        self.hoehe = int(self.get_element('IGF_RLT_RaumHöhe'))
+        self.volumen = round((self.hoehe*self.flaeche/1000),2)
+        if not self.hoehe:
+            self.hoehe = int(self.get_element('Lichte Höhe'))
+            self.volumen = int(self.get_element('Volumen'))
+       
+        # self.hoehe = round((self.volumen/self.flaeche),2)
         self.nachtbetrieb = self.get_element('IGF_RLT_Nachtbetrieb')
         self.tiefenachtbetrieb = self.get_element('IGF_RLT_TieferNachtbetrieb')
         self.NB_LW = self.get_element('IGF_RLT_NachtbetriebLW')
@@ -1557,6 +2786,10 @@ class MEPRaum(object):
 
         self.ab_min.soll = self.ab_min.soll - self.ab_24h.soll - self.ab_lab_min.soll
         self.ab_max.soll = self.ab_max.soll - self.ab_24h.soll - self.ab_lab_max.soll
+        self.labnacht = 0
+        self.labtnacht = 0
+        self.ab24nacht = 0
+        self.ab24tnacht = 0
         self.sum_update()
 
         
@@ -1618,39 +2851,135 @@ class MEPRaum(object):
         n = abs(int(self.Druckstufe.soll/10)) if abs(int(self.Druckstufe.soll/10)) < 6 else 5
         if self.Druckstufe.soll > 0:self.IGF_Legende = n*'+'
         else:self.IGF_Legende = n*'-'
-    
-        
+          
     def Labmin_24h_Druckstufe_Pruefen(self,zuluftmin):
+        if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll > zuluftmin:
+            zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll
+        
+        
+        # if self.Druckstufe.soll < 0:
+        #     if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll + self.Druckstufe.soll > zuluftmin + self.ueber_in_manuell.soll + self.ueber_in.soll:
+        #         zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.Druckstufe.soll + self.ab_lab_min.soll + self.ab_24h.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # else:
+        # if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll > zuluftmin + self.ueber_in_manuell.soll + self.ueber_in.soll:
+        #     zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # if self.Druckstufe.soll > 0:
+        #     zuluftmin = zuluftmin + self.Druckstufe.soll 
+
+        return zuluftmin
+    
+    def Labmin_24h_Druckstufe_Nacht_Pruefen(self,zuluftmin):
+
+        zuluftmin =  zuluftmin - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # if self.Druckstufe.soll < 0:
+        #     if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll + self.Druckstufe.soll > zuluftmin + self.ueber_in_manuell.soll + self.ueber_in.soll:
+        #         zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.Druckstufe.soll + self.ab_lab_min.soll + self.ab_24h.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # else:
         if self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll > zuluftmin + self.ueber_in_manuell.soll + self.ueber_in.soll:
             zuluftmin = self.ueber_aus.soll + self.ueber_aus_manuell.soll  + self.ab_lab_min.soll + self.ab_24h.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
-
-        if self.Druckstufe.soll > 0:
-            zuluftmin = zuluftmin + self.Druckstufe.soll 
+        if zuluftmin < 0:
+            zuluftmin = 0
+        # if self.Druckstufe.soll > 0:
+        #     zuluftmin = zuluftmin + self.Druckstufe.soll 
 
         return zuluftmin
 
     def Labmax_24h_Druckstufe_Pruefen(self,zuluftmax):
-        if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll > zuluftmax + self.ueber_in_manuell.soll + self.ueber_in.soll:
-            zuluftmax =  self.ab_lab_max.soll + self.ab_24h.soll + self.ueber_aus.soll + self.ueber_aus_manuell.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
-
-        if self.Druckstufe.soll > 0:
-            zuluftmax = zuluftmax + self.Druckstufe.soll 
+        if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll > zuluftmax :
+            zuluftmax =  self.ab_lab_max.soll + self.ab_24h.soll + self.ueber_aus.soll + self.ueber_aus_manuell.soll
+        
+        # if self.Druckstufe.soll < 0:
+        #     if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll + self.Druckstufe.soll > zuluftmax + self.ueber_in_manuell.soll + self.ueber_in.soll:
+        #         zuluftmax =  self.ab_lab_max.soll + self.ab_24h.soll + self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.Druckstufe.soll  - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # else:
+        # if self.ueber_aus.soll + self.ueber_aus_manuell.soll + self.ab_lab_max.soll + self.ab_24h.soll > zuluftmax + self.ueber_in_manuell.soll + self.ueber_in.soll:
+        #     zuluftmax =  self.ab_lab_max.soll + self.ab_24h.soll + self.ueber_aus.soll + self.ueber_aus_manuell.soll - self.ueber_in_manuell.soll - self.ueber_in.soll
+        # if self.Druckstufe.soll > 0:
+        #     zuluftmax = zuluftmax + self.Druckstufe.soll 
 
         return zuluftmax
 
     def Nachtbetrieb_Berechnen(self):
-        if self.nachtbetrieb:
-            if self.tiefenachtbetrieb:
-                self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
-                if self.tnb_dauer.soll <= 0:
-                    self.tnb_dauer.soll += 24.00
-                self.tnb_zu.soll = self.T_NB_LW * self.volumen
-                self.tnb_zu.soll = self.Labmin_24h_Druckstufe_Pruefen(self.tnb_zu.soll)
-                self.tnb_ab.soll = self.tnb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
-            self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll + 24.00
-            self.nb_zu.soll = self.NB_LW * self.volumen
-            self.nb_zu.soll = self.Labmin_24h_Druckstufe_Pruefen(self.nb_zu.soll)
-            self.nb_ab.soll = self.nb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
+        if self.bezugsname in ['Fläche',"Luftwechsel","Person","manuell"]:
+            if self.nachtbetrieb:
+                if self.tiefenachtbetrieb:
+                    self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
+                    if self.tnb_dauer.soll <= 0:
+                        self.tnb_dauer.soll += 24.00
+                    self.tnb_zu.soll = self.luft_round(self.T_NB_LW * self.volumen)
+                
+                    self.tnb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.tnb_zu.soll)
+                    self.tnb_ab.soll = self.tnb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll #- self.Druckstufe.soll
+                else:
+                    self.tnb_dauer.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_ab.soll = 0
+
+                self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll + 24.00
+                self.nb_zu.soll = self.luft_round(self.NB_LW * self.volumen)
+                self.nb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.nb_zu.soll)
+                self.nb_ab.soll = self.nb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll #- self.Druckstufe.soll
+            else:
+                self.nb_dauer.soll = 0
+                self.nb_zu.soll = 0
+                self.nb_ab.soll = 0
+                self.tnb_dauer.soll = 0
+                self.tnb_ab.soll = 0
+                self.tnb_zu.soll = 0   
+        elif self.bezugsname in ['nurZU_Fläche',"nurZU_Luftwechsel","nurZU_Person","nurZUMa"]:
+            if self.nachtbetrieb:
+                if self.tiefenachtbetrieb:
+                    self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
+                    if self.tnb_dauer.soll <= 0:
+                        self.tnb_dauer.soll += 24.00
+                    self.tnb_zu.soll = 0-(self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll )#- self.Druckstufe.soll)
+                    # self.tnb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.tnb_zu.soll)
+                    self.tnb_ab.soll = 0
+
+                else:
+                    self.tnb_dauer.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_ab.soll = 0
+                self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll + 24.00
+                self.nb_zu.soll = 0-(self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll )#- self.Druckstufe.soll)
+                # self.nb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.nb_zu.soll)
+                self.nb_ab.soll = 0
+
+            else:
+                self.nb_dauer.soll = 0
+                self.nb_zu.soll = 0
+                self.nb_ab.soll = 0
+                self.tnb_dauer.soll = 0
+                self.tnb_ab.soll = 0
+                self.tnb_zu.soll = 0   
+        elif self.bezugsname in ['nurAB_Fläche',"nurAB_Luftwechsel","nurAB_Person","nurABMa"]:
+            if self.nachtbetrieb:
+                if self.tiefenachtbetrieb:
+                    self.tnb_dauer.soll = self.tnb_bis.soll - self.tnb_von.soll
+                    if self.tnb_dauer.soll <= 0:
+                        self.tnb_dauer.soll += 24.00
+                    self.tnb_zu.soll = 0
+                    # self.tnb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.tnb_zu.soll)
+                    self.tnb_ab.soll = self.tnb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll# - self.Druckstufe.soll
+                else:
+                    self.tnb_dauer.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_zu.soll = 0
+                    self.tnb_ab.soll = 0
+
+                self.nb_dauer.soll = self.nb_bis.soll - self.nb_von.soll - self.tnb_dauer.soll + 24.00
+                self.nb_zu.soll = 0
+                # self.nb_zu.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.nb_zu.soll)
+                self.nb_ab.soll = self.nb_zu.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll #- self.Druckstufe.soll
+            else:
+                self.nb_dauer.soll = 0
+                self.nb_zu.soll = 0
+                self.nb_ab.soll = 0
+                self.tnb_dauer.soll = 0
+                self.tnb_ab.soll = 0
+                self.tnb_zu.soll = 0   
         else:
             self.nb_dauer.soll = 0
             self.nb_zu.soll = 0
@@ -1658,7 +2987,7 @@ class MEPRaum(object):
             self.tnb_dauer.soll = 0
             self.tnb_ab.soll = 0
             self.tnb_zu.soll = 0   
-    
+
     def Tagesbetrieb_Berechnen(self):
         if self.flaeche == 0:
             return
@@ -1668,83 +2997,139 @@ class MEPRaum(object):
                 return
             if self.bezugsname == "nurZU_Fläche":
                 self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurZU_Luftwechsel":
                 self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
             
             elif self.bezugsname == "nurZU_Person":
                 self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurZUMa":
                 self.zu_min.soll = self.luft_round(float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
             
             self.ab_min.soll = self.ab_max.soll = 0
+            self.ab_min.reduziert = self.ab_max.reduziert = 0
             self.zu_max.soll = self.zu_min.soll
+            self.zu_max.reduziert = self.zu_min.reduziert
 
             self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
             self.zu_max.soll = self.Labmax_24h_Druckstufe_Pruefen(self.zu_max.soll)
+            self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+            self.zu_max.reduziert = self.Labmax_24h_Druckstufe_Pruefen(self.zu_max.reduziert)
+            self.angeabluft.reduziert = self.angezuluft.reduziert = self.zu_min.reduziert
             self.angeabluft.soll = self.angezuluft.soll = self.zu_min.soll
             
             abweichung = self.ueber_aus_manuell.soll + self.ueber_aus.soll - self.zu_min.soll - self.ueber_in.soll - self.ueber_in_manuell.soll + self.Druckstufe.soll
+            abweichung_reduziert = self.ueber_aus_manuell.soll + self.ueber_aus.soll - self.zu_min.reduziert - self.ueber_in.soll - self.ueber_in_manuell.soll + self.Druckstufe.soll
             
             if abweichung >= 0:
                 self.zu_min.soll += abweichung
                 self.zu_max.soll += abweichung
+            if abweichung_reduziert >= 0:
+                self.zu_min.reduziert += abweichung_reduziert
+                self.zu_max.reduziert += abweichung_reduziert
 
 
+            if self.IsReduziert:
+                if abweichung_reduziert < 0:
+                    self.hinweis = "Achtung: Bitte Überströmung-Aus um {} m³/h erhöhen".format(int(0 - abweichung_reduziert))
+                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
             else:
-                self.hinweis = "Achtung: Bitte Überströmung-Aus um {} m³/h erhöhen".format(int(0 - abweichung))
-                self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                if abweichung < 0:
+                    self.hinweis = "Achtung: Bitte Überströmung-Aus um {} m³/h erhöhen".format(int(0 - abweichung))
+                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
 
         elif self.bezugsname in ['nurAB_Fläche',"nurAB_Luftwechsel","nurAB_Person","nurABMa"]:
             if self.bezugsname == "nurAB_Fläche":
                 self.angezuluft.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurAB_Luftwechsel":
                 self.angezuluft.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurAB_Person":
                 self.angezuluft.soll = self.luft_round(self.personen * float(self.faktor))
+                self.angezuluft.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "nurABMa":
                 self.angezuluft.soll = self.luft_round(float(self.faktor))
-                        
+                self.angezuluft.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
+                           
+            self.angeabluft.reduziert = self.angezuluft.reduziert
             self.angeabluft.soll = self.angezuluft.soll
             self.zu_min.soll = self.zu_max.soll = 0
+            self.zu_min.reduziert = self.zu_max.reduziert = 0
             
             abweichung_max = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
             abweichung_min = self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
             abweichung = self.ueber_in.soll + self.ueber_in_manuell.soll - self.angezuluft.soll
+            abweichung_reduziert = self.ueber_in.soll + self.ueber_in_manuell.soll - self.angezuluft.reduziert
+            
             if abweichung_max >= 0:
                 self.ab_min.soll = abweichung_min
                 self.ab_max.soll = abweichung_max
-                if abweichung < 0:
-                    self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(int(0 - abweichung))
-                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                self.ab_min.reduziert = self.ab_min.soll
+                self.ab_max.reduziert = self.ab_max.soll
+                if self.IsReduziert:
+                    if abweichung_reduziert < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(int(0 - abweichung_reduziert))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                else:
+                    if abweichung < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(int(0 - abweichung))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
             else:
                 self.ab_min.soll = 0
                 self.ab_max.soll = 0
-
-  
-                if abweichung < 0:
-                    self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(max(int(0 - abweichung),int(0 - abweichung_max)))
-                    self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                self.ab_min.reduziert = 0
+                self.ab_max.reduziert = 0
+                if self.IsReduziert:
+                    if abweichung_reduziert < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(max(int(0 - abweichung_reduziert),int(0 - abweichung_max)))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
+                else:
+                    if abweichung < 0:
+                        self.hinweis = "Achtung: Bitte Überströmung-Ein um {} m³/h erhöhen".format(max(int(0 - abweichung),int(0 - abweichung_max)))
+                        self.logger.error("Raum {}: {}".format(self.Raumnr,self.hinweis))
                
+             
         elif self.bezugsname in ['Fläche',"Luftwechsel","Person","manuell"]:
             if self.bezugsname == "Fläche":
-                self.zu_max.soll = self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.zu_min.soll = self.luft_round(self.flaeche * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.flaeche * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "Luftwechsel":
-                self.zu_max.soll = self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.zu_min.soll = self.luft_round(self.volumen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.volumen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "Person":
-                self.zu_max.soll = self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
+                self.zu_min.soll = self.luft_round(self.personen * float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(self.personen * float(self.faktor) * self.reduziertfaktor)
             elif self.bezugsname == "manuell":
-                self.zu_max.soll = self.zu_min.soll = self.luft_round(float(self.faktor))
-        
+                self.zu_min.soll = self.luft_round(float(self.faktor))
+                self.zu_min.reduziert = self.luft_round(float(self.faktor) * self.reduziertfaktor)
             
             
-            self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
-            self.zu_max.soll = self.Labmax_24h_Druckstufe_Pruefen(self.zu_max.soll)
+            if self.bezugsname == 'manuell':
+                self.zu_min.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.zu_min.soll)
+                self.zu_max.soll = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.zu_max.soll)
+                self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.zu_min.reduziert)
+                self.zu_max.reduziert = self.Labmin_24h_Druckstufe_Nacht_Pruefen(self.zu_max.reduziert)
+            else:
+                self.zu_min.soll = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.soll)
+                self.zu_max.soll = self.Labmax_24h_Druckstufe_Pruefen(self.zu_max.soll)
+                self.zu_min.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_min.reduziert)
+                self.zu_max.reduziert = self.Labmin_24h_Druckstufe_Pruefen(self.zu_max.reduziert)
 
             self.angeabluft.soll = self.angezuluft.soll = self.zu_max.soll
+            self.angeabluft.reduziert = self.angezuluft.reduziert = self.zu_min.reduziert
             
 
+            self.ab_max.soll = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll #- self.Druckstufe.soll
+            self.ab_min.soll = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll #- self.Druckstufe.soll
+            
             self.ab_max.soll = self.zu_max.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
             self.ab_min.soll = self.zu_min.soll + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
+            self.ab_max.reduziert = self.zu_max.reduziert + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_max.soll - self.ab_24h.soll - self.Druckstufe.soll
+            self.ab_min.reduziert = self.zu_min.reduziert + self.ueber_in.soll + self.ueber_in_manuell.soll - self.ueber_aus.soll - self.ueber_aus_manuell.soll - self.ab_lab_min.soll - self.ab_24h.soll - self.Druckstufe.soll
             
             if self.ab_max.soll <= 0:
                 self.zu_max.soll -= self.ab_max.soll
@@ -1752,6 +3137,12 @@ class MEPRaum(object):
             if self.ab_min.soll <= 0:
                 self.zu_max.soll -= self.ab_min.soll
                 self.ab_min.soll = 0
+            if self.ab_max.reduziert <= 0:
+                self.zu_max.reduziert -= self.ab_max.reduziert
+                self.ab_max.reduziert = 0
+            if self.ab_min.reduziert <= 0:
+                self.zu_max.reduziert -= self.ab_min.reduziert
+                self.ab_min.reduziert = 0
                        
         elif self.bezugsname == 'keine':
             self.zu_min.soll = 0
@@ -1760,6 +3151,12 @@ class MEPRaum(object):
             self.ab_min.soll = 0
             self.zu_max.soll = 0
             self.ab_max.soll = 0
+            self.zu_min.reduziert = 0
+            self.angezuluft.reduziert = 0
+            self.angeabluft.reduziert = 0
+            self.ab_min.reduziert = 0
+            self.zu_max.reduziert = 0
+            self.ab_max.reduziert = 0
             
         self.get_Schacht_info()
         self.get_Anlagen_info()
@@ -1771,14 +3168,19 @@ class MEPRaum(object):
         max_zu = 0
         max_ab = 0
         ab24h = 0
+        ab24h_nacht = 0
+        ab24h_tnacht = 0
         lab_min = 0
         lab_max = 0
+        lab_nacht = 0
+        lab_tnacht = 0
         nb_zu = 0
         nb_ab = 0
         tnb_zu = 0
         tnb_ab = 0
         uber_in = 0
         uber_aus = 0
+
 
         for uber in self.list_ueber["Ein"]:
             uber_in += uber.menge
@@ -1788,13 +3190,13 @@ class MEPRaum(object):
         for auslass in self.list_auslass:
             if auslass.art == '24h':
                 ab24h += auslass.Luftmengenmin
-                # nb_ab += auslass.Luftmengennacht
-                # tnb_ab += auslass.Luftmengentnacht
+                ab24h_nacht += auslass.Luftmengennacht
+                ab24h_tnacht += auslass.Luftmengentnacht
             elif auslass.art == 'LAB':
                 lab_min += auslass.Luftmengenmin
                 lab_max += auslass.Luftmengenmax
-                # nb_ab += auslass.Luftmengennacht
-                # tnb_ab += auslass.Luftmengentnacht
+                lab_nacht += auslass.Luftmengennacht
+                lab_tnacht += auslass.Luftmengentnacht
             elif auslass.art == 'RZU':
                 min_zu += auslass.Luftmengenmin
                 max_zu += auslass.Luftmengenmax
@@ -1830,6 +3232,11 @@ class MEPRaum(object):
         self.ueber_in.ist = int(round(uber_in))
         self.ueber_aus.ist = int(round(uber_aus))
         self.ueber_sum.ist = int(round(uber_in-uber_aus))
+
+        self.labnacht = int(round(lab_nacht))
+        self.labtnacht = int(round(lab_tnacht))
+        self.ab24nacht = int(round(ab24h_nacht))
+        self.ab24tnacht = int(round(ab24h_tnacht))
         
     def get_Anlagen_info(self):
         self.Anlagen_info.Clear()
@@ -1842,22 +3249,36 @@ class MEPRaum(object):
             else:
                 Dict[el.art][el.AnlNr] += float(el.Luftmengenmax)
         
-        if 'RZU' in Dict.keys():
-            for anl in sorted(Dict['RZU'].keys()):
+        if self.IsReduziert:
+            if 'RZU' in Dict.keys():
+                for anl in sorted(Dict['RZU'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                        self.zu_max.reduziert,anl,Dict['RZU'][anl]))
+            else:
                 self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
-                    self.zu_max.soll,anl,Dict['RZU'][anl]))
-        else:
-            #if self.get_element('IGF_RLT_AnlagenNr_RZU') or self.get_element('IGF_RLT_Luftmenge_RZU'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
-                self.zu_max.soll,'',''))
-        if 'RAB' in Dict.keys():
-            for anl in sorted(Dict['RAB'].keys()):
+                    self.zu_max.reduziert,'',''))
+            if 'RAB' in Dict.keys():
+                for anl in sorted(Dict['RAB'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                        self.ab_max.reduziert,anl,Dict['RAB'][anl]))
+            else:
                 self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
-                    self.ab_max.soll,anl,Dict['RAB'][anl]))
+                    self.ab_max.reduziert,'',''))
         else:
-            #if self.get_element('IGF_RLT_AnlagenNr_RAB') or self.get_element('IGF_RLT_Luftmenge_RAB'):
-            self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
-                self.ab_max.soll,'',''))
+            if 'RZU' in Dict.keys():
+                for anl in sorted(Dict['RZU'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                        self.zu_max.soll,anl,Dict['RZU'][anl]))
+            else:
+                self.Anlagen_info.Add(MEPAnlagenInfo('RZU',self.get_element('IGF_RLT_AnlagenNr_RZU'),\
+                    self.zu_max.soll,'',''))
+            if 'RAB' in Dict.keys():
+                for anl in sorted(Dict['RAB'].keys()):
+                    self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                        self.ab_max.soll,anl,Dict['RAB'][anl]))
+            else:
+                self.Anlagen_info.Add(MEPAnlagenInfo('RAB',self.get_element('IGF_RLT_AnlagenNr_RAB'),\
+                    self.ab_max.soll,'',''))
         if 'TZU' in Dict.keys():
             for anl in sorted(Dict['TZU'].keys()):
                 self.Anlagen_info.Add(MEPAnlagenInfo('TZU',self.get_element('IGF_RLT_AnlagenNr_TZU'),\
@@ -1896,10 +3317,16 @@ class MEPRaum(object):
         
     def get_Schacht_info(self):
         self.Schacht_info.Clear()
-        self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.rzu_Schacht)
-        self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.soll,self.liste_schacht)
-        self.Schacht_info.Add(self.rab_Schacht)
+        if not self.IsReduziert:
+            self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.soll,self.liste_schacht)
+            self.Schacht_info.Add(self.rzu_Schacht)
+            self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.soll,self.liste_schacht)
+            self.Schacht_info.Add(self.rab_Schacht)
+        else:
+            self.rzu_Schacht = MEPSchachtInfo('RZU',self.get_element('TGA_RLT_SchachtZuluft'),self.zu_max.reduziert,self.liste_schacht)
+            self.Schacht_info.Add(self.rzu_Schacht)
+            self.rab_Schacht = MEPSchachtInfo('RAB',self.get_element('TGA_RLT_SchachtAbluft'),self.ab_max.reduziert,self.liste_schacht)
+            self.Schacht_info.Add(self.rab_Schacht)
         
         self.tzu_Schacht = MEPSchachtInfo('TZU',self.get_element('IGF_RLT_Schacht_TZU'),self.tier_zu_max.soll,self.liste_schacht)
         self.Schacht_info.Add(self.tzu_Schacht)
@@ -1954,13 +3381,21 @@ class MEPRaum(object):
                     print(param_name)
                   
             except Exception as e:pass#print(e)
+        
+        if self.IsReduziert == 0:
+            wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.soll)
+            wert_schreiben("Angegebener Abluftluftstrom", self.angeabluft.soll)
+        else:
+            wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.reduziert)
+            wert_schreiben("Angegebener Abluftluftstrom", self.angezuluft.reduziert)
+        
 
-        wert_schreiben("Angegebener Zuluftstrom", self.angezuluft.soll)
-        wert_schreiben("Angegebener Abluftluftstrom", self.angeabluft.soll)
         wert_schreiben("IGF_RLT_AbluftminRaum", self.ab_min.soll+self.ab_lab_min.soll+self.ab_24h.soll+self.tier_ab_min.soll)
         wert_schreiben("IGF_RLT_AbluftmaxRaum", self.ab_max.soll+self.ab_lab_max.soll+self.ab_24h.soll+self.tier_ab_max.soll)
         wert_schreiben("IGF_RLT_ZuluftminRaum", self.zu_min.soll)
         wert_schreiben("IGF_RLT_ZuluftmaxRaum", self.zu_max.soll)
+        # wert_schreiben("IGF_RLT_RaumHöhe", self.hoehe)
+        # wert_schreiben("IGF_RLT_RaumVolumen", self.volumen)
 
         wert_schreiben2("TGA_RLT_VolumenstromProName", self.bezugsname)
         wert_schreiben("TGA_RLT_VolumenstromProEinheit", self.einheit)
@@ -1996,9 +3431,12 @@ class MEPRaum(object):
         # wert_schreiben("IGF_RLT_AnlagenRaumAbluft", self.ab_min.soll+self.ab_lab_min.soll)
         # wert_schreiben("IGF_RLT_AnlagenRaumZuluft", self.zu_min.soll)
         # wert_schreiben("IGF_RLT_AnlagenRaum24hAbluft", self.ab_24h.soll)
-        
-        wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_max.soll)
-        wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.soll)
+        if self.IsReduziert == 0:
+            wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_max.soll)
+            wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.soll)
+        else:
+            wert_schreiben("IGF_RLT_Luftmenge_RAB", self.ab_max.reduziert)
+            wert_schreiben("IGF_RLT_Luftmenge_RZU", self.zu_max.reduziert)
         wert_schreiben("IGF_RLT_Luftmenge_24h", self.ab_24h.soll)
         wert_schreiben("IGF_RLT_Luftmenge_LAB", self.ab_lab_max.soll)
         wert_schreiben("IGF_RLT_Luftmenge_min_TAB", self.tier_ab_min.soll)
@@ -2026,6 +3464,7 @@ class MEPRaum(object):
                 wert_schreiben2('IGF_RLT_AnlagenNr_24h',int(el.mep_nr))
        
 DICT_MEP_ITEMSSOIRCE = {}
+LISTE_MEP = ObservableCollection[MEPFOREXPORTITEM]()
 
 def Get_MEP_Info():
     spaces = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).WhereElementIsNotElementType().ToElementIds()
@@ -2055,6 +3494,9 @@ def Get_MEP_Info():
             mepraum = MEPRaum(space_id,list_vsr)
             # if not mepraum.IsSchacht:
             DICT_MEP_ITEMSSOIRCE[mepraum.Raumnr] = mepraum
+    for Raumnr in sorted(DICT_MEP_ITEMSSOIRCE.keys()):
+        LISTE_MEP.Add(MEPFOREXPORTITEM(Raumnr,DICT_MEP_ITEMSSOIRCE[Raumnr].bezugsname))
+    
 
 Get_MEP_Info()
 
@@ -2116,6 +3558,9 @@ class ExtenalEventListe(IExternalEventHandler):
                 try:v.ZoomToFit() 
                 except:pass
                 return
+        uidoc.Dispose()
+        doc.Dispose()
+        view.Dispose()
 
     def RaumundBauteileanzeigen(self,uiapp):
         self.name = 'Raum und alle Bauteile anzeigen'
@@ -2153,6 +3598,9 @@ class ExtenalEventListe(IExternalEventHandler):
                 try:v.ZoomToFit() 
                 except:pass
                 return
+        uidoc.Dispose()
+        doc.Dispose()
+        view.Dispose()
     
     def RaumluftBerechnen(self,uiapp):
         self.name = 'Raumluftberechnen'
@@ -2174,12 +3622,15 @@ class ExtenalEventListe(IExternalEventHandler):
 
         self.GUI.Auswertung_System()
         self.GUI.Auswertung_MEP()
-    
+        doc.Dispose()
+
     def LuftmengeverteilenMEP(self,uiapp):
         self.name = 'Luftmengeverteilen ' + self.GUI.mepraum.Raumnr
         task = ABFRAGE('Luftmenge in akt. Raum gleichmäßig verteilen?',True,130)
         task.ShowDialog()
         if task.result == False:
+            try:task.Dispose()
+            except:pass
             return 
         doc = uiapp.ActiveUIDocument.Document
         t = DB.Transaction(doc,self.name)
@@ -2191,12 +3642,17 @@ class ExtenalEventListe(IExternalEventHandler):
 
         self.GUI.Auswertung_System()
         self.GUI.Auswertung_MEP()
+        doc.Dispose()
+        try:task.Dispose()
+        except:pass
     
     def LuftmengeverteilenProjekt(self,uiapp):
         self.name = 'Luftmengeverteilen Projekt' 
         task = ABFRAGE('Luftmenge für das Projekt gleichmäßig verteilen?',False,160)
         task.ShowDialog()
         if task.result == False:
+            try:task.Dispose()
+            except:pass
             return 
         doc = uiapp.ActiveUIDocument.Document
         t = DB.Transaction(doc,self.name)
@@ -2210,6 +3666,9 @@ class ExtenalEventListe(IExternalEventHandler):
 
         self.GUI.Auswertung_System()
         self.GUI.Auswertung_MEP()
+        doc.Dispose()
+        try:task.Dispose()
+        except:pass
     
     def Luftmengeverteilen(self,mep,task):
         zu = {}
@@ -2264,7 +3723,8 @@ class ExtenalEventListe(IExternalEventHandler):
                 for auslass in h24[key]:
                     auslass.Luftmengennacht = auslass.Luftmengenmin
                     auslass.Luftmengenmax = auslass.Luftmengenmin
-                    auslass.Luftmengentnacht = auslass.Luftmengenmin
+                    if mep.tiefenachtbetrieb:auslass.Luftmengentnacht = auslass.Luftmengenmin
+                    else:auslass.Luftmengentnacht = 0
                     
         if len(zu.keys()) == 1:
             for key in zu.keys():
@@ -2322,6 +3782,8 @@ class ExtenalEventListe(IExternalEventHandler):
         for vsr in mep.list_vsr:
             if vsr.art in ['RZU','RAB','LAB','24h','RUM']:
                 vsr.Luftmengenermitteln_new()
+                vsr.vsrauswaelten()
+                vsr.vsrueberpruefen()
         self.AederungUebernehmen(mep)
     
     def AederungUebernehmen(self,mep):
@@ -2334,6 +3796,8 @@ class ExtenalEventListe(IExternalEventHandler):
         task = ABFRAGE('Luftmenge akt. Raum übernehmen?',True,70,False)
         task.ShowDialog()
         if task.result == False:
+            try:task.Dispose()
+            except:pass
             return 
         doc = uiapp.ActiveUIDocument.Document
         t = DB.Transaction(doc,self.name)
@@ -2344,13 +3808,19 @@ class ExtenalEventListe(IExternalEventHandler):
 
         self.GUI.Auswertung_System()
         self.GUI.Auswertung_MEP()
+        doc.Dispose()
+        try:task.Dispose()
+        except:pass
     
     def AederungUebernehmenProjekt(self,uiapp):
         self.name = 'Änderung übernehmen Projekt' 
         task = ABFRAGE('Alle Änderung übernehmen?',False,100,False)
         task.ShowDialog()
         if task.result == False:
+            try:task.Dispose()
+            except:pass
             return 
+        
         doc = uiapp.ActiveUIDocument.Document
         t = DB.Transaction(doc,self.name)
         t.Start()
@@ -2361,22 +3831,123 @@ class ExtenalEventListe(IExternalEventHandler):
 
         self.GUI.Auswertung_System()
         self.GUI.Auswertung_MEP()
+        doc.Dispose()
+        try:task.Dispose()
+        except:pass
 
     def ExportRaumluftbilanz(self,uiapp):
-        self.name = 'Exportraumluftbilanz' 
-        path = r'C:\Users\Zhang\Desktop\test.xlsx'
+        temp = RaumluftbilanzExport(self.GUI.path,self.GUI.ListeMEP)
+        temp.ShowDialog()
+        if not temp.result:
+            try:temp.Dispose()
+            except:pass
+            return
+        else:
+            self.GUI.path = temp.path
+        try:temp.Dispose()
+        except:pass
+        Liste = []
+        for el in self.GUI.ListeMEP:
+            if el.checked:
+                Liste.append(el.name)
+        path = self.GUI.path + '\\Raumluftbilanz.xlsx'
         e = xlsxwriter.Workbook(path)
         worksheet = e.add_worksheet()
-        n = 0
-        for mep in self.GUI.mepraum_liste.values():  
-            
-            raumdaten = Raumdaten(mep,15*n)
+        rowstart = 0
+        Liste_Pagebreaks = []
+        for mepname in sorted(Liste):  
+            mep = self.GUI.mepraum_liste[mepname]
+            raumdaten = Raumdaten(mep,rowstart)
             raumdaten.book = e
             raumdaten.sheet = worksheet
-            n += 1
-            if n > 10:
-                break
+            raumdaten.GetFinalExportdaten()
+            rowstart = raumdaten.rowende
+            Liste_Pagebreaks.extend(raumdaten.rowbreaks)
+        worksheet.set_landscape()
+        worksheet.set_column(0,3,20)
+        worksheet.set_column(4,5,13)
+        worksheet.set_column(6,7,24)
+        worksheet.set_column(8,10,7)
+        worksheet.set_column(11,18,11)
+        worksheet.set_column(19,19,18)
+        worksheet.set_column(20,20,25)
+        worksheet.set_paper(9)
+        worksheet.set_h_pagebreaks(Liste_Pagebreaks)   
+        header2 = '&L&G'     
+        worksheet.set_margins(top=1)
+        worksheet.set_footer('&C&p / &N')
+        worksheet.set_header(header2, {'image_left': IGF_LOGO})
         e.close() 
+    
+    def ExportLuftmengenInSchacht(self,uiapp):
+        temp = RaumluftbilanzExport(self.GUI.path,self.GUI.ListeMEP)
+        temp.ShowDialog()
+        if not temp.result:
+            try:temp.Dispose()
+            except:pass
+            return
+        else:
+            self.GUI.path = temp.path
+        try:temp.Dispose()
+        except:pass
+        Liste = []
+        for el in self.GUI.ListeMEP:
+            if el.checked:
+                Liste.append(self.GUI.mepraum_liste[el.name])
+        path = self.GUI.path + '\\Luftmengen_Schacht.xlsx'
+        e = xlsxwriter.Workbook(path)
+        worksheet = e.add_worksheet()
+        
+        if len(Liste) > 0:
+            _dict = self.luftmengen_summieren(Liste)
+            raum = Liste[0]
+            cell_format = e.add_format()
+            cell_format.set_num_format('''0 "m³/h"''')
+            for n,schacht in enumerate(sorted(raum.liste_schacht)):
+                worksheet.merge_range(0,3*n+1,0,3*n+3,schacht)
+                worksheet.write(1, 3*n+1, 'Raumzuluft')
+                worksheet.write(1, 3*n+2, 'Raumabluft')
+                worksheet.write(1, 3*n+3, '24h-Abluft')
+            for n_ebene,ebene in enumerate(sorted(_dict.keys())):
+                worksheet.write(n_ebene+2,0, ebene)
+                for n_schahct,schacht in enumerate(sorted(_dict[ebene].keys())):
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+1, _dict[ebene][schacht][0],cell_format)
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+2, _dict[ebene][schacht][1],cell_format)
+                    worksheet.write_number(n_ebene+2, 3*n_schahct+3, _dict[ebene][schacht][2],cell_format)
+        e.close() 
+    
+    def luftmengen_summieren(self,Liste_raum):
+        _dict = {}
+        for raum in Liste_raum:
+            if raum.ebene not in _dict.keys():
+                _dict[raum.ebene] = {}
+                for schacht in raum.liste_schacht:
+                    _dict[raum.ebene][schacht] = [0,0,0]
+            if raum.rzu_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.rzu_Schacht.nr][0] += raum.rzu_Schacht.menge
+            if raum.rab_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.rab_Schacht.nr][1] += raum.rab_Schacht.menge
+            if raum.lab_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum.lab_Schacht.nr][1] += raum.lab_Schacht.menge
+            if raum._24h_Schacht.nr in _dict[raum.ebene].keys():
+                _dict[raum.ebene][raum._24h_Schacht.nr][2] += raum._24h_Schacht.menge
+        return _dict
+            
 
-        
-        
+    def vsranpassen(self,uiapp):
+        self.name = 'VSR anpassen' 
+        doc = uiapp.ActiveUIDocument.Document
+        t = DB.Transaction(doc,self.name)
+        t.Start()
+        # for mep in self.GUI.mepraum_liste.keys():  
+        #     if mep.upper().find('130.') != -1 and mep.upper().find('TIER') == -1:
+        #         mepraum = self.GUI.mepraum_liste[mep]
+        #         for vsr in mepraum.list_vsr:
+        #             try:vsr.changetype()
+        #             except:pass
+        for vsr in self.GUI.mepraum.list_vsr:
+            try:vsr.changetype()
+            except Exception as e:logger.error(e)
+        t.Commit()
+        t.Dispose()
+        doc.Dispose()

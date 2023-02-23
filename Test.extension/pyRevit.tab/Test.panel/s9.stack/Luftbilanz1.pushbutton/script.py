@@ -6,7 +6,7 @@ from System.Collections.ObjectModel import ObservableCollection
 from System.Text.RegularExpressions import Regex
 from eventhandler import Luftauslass,VSR,DICT_MEP_ITEMSSOIRCE,VISIBLE,HIDDEN,RED,BLACK,ExtenalEventListe,ExternalEvent,LISTE_MEP
 
-__title__ = "Raumluftbilanz"
+__title__ = "Raumluftbilanz_MFC"
 __doc__ = """
 
 imput Parameter:

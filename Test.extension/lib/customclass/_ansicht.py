@@ -76,6 +76,7 @@ class RBLItem(RVItem):
                         Headerformat = units_default.GetFormatOptions(param.GetDefinition().UnitType)
                 
                 try:
+                    if param.GetDefinition().UnitType.ToString() == '' 
                     Accuracy = Headerformat.Accuracy
                 except:
                     Accuracy = ''

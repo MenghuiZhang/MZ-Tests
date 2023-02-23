@@ -82,55 +82,47 @@ class TRENNEN(IExternalEventHandler):
         uidoc = app.ActiveUIDocument
         doc = uidoc.Document
         try:
-            # el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter(),'Wählt den Rohrzubehör aus')
+
             el0 = doc.GetElement(uidoc.Selection.GetElementIds()[0])
             conns0 = list(el0.MEPModel.ConnectorManager.Connectors)
             conn_0 = None
             conn_1 = None
-            # conn_2 = None
-            # conn_3 = None
+            conn_2 = None
+            conn_3 = None
             for conn in conns0:
-                if not conn_0: conn_0 = conn
-                else:conn_1 = conn
-                # allrefs = conn.AllRefs
-                # for ref in allrefs:
-                #     owner = ref.Owner
-                #     if owner.Category.Name in ['Luftkanalformteile','Luftkanäle']:
+                allrefs = conn.AllRefs
+                for ref in allrefs:
+                    owner = ref.Owner
+                    if owner.Category.Name in ['Luftkanalformteile','Luftkanäle']:
 
-                #         if not conn_0:
-                #             conn_0 = conn
-                #             conn_1 = ref
-                #         else:
-                #             conn_2 = conn
-                #             conn_3 = ref
+                        if not conn_0:
+                            conn_0 = conn
+                            conn_1 = ref
+                        else:
+                            conn_2 = conn
+                            conn_3 = ref
             t = DB.Transaction(doc,'Test')
             t.Start()
-            # conn_0.DisconnectFrom(conn_1)
-            # conn_2.DisconnectFrom(conn_3)
+            conn_0.DisconnectFrom(conn_1)
+            conn_2.DisconnectFrom(conn_3)
             doc.Regenerate()
             o0 = conn_0.Origin
-            o1 = conn_1.Origin
+            o1 = conn_2.Origin
             A = o0.X-o1.X
             B = o0.Y-o1.Y
             C = o0.Z-o1.Z
-            D = A*(o0.X+o1.X)/2.0+B*(o0.Y+o1.Y)/2.0+C*(o0.Z+o1.Z)/2.0
-            X2 = 0
-            Y2 = 0
-            Z2 = 0
-            if A != 0:
-                X2 = D/A
-            elif B != 0:
-                Y2 = D/B
-            elif C != 0:
-                Z2 = D/C
-            
-            Line = DB.Line.CreateBound(DB.XYZ((o0.X+o1.X)/2,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2),DB.XYZ(X2,Y2,Z2))
-            Line1 = DB.Line.CreateBound(o1,o0)
-            DB.ElementTransformUtils.RotateElement(doc, el0.Id, Line,float(math.pi))
-            # print(DB.XYZ((o0.X+o1.X)/2,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2),DB.XYZ(X2,Y2,Z2))
-            # print(o0,o1)
-            # el0.Location.Rotate(Line,math.pi)
-            # doc.Regenerate()
+            if C < 0.00001:
+                Line = DB.Line.CreateBound(DB.XYZ((o0.X+o1.X)/2,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2),DB.XYZ((o0.X+o1.X)/2,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2+1))
+
+                DB.ElementTransformUtils.RotateElement(doc, el0.Id, Line,float(math.pi))
+            elif A <0.00001 and B < 0.0001:
+                Line = DB.Line.CreateBound(DB.XYZ((o0.X+o1.X)/2,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2),DB.XYZ((o0.X+o1.X)/2+1,(o0.Y+o1.Y)/2,(o0.Z+o1.Z)/2))
+                DB.ElementTransformUtils.RotateElement(doc, el0.Id, Line,float(math.pi))
+            else:
+                t.RollBack()
+                t.Dispose()
+            Line.Dispose()
+            doc.Regenerate()
             # conn_0.ConnectTo(conn_3)
             # conn_2.ConnectTo(conn_1)
             t.Commit()

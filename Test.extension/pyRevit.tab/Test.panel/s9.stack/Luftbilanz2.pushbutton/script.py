@@ -4,7 +4,7 @@ from IGF_log import getlog
 from System.Collections.ObjectModel import ObservableCollection
 # from eventhandler import *
 from System.Text.RegularExpressions import Regex
-from eventhandler import Luftauslass,VSR,DICT_MEP_ITEMSSOIRCE,VISIBLE,HIDDEN,RED,BLACK,ExtenalEventListe,ExternalEvent
+from eventhandler import Luftauslass,VSR,DICT_MEP_ITEMSSOIRCE,VISIBLE,HIDDEN,RED,BLACK,ExtenalEventListe,ExternalEvent,LISTE_MEP
 
 __title__ = "Raumluftbilanz"
 __doc__ = """
@@ -75,6 +75,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.regex2 = Regex("[^0-9]+")
         self.regex3 = Regex("[^0-9-]+")
         self.externaleventliste = ExtenalEventListe()
+        self.ListeMEP = LISTE_MEP
+        self.path = ''
         self.externalevent = ExternalEvent.Create(self.externaleventliste)
         self.visible = VISIBLE
         self.hidden = HIDDEN
@@ -93,6 +95,24 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
     def TextBox_GotFocus(self,sender,e):
         tb = sender
         tb.SelectAll()
+    
+    def vsr_selectedfabrikat_changed(self,sender,e):
+        if self.lv_vsr1_getrennt.SelectedItem:
+            try:
+                item = sender.DataContext
+                item.vsrauswaelten()
+                item.vsrueberpruefen()
+            except Exception as e:
+                pass
+    
+    def vsr_selectedtyp_changed(self,sender,e):
+        if self.lv_vsr1_getrennt.SelectedItem:
+            try:
+                item = sender.DataContext
+                item.VSR_Hersteller = item.DICT_DatenBank[item.Liste_Herstellertyp[item.Herstellertypindex]]
+                item.vsrueberpruefen()
+            except Exception as e:
+                pass
 
     def set_up(self):
         self.bezugsname.IsEnabled = True
@@ -257,7 +277,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.b_ab_24h_min_sys.Text = str(int(round(ab24h)))
 
         self.min_Abweichung_sys.Text = str(int(round(min_abweichung)))
-        if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(min_abweichung)) <= 3:
+        #if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
             self.min_auswertung_sys.Text = 'OK'
             self.min_Abweichung_sys.Foreground = self.black
             self.min_auswertung_sys.Foreground = self.black
@@ -285,7 +306,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.b_ab_24h_max_sys.Text = str(int(round(ab24h)))
 
         self.max_Abweichung_sys.Text = str(int(round(max_abweichung)))
-        if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(max_abweichung)) <= 3:
+        #if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
             self.max_auswertung_sys.Text = 'OK'
             self.max_Abweichung_sys.Foreground = self.black
             self.max_auswertung_sys.Foreground = self.black
@@ -294,25 +316,38 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.max_auswertung_sys.Foreground = self.red
             self.max_Abweichung_sys.Foreground = self.red
 
-
-        nb_zu_sum = nb_zu_raum + uber_in + uber_in_m
-        nb_ab_sum = nb_ab_raum + uber_aus + lab_nb_ab + ab24h + uber_aus_m
-        nb_abweichung = nb_zu_sum - nb_ab_sum
+        if self.mepraum.nachtbetrieb:
+            nb_zu_sum = nb_zu_raum + uber_in + uber_in_m
+            nb_ab_sum = nb_ab_raum + uber_aus + lab_nb_ab + ab24h + uber_aus_m
+            nb_abweichung = nb_zu_sum - nb_ab_sum
+        else:
+            nb_zu_sum = nb_zu_raum
+            nb_ab_sum = nb_ab_raum + ab24h 
+            nb_abweichung = nb_zu_sum - nb_ab_sum
 
         self.b_zu_nacht_sum_sys.Text = str(int(round(nb_zu_sum)))
         self.b_zu_nacht_raum_sys.Text = str(int(round(nb_zu_raum)))
-        self.b_zu_nacht_ueber_sys.Text = str(int(round(uber_in)))
-        self.b_zu_nacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
+        if self.mepraum.nachtbetrieb:
+            self.b_zu_nacht_ueber_sys.Text = str(int(round(uber_in)))
+            self.b_zu_nacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
+            self.b_ab_nacht_ueber_sys.Text = str(int(round(uber_aus)))
+            self.b_ab_nacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
+            self.b_ab_nacht_lab_sys.Text = str(int(round(lab_nb_ab)))
+        else:
+            self.b_zu_nacht_ueber_sys.Text = '0'
+            self.b_zu_nacht_ueber_m_sys.Text = '0'
+            self.b_ab_nacht_ueber_sys.Text = '0'
+            self.b_ab_nacht_ueber_m_sys.Text = '0'
+            self.b_ab_nacht_lab_sys.Text = '0'
+
 
         self.b_ab_nacht_sum_sys.Text = str(int(round(nb_ab_sum)))
         self.b_ab_nacht_raum_sys.Text = str(int(round(nb_ab_raum)))
-        self.b_ab_nacht_ueber_sys.Text = str(int(round(uber_aus)))
-        self.b_ab_nacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-        self.b_ab_nacht_lab_sys.Text = str(int(round(lab_nb_ab)))
         self.b_ab_24h_nacht_sys.Text = str(int(round(ab24h)))
 
         self.nacht_Abweichung_sys.Text = str(int(round(nb_abweichung)))
-        if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(nb_abweichung)) <= 3:
+        #if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
             self.nacht_auswertung_sys.Text = 'OK'
             self.nacht_Abweichung_sys.Foreground = self.black
             self.nacht_auswertung_sys.Foreground = self.black
@@ -320,32 +355,49 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.nacht_auswertung_sys.Text = 'Passt Nicht'
             self.nacht_auswertung_sys.Foreground = self.red
             self.nacht_Abweichung_sys.Foreground = self.red
+        if self.mepraum.tiefenachtbetrieb:
         
-        tnb_zu_sum = tnb_zu_raum + uber_in + uber_in_m
-        tnb_ab_sum = tnb_ab_raum + uber_aus + lab_tnb_ab + ab24h + uber_aus_m
-        tnb_abweichung = tnb_zu_sum - tnb_ab_sum
-
-        self.b_zu_tnacht_sum_sys.Text = str(int(round(tnb_zu_sum)))
-        self.b_zu_tnacht_raum_sys.Text = str(int(round(tnb_zu_raum)))
-        self.b_zu_tnacht_ueber_sys.Text = str(int(round(uber_in)))
-        self.b_zu_tnacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
-
-        self.b_ab_tnacht_sum_sys.Text = str(int(round(tnb_ab_sum)))
-        self.b_ab_tnacht_raum_sys.Text = str(int(round(tnb_ab_raum)))
-        self.b_ab_tnacht_ueber_sys.Text = str(int(round(uber_aus)))
-        self.b_ab_tnacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-        self.b_ab_tnacht_lab_sys.Text = str(int(round(lab_tnb_ab)))
-        self.b_ab_24h_tnacht_sys.Text = str(int(round(ab24h)))
-
-        self.tnacht_Abweichung_sys.Text = str(int(round(tnb_abweichung)))
-        if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+            tnb_zu_sum = tnb_zu_raum + uber_in + uber_in_m
+            tnb_ab_sum = tnb_ab_raum + uber_aus + lab_tnb_ab + ab24h + uber_aus_m
+            tnb_abweichung = tnb_zu_sum - tnb_ab_sum
+            self.b_zu_tnacht_ueber_sys.Text = str(int(round(uber_in)))
+            self.b_zu_tnacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
+            self.b_ab_tnacht_ueber_sys.Text = str(int(round(uber_aus)))
+            self.b_ab_tnacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
+            self.b_ab_tnacht_lab_sys.Text = str(int(round(lab_tnb_ab)))
+            self.b_ab_24h_tnacht_sys.Text = str(int(round(ab24h)))
+            #if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+            if abs(round(tnb_abweichung)) <= 3:
+                self.tnacht_auswertung_sys.Text = 'OK'
+                self.tnacht_Abweichung_sys.Foreground = self.black
+                self.tnacht_auswertung_sys.Foreground = self.black
+            else:
+                self.tnacht_auswertung_sys.Text = 'Passt Nicht'
+                self.tnacht_auswertung_sys.Foreground = self.red
+                self.tnacht_Abweichung_sys.Foreground = self.red
+        else:
+            tnb_zu_sum = tnb_zu_raum 
+            tnb_ab_sum = tnb_ab_raum 
+            tnb_abweichung = tnb_zu_sum - tnb_ab_sum
+            self.b_zu_tnacht_ueber_sys.Text = '0'
+            self.b_zu_tnacht_ueber_m_sys.Text = '0'
+            self.b_ab_tnacht_ueber_sys.Text = '0'
+            self.b_ab_tnacht_ueber_m_sys.Text = '0'
+            self.b_ab_tnacht_lab_sys.Text = '0'
+            self.b_ab_24h_tnacht_sys.Text = '0'
+            
             self.tnacht_auswertung_sys.Text = 'OK'
             self.tnacht_Abweichung_sys.Foreground = self.black
             self.tnacht_auswertung_sys.Foreground = self.black
-        else:
-            self.tnacht_auswertung_sys.Text = 'Passt Nicht'
-            self.tnacht_auswertung_sys.Foreground = self.red
-            self.tnacht_Abweichung_sys.Foreground = self.red
+            
+
+
+        self.b_zu_tnacht_sum_sys.Text = str(int(round(tnb_zu_sum)))
+        self.b_zu_tnacht_raum_sys.Text = str(int(round(tnb_zu_raum)))
+        self.b_ab_tnacht_sum_sys.Text = str(int(round(tnb_ab_sum)))
+        self.b_ab_tnacht_raum_sys.Text = str(int(round(tnb_ab_raum)))
+        self.tnacht_Abweichung_sys.Text = str(int(round(tnb_abweichung)))
+        
 
         self.mepraum.zu_min.ist = int(round(min_zu_raum))
         self.mepraum.zu_max.ist = int(round(max_zu_raum))
@@ -401,7 +453,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.b_ab_24h_min_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
 
         self.min_Abweichung_mep.Text = str(int(round(min_abweichung)))
-        if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        #if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(min_abweichung)) <= 3:
             self.min_auswertung_mep.Text = 'OK'
             self.min_Abweichung_mep.Foreground = self.black
             self.min_auswertung_mep.Foreground = self.black
@@ -427,7 +480,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.b_ab_24h_max_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
 
         self.max_Abweichung_mep.Text = str(int(round(max_abweichung)))
-        if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        #if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(max_abweichung)) <= 3:
             self.max_auswertung_mep.Text = 'OK'
             self.max_Abweichung_mep.Foreground = self.black
             self.max_auswertung_mep.Foreground = self.black
@@ -435,25 +489,36 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.max_auswertung_mep.Text = 'Passt Nicht'
             self.max_auswertung_mep.Foreground = self.red
             self.max_Abweichung_mep.Foreground = self.red
-
-        nb_zu_sum = float(self.mepraum.nb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        nb_ab_sum = float(self.mepraum.nb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
+        
+        if not self.mepraum.nachtbetrieb:
+            nb_zu_sum = float(self.mepraum.nb_zu.soll) 
+            nb_ab_sum = float(self.mepraum.nb_ab.soll) + float(self.mepraum.ab_24h.soll) 
+        else:
+            nb_zu_sum = float(self.mepraum.nb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
+            nb_ab_sum = float(self.mepraum.nb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
         nb_abweichung = nb_zu_sum - nb_ab_sum
         self.b_zu_nacht_sum_mep.Text = str(int(round(nb_zu_sum)))
         self.b_zu_nacht_raum_mep.Text = str(int(round(float(self.mepraum.nb_zu.soll))))
-        self.b_zu_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        self.b_zu_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
+        if self.mepraum.nachtbetrieb:
+            self.b_zu_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
+        else:self.b_zu_nacht_ueber_mep.Text = '0'
+        if self.mepraum.nachtbetrieb:self.b_zu_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
+        else:self.b_zu_nacht_ueber_m_mep.Text = '0'
 
         self.b_ab_nacht_sum_mep.Text = str(int(round(nb_ab_sum)))
         self.b_ab_nacht_raum_mep.Text = str(int(round(float(self.mepraum.nb_ab.soll))))
-        self.b_ab_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-        self.b_ab_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-        self.b_ab_nacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
+        if self.mepraum.nachtbetrieb:self.b_ab_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
+        else:self.b_ab_nacht_ueber_mep.Text = '0'
+        if self.mepraum.nachtbetrieb:self.b_ab_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
+        else:self.b_ab_nacht_ueber_m_mep.Text = '0'
+        if self.mepraum.nachtbetrieb:self.b_ab_nacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
+        else:self.b_ab_nacht_lab_mep.Text = '0'
         self.b_ab_24h_nacht_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
 
         self.nacht_Abweichung_mep.Text = str(int(round(nb_abweichung)))
 
-        if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        #if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if abs(round(nb_abweichung)) <= 3:
             self.nacht_auswertung_mep.Text = 'OK'
             self.nacht_Abweichung_mep.Foreground = self.black
             self.nacht_auswertung_mep.Foreground = self.black
@@ -461,32 +526,47 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.nacht_auswertung_mep.Text = 'Passt Nicht'
             self.nacht_auswertung_mep.Foreground = self.red
             self.nacht_Abweichung_mep.Foreground = self.red
+        if self.mepraum.tiefenachtbetrieb:
+            tnb_zu_sum = float(self.mepraum.tnb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
+            tnb_ab_sum = float(self.mepraum.tnb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
+        else:
+            tnb_zu_sum = float(self.mepraum.tnb_zu.soll)
+            tnb_ab_sum = float(self.mepraum.tnb_ab.soll) + float(self.mepraum.ab_24h.soll) 
         
-        tnb_zu_sum = float(self.mepraum.tnb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        tnb_ab_sum = float(self.mepraum.tnb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
         tnb_abweichung = tnb_zu_sum - tnb_ab_sum
         self.b_zu_tnacht_sum_mep.Text = str(int(round(tnb_zu_sum)))
         self.b_zu_tnacht_raum_mep.Text = str(int(round(float(self.mepraum.tnb_zu.soll))))
-        self.b_zu_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        self.b_zu_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
-
+        if self.mepraum.tiefenachtbetrieb:self.b_zu_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
+        else:self.b_zu_tnacht_ueber_mep.Text = '0'
+        if self.mepraum.tiefenachtbetrieb:self.b_zu_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
+        else:self.b_zu_tnacht_ueber_m_mep.Text = '0'
+        
         self.b_ab_tnacht_sum_mep.Text = str(int(round(tnb_ab_sum)))
         self.b_ab_tnacht_raum_mep.Text = str(int(round(float(self.mepraum.tnb_ab.soll))))
-        self.b_ab_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-        self.b_ab_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-        self.b_ab_tnacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
-        self.b_ab_24h_tnacht_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
-
-        self.tnacht_Abweichung_mep.Text = str(int(round(tnb_abweichung)))
-
-        if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+        if self.mepraum.tiefenachtbetrieb:
+            self.b_ab_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
+            self.b_ab_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
+            self.b_ab_tnacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
+            self.b_ab_24h_tnacht_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
+            self.tnacht_Abweichung_mep.Text = str(int(round(tnb_abweichung)))
+            #if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
+            if abs(round(tnb_abweichung)) <= 3:
+                self.tnacht_auswertung_mep.Text = 'OK'
+                self.tnacht_Abweichung_mep.Foreground = self.black
+                self.tnacht_auswertung_mep.Foreground = self.black
+            else:
+                self.tnacht_auswertung_mep.Text = 'Passt Nicht'
+                self.tnacht_auswertung_mep.Foreground = self.red
+                self.tnacht_Abweichung_mep.Foreground = self.red
+        else:
+            self.b_ab_tnacht_ueber_mep.Text = '0'
+            self.b_ab_tnacht_ueber_m_mep.Text = '0'
+            self.b_ab_tnacht_lab_mep.Text = '0'
+            self.b_ab_24h_tnacht_mep.Text = '0'
+            self.tnacht_Abweichung_mep.Text = '0'
             self.tnacht_auswertung_mep.Text = 'OK'
             self.tnacht_Abweichung_mep.Foreground = self.black
             self.tnacht_auswertung_mep.Foreground = self.black
-        else:
-            self.tnacht_auswertung_mep.Text = 'Passt Nicht'
-            self.tnacht_auswertung_mep.Foreground = self.red
-            self.tnacht_Abweichung_mep.Foreground = self.red
 
     def nachtbetriebchanged(self, sender, args):
         try:
@@ -512,6 +592,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         try:
             self.mepraum.ab_lab_min.soll = round(float(str(sender.Text).replace(',', '.')))
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
             # self.grundinfo.Items.Refresh()
@@ -522,6 +603,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         try:
             self.mepraum.ab_lab_max.soll = round(float(str(sender.Text).replace(',', '.')))
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
             # self.grundinfo.Items.Refresh()
@@ -533,6 +615,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         try:
             self.mepraum.ab_24h.soll = round(float(str(sender.Text).replace(',', '.')))
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
             # self.grundinfo.Items.Refresh()
@@ -543,12 +626,27 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         try:
             self.mepraum.Druckstufe.soll = round(float(str(sender.Text).replace(',', '.')))
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
             # self.grundinfo.Items.Refresh()
             # self.anlageninfo.Items.Refresh()
             # self.schachtinfo.Items.Refresh()
         except:pass
+    
+    def hoehechanged(self, sender, args):
+        try:
+            self.mepraum.hoehe = int(float(str(sender.Text)))
+            self.mepraum.volumen = round(self.mepraum.flaeche * self.mepraum.hoehe / 1000,2)
+            self.volumen.Text = str(self.mepraum.volumen)
+            self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
+            self.mepraum.Druckstufe_Berechnen()
+            self.Auswertung_MEP()
+            # self.grundinfo.Items.Refresh()
+            # self.anlageninfo.Items.Refresh()
+            # self.schachtinfo.Items.Refresh()
+        except Exception as e:print(e)
 
     def LW_nacht_changed(self, sender, args):
         try:
@@ -604,6 +702,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         except:pass
         try:
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
             # self.grundinfo.Items.Refresh()
@@ -619,6 +718,7 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.einheit.Text = self.mepraum.einheit = self.mepraum.einheit_liste[self.mepraum.bezugsnummer]
         try:
             self.mepraum.Tagesbetrieb_Berechnen()
+            self.mepraum.Nachtbetrieb_Berechnen()
             self.mepraum.Druckstufe_Berechnen()
             self.Auswertung_MEP()
         except:pass
@@ -892,13 +992,13 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
                     if el.art == '24h':
                         el.Luftmengentnacht = item.Luftmengenmin
                         el.Luftmengenmax = item.Luftmengenmin
-                        el.Luftmengennacht = item.Luftmengenmin
+                        if self.mepraum.tiefenachtbetrieb:el.Luftmengennacht = item.Luftmengenmin
                     self.Auslass_Volumen_changed(el)
         else:
             if item.art == '24h':
                 item.Luftmengentnacht = item.Luftmengenmin
                 item.Luftmengenmax = item.Luftmengenmin
-                item.Luftmengennacht = item.Luftmengenmin
+                if self.mepraum.tiefenachtbetrieb:item.Luftmengennacht = item.Luftmengenmin
             self.Auslass_Volumen_changed(item)
     
     def Auslass_Volumen_changed_nacht(self,sender,args):
@@ -917,12 +1017,16 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             vsr = auslass.VSR_Class
             if vsr:
                 vsr.Luftmengenermitteln_new()
+                vsr.vsrauswaelten()
+                vsr.vsrueberpruefen()
             iris = auslass.IRIS_Class
             if iris:
                 iris.Luftmengenermitteln_new()
             haupt = auslass.Haupt_Class
             if haupt:
                 haupt.Luftmengenermitteln_new()
+                haupt.vsrauswaelten()
+                haupt.vsrueberpruefen()
         except:pass
         try:
             self.Auswertung_System()
@@ -1045,9 +1149,18 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.lv_ueber_in.SelectedIndex = -1
 
     def abbrechen(self, sender, args):
-        # self.Close()
+        self.externalevent.Dispose()
+        self.Close()
+    
+    def exportieren(self, sender, args):
         try:
             self.externaleventliste.Executeapp = self.externaleventliste.ExportRaumluftbilanz
+            self.externalevent.Raise()
+        except Exception as e:print(e)
+    
+    def exportieren_schacht(self, sender, args):
+        try:
+            self.externaleventliste.Executeapp = self.externaleventliste.ExportLuftmengenInSchacht
             self.externalevent.Raise()
         except Exception as e:print(e)
     
@@ -1066,6 +1179,14 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
     def Berechnen(self, sender, args):
         try:
             self.externaleventliste.Executeapp = self.externaleventliste.RaumluftBerechnen
+
+            self.externalevent.Raise()
+        except Exception as e:print(e)
+
+    def changevsrtype(self, sender, args):
+        try:
+            
+            self.externaleventliste.Executeapp = self.externaleventliste.vsranpassen
             self.externalevent.Raise()
         except Exception as e:print(e)
 
@@ -1157,3 +1278,44 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
 mepWPF = MEPRaum_Uebersicht()
 mepWPF.externaleventliste.GUI = mepWPF 
 mepWPF.Show()
+
+
+# from eventhandler import Raumdaten,IGF_LOGO,xlsxwriter
+# path = r'C:\Users\Zhang\Desktop\test12.xlsx'
+# e = xlsxwriter.Workbook(path)
+# worksheet = e.add_worksheet()
+
+# n = 0
+# rowstart = 0
+# Liste_Pagebreaks = []
+# for mepname in sorted(DICT_MEP_ITEMSSOIRCE.keys()):  
+#     mep = DICT_MEP_ITEMSSOIRCE[mepname]
+#     # raumdaten = Raumdaten(mep,rowstart)
+#     raumdaten = Raumdaten(mep,rowstart)
+#     raumdaten.book = e
+#     raumdaten.sheet = worksheet
+#     # raumdaten.exportheader1()
+#     raumdaten.GetFinalExportdaten()
+#             # while (raumdaten.rowende - rowstart > 36):
+#             #     Liste_Pagebreaks.append(rowstart+36)
+#             #     rowstart += 36
+#     rowstart = raumdaten.rowende
+
+#     Liste_Pagebreaks.extend(raumdaten.rowbreaks)
+
+# worksheet.set_landscape()
+# worksheet.set_column(0,1,17)
+# worksheet.set_column(2,5,13)
+# worksheet.set_column(6,6,7)
+# worksheet.set_column(7,7,13)
+# worksheet.set_column(8,10,7)
+# worksheet.set_column(11,18,11)
+# worksheet.set_column(19,19,18)
+# worksheet.set_column(20,20,25)
+# worksheet.set_paper(9)
+# worksheet.set_h_pagebreaks(Liste_Pagebreaks)   
+# header2 = '&L&G'  
+# worksheet.set_footer('&C&p / &N')   
+# worksheet.set_margins(top=1)
+# worksheet.set_header(header2, {'image_left': IGF_LOGO})
+# e.close() 

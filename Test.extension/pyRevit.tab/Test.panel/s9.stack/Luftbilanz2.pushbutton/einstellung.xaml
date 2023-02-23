@@ -1,7 +1,7 @@
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Abfrage" Height="400" Width="400"  WindowStyle="None" MouseLeftButtonDown="movewindow" Background="#FFAAB7FF">
+        Title="Abfrage" Height="400" Width="400"  ResizeMode="NoResize" WindowStyle="None" MouseLeftButtonDown="movewindow" Background="#FFAAB7FF">
     <Border BorderBrush="#FF131212" BorderThickness="2,2,2,2">
         <Grid x:Name="maingrid" >
             <Grid.RowDefinitions>

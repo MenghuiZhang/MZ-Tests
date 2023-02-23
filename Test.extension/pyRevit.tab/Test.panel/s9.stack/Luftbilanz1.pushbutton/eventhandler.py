@@ -1761,13 +1761,21 @@ class Luftauslass(FamilieExemplar):
 
     def Luftmengenermitteln(self):
         try:self.Luftmengenmin = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMin'))),1)
-        except:pass
+        except:
+            try:self.Luftmengenmin = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromMin'))),1)
+            except:pass
         try:self.Luftmengennacht = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromNacht'))),1)
-        except:pass
+        except:
+            try:self.Luftmengennacht = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromNacht'))),1)
+            except:pass
         try:self.Luftmengenmax = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromMax'))),1)
-        except:pass
+        except:
+            try:self.Luftmengenmax = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromMax'))),1)
+            except:pass
         try:self.Luftmengentnacht = round(float(get_value(self.elem.LookupParameter('IGF_RLT_AuslassVolumenstromTiefeNacht'))),1)
-        except:pass
+        except:
+            try:self.Luftmengentnacht = round(float(get_value(self.elem.Symbol.LookupParameter('IGF_RLT_AuslassVolumenstromTiefeNacht'))),1)
+            except:pass
 
     def get_RountingListe(self,element):
         if self.RoutingListe.Count > 500:return
@@ -1796,12 +1804,12 @@ class Luftauslass(FamilieExemplar):
                                     conns_temp = owner.MEPModel.ConnectorManager.Connectors
                                     for conn_temp in conns_temp:
                                         if self.lufttyp == 'ReturnAir':
-                                            if conn_temp.Direction.ToString() == 'In' or conn_temp.Description == 'Haupt':#???
+                                            if conn_temp.Direction.ToString() == 'In' or conn_temp.Description == 'In':#???
                                                 if conn.IsConnectedTo(conn_temp):
                                                     self.vsr = owner.Id.ToString()
                                                     return
                                         if self.lufttyp == 'SupplyAir':
-                                            if conn_temp.Direction.ToString() == 'Out' or conn_temp.Description == 'Haupt':#???
+                                            if conn_temp.Direction.ToString() == 'Out' or conn_temp.Description == 'Out':#???
                                                 if conn.IsConnectedTo(conn_temp):
                                                     self.vsr = owner.Id.ToString()
                                                     return
@@ -1896,6 +1904,8 @@ class VSR(FamilieExemplar):
         }
         try:
             self.vsrid = self.elem.LookupParameter('SBI_Bauteilnummerierung').AsString()
+            if not self.vsrid:
+                self.vsrid = ''
         except:
             self.vsrid = ''
         try:
@@ -2115,6 +2125,7 @@ class VSR(FamilieExemplar):
                                                 self.Liste_Herstellertyp.append(vsr_temp.typ)
         
     def vsrauswaelten(self):
+        self.get_vsrListe()
         if len(self.Liste_Herstellertyp) > 0:
             if self.size.find('DN') != -1:
                 self.VSR_Hersteller = DICT_DatenBank[self.Liste_Herstellertyp[0]]
@@ -2394,7 +2405,22 @@ def Get_Auslass_Info():
                                         DICT_VSR_AUSLASS[vsrid][key0][key1] = []
                                     if auslass not in DICT_VSR_AUSLASS[vsrid][key0][key1]:
                                         DICT_VSR_AUSLASS[vsrid][key0][key1].append(auslass)
-
+                                    if auslass.raumid not in DICT_MEP_VSR.keys():
+                                        DICT_MEP_VSR[auslass.raumid] = []
+                                    if vsrid not in DICT_MEP_VSR[auslass.raumid]:DICT_MEP_VSR[auslass.raumid].append(vsrid) 
+                        for mep in DICT_VSR_MEP[vsrid_neu]:
+                            if mep not in DICT_VSR_MEP[vsrid]:
+                                DICT_VSR_MEP[vsrid].append(mep)
+                        for mep in DICT_VSR_MEP_NUR_NUMMER[vsrid_neu]:
+                            if mep not in DICT_VSR_MEP_NUR_NUMMER[vsrid]:
+                                DICT_VSR_MEP_NUR_NUMMER[vsrid].append(mep)
+                        
+                        if not auslass.raumid in DICT_MEP_VSR.keys():
+                            DICT_MEP_VSR[auslass.raumid] = []
+                            DICT_MEP_VSR[auslass.raumid].append(auslass.vsr) 
+                            if auslass.iris not in [-1,'']:
+                                DICT_MEP_VSR[auslass.raumid].append(auslass.iris)
+                  
          
             vsr = VSR(DB.ElementId(int(vsrid)))
             if vsr.elemid.ToString() in LISTE_IRIS:
@@ -3814,7 +3840,6 @@ class ExtenalEventListe(IExternalEventHandler):
                 _dict[raum.ebene][raum._24h_Schacht.nr][2] += raum._24h_Schacht.menge
         return _dict
             
-
     def vsranpassen(self,uiapp):
         self.name = 'VSR anpassen' 
         doc = uiapp.ActiveUIDocument.Document
@@ -3826,7 +3851,10 @@ class ExtenalEventListe(IExternalEventHandler):
         #         for vsr in mepraum.list_vsr:
         #             try:vsr.changetype()
         #             except:pass
-        for vsr in self.GUI.mepraum.list_vsr:
+        for vsr in self.GUI.mepraum.list_vsr0:
+            try:vsr.changetype()
+            except Exception as e:logger.error(e)
+        for vsr in self.GUI.mepraum.list_vsr1:
             try:vsr.changetype()
             except Exception as e:logger.error(e)
         t.Commit()

@@ -2066,7 +2066,6 @@
 
             </Grid>
         </GroupBox>
-
         <Grid Grid.Row="3" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -2080,9 +2079,9 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Content="Raumluftbilanz berechnen" Width="200" Height="50" Grid.Column="0" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben"/>
+            <Button Content="Raumluftbilanz berechnen" Height="50" Grid.Column="0" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben" Margin="10,0,10,0"/>
 
-            <Button Width="200"   Height="50" Grid.Column="1" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" >
+            <Button   Height="50" Grid.Column="1" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" Margin="10,0,9,0" >
                 <Button.Content>
                     <StackPanel>
                         <TextBlock Text="Luftmenge in akt. Raum" HorizontalAlignment="Center"/>
@@ -2092,7 +2091,7 @@
                 </Button.Content>
             </Button>
 
-            <Button Width="200" Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" >
+            <Button Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" Margin="10,0,10,0" >
                 <Button.Content>
                     <StackPanel>
                         <TextBlock Text="Luftmenge für das Projekt" HorizontalAlignment="Center"/>
@@ -2101,8 +2100,8 @@
 
                 </Button.Content>
             </Button>
-            <Button Content="Änderung akt. Raum übernehmen" Width="200"   Height="50" Grid.Column="3" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben"/>
-            <Button Content="alle Änderung übernehmen" Width="200"   Height="50" Grid.Column="4" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben"/>
+            <Button Content="Änderung akt. Raum übernehmen"   Height="50" Grid.Column="3" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben" Margin="10,0,10,0"/>
+            <Button Content="alle Änderung übernehmen"   Height="50" Grid.Column="4" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben" Margin="10,0,10,0"/>
             <Button  Width="200"   Height="50" Grid.Column="5" Click="aus_revit_uebernehmen" ToolTip="geänderte Daten wie z.B. Auslässesinfo in GUI übertragen und Übersicht aktualisieren">
                 <Button.Content>
                     <StackPanel>
@@ -2111,10 +2110,10 @@
                     </StackPanel>
                 </Button.Content>
             </Button>
-            <Button Content="Raumluftbilanz exportieren" Width="200"  Height="50" Grid.Column="6" Click="exportieren" Visibility="Visible"/>
-            <Button Content="Raumluft-Schacht exportieren" Width="200"  Height="50" Grid.Column="7" Click="exportieren_schacht" Visibility="Visible"/>
-            <Button Content="VSR-Typ anpassen" Width="200"  Height="50" Grid.Column="8" Click="changevsrtype" Visibility="Visible"/>
-            <Button Content="Programm schließen" Width="200"  Height="50" Grid.Column="9" Click="abbrechen" Visibility="Visible"/>
+            <Button Content="Raumluftbilanz exportieren"  Height="50" Grid.Column="6" Click="exportieren" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="Raumluft-Schacht exportieren"  Height="50" Grid.Column="7" Click="exportieren_schacht" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="VSR-Typ anpassen"  Height="50" Grid.Column="8" Click="changevsrtype" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="Programm schließen"  Height="50" Grid.Column="9" Click="abbrechen" Visibility="Visible" Margin="10,0,10,0"/>
             <Grid Grid.Column="2" Visibility="Hidden">
                 <Grid.RowDefinitions>
                     <RowDefinition/>

@@ -1,7 +1,7 @@
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MEP-Räume-Übersicht" Height="900" Width="1700" MinWidth="1700" Background="SkyBlue">
+        Title="MEP-Räume-Übersicht" Height="900" Width="2100" MinWidth="1700" Background="SkyBlue">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="450"/>
@@ -58,16 +58,17 @@
                             <TextBlock x:Name="flaeche" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text=" m²" VerticalAlignment="Center" Margin="0" />
                         </DockPanel>
+                        <DockPanel Height="20" Margin="0,0,5,0">
+                            <TextBlock VerticalAlignment="Center" Margin="5,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Licht Höhe:" Width="65"/>
+                            <TextBox x:Name="hoehe" VerticalAlignment="Center" Width="70" TextChanged="hoehechanged" PreviewTextInput="Textinput0"/>
+                            <TextBlock Text=" mm" VerticalAlignment="Center" Margin="0" />
+                        </DockPanel>
                         <DockPanel Height="20" Margin="5,0,5,0">
                             <TextBlock VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Volumen: " Width="65"/>
                             <TextBlock x:Name="volumen" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text=" m³" VerticalAlignment="Center" Margin="0" />
                         </DockPanel>
-                        <DockPanel Height="20" Margin="0,0,5,0">
-                            <TextBlock VerticalAlignment="Center" Margin="5,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Licht Höhe:" Width="65"/>
-                            <TextBlock x:Name="hoehe" VerticalAlignment="Center" Width="70"/>
-                            <TextBlock Text=" mm" VerticalAlignment="Center" Margin="0" />
-                        </DockPanel>
+
                         <DockPanel Height="20" Margin="0,0,5,0">
                             <TextBlock VerticalAlignment="Center" Margin="5,0,5,0" Foreground="#FFAE4141" FontWeight="Bold" Text="Personen: " Width="70"/>
                             <TextBlock x:Name="personen" VerticalAlignment="Center" />
@@ -792,7 +793,7 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <GroupBox Header="Haupt-Volumenstromregler" Margin="2">
-                            <ListView x:Name="lv_vsr" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR_Selected_Changed" >
+                            <ListView x:Name="lv_vsr" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR_Selected_Changed" >
                                 <ListView.Resources>
                                     <Style TargetType="{x:Type GridViewColumnHeader}">
                                         <Setter Property="FontWeight" Value="Bold"/>
@@ -908,7 +909,7 @@
                         </GroupBox>
 
                         <GroupBox Header="Volumenstromregler" Grid.Row="1" Margin="2">
-                            <ListView x:Name="lv_vsr1" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR1_Selected_Changed" >
+                            <ListView x:Name="lv_vsr1" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR1_Selected_Changed" >
                                 <ListView.Resources>
                                     <Style TargetType="{x:Type GridViewColumnHeader}">
                                         <Setter Property="FontWeight" Value="Bold"/>
@@ -1025,7 +1026,7 @@
                         </GroupBox>
 
                         <GroupBox Header="Drosselklappe"  Grid.Row="2" Margin="2" >
-                            <ListView x:Name="lv_vsr2" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR2_Selected_Changed" >
+                            <ListView x:Name="lv_vsr2" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR2_Selected_Changed" >
                                 <ListView.Resources>
                                     <Style TargetType="{x:Type GridViewColumnHeader}">
                                         <Setter Property="FontWeight" Value="Bold"/>
@@ -1141,7 +1142,7 @@
                         </GroupBox>
 
                         <GroupBox Header="Luftauslässe"  Grid.Row="3" Margin="2" >
-                            <ListView x:Name="lv_auslass" Background="LightBlue" ItemsSource="{Binding}" SelectionChanged="Auslass_Selected_Changed" >
+                            <ListView x:Name="lv_auslass" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionChanged="Auslass_Selected_Changed" >
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
                                         <Style.Triggers>
@@ -1263,16 +1264,10 @@
 
                 </TabItem>
                 <TabItem Header="Haupt-VSR" Width="100">
-                    <ListView x:Name="lv_vsr_getrennt" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR_Selected_Changed_getrennt" >
-                        <ListView.Resources>
-                            <Style TargetType="{x:Type GridViewColumnHeader}">
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="10"/>
-                                <Setter Property="Height" Value="18"/>
-                            </Style>
-                        </ListView.Resources>
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
+                    <DataGrid x:Name="lv_vsr_getrennt" Background="#FFC7EAF5" ItemsSource="{Binding}" CanUserSortColumns="False" SelectionChanged="VSR_Selected_Changed_getrennt" HorizontalScrollBarVisibility="Auto" SelectionMode="Single">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="ToolTip" Value="{Binding tooltip}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding art}" Value="RZU">
                                         <Setter Property="Foreground" Value="Blue"/>
@@ -1294,101 +1289,198 @@
                                     <DataTrigger Binding="{Binding art}" Value="LAB">
                                         <Setter Property="Foreground" Value="orange"/>
                                     </DataTrigger>
-
                                 </Style.Triggers>
                             </Style>
-                        </ListView.ItemContainerStyle>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Resources>
+                            <Style TargetType="{x:Type DataGridColumnHeader}">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Height" Value="18"/>
+                                <Setter Property="Content" Value="{Binding}"/>
+                                <Setter Property="Height" Value="20"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="30" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="VSR1_checked_changed"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = art}"/>
+                                    </DataTemplate>
 
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="30" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="VSR_checked_changed"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Width="50" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = art}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Art" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="300" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="Familien und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname: Typenname"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = vsrid}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Planbezeichnung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="300">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Familie und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname:Typenname"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Dimension" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengenmin}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TagMinbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMin"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengenmax}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TagMaxbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMax"/>
-                                </GridViewColumn>
+                                </DataGridTemplateColumn.Header>
 
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengennacht}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengenmin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TagMinbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMin" />
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengenmax, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TagMaxbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMax" />
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengennacht, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Nachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengentnacht}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="250" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = raum}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="Einbauort" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Raumnummer"/>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
+                                </DataGridTemplateColumn.Header>
 
-                    </ListView>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengentnacht, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = raum}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Einbauort" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Raumnummer" TextWrapping="Wrap"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="150" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Liste_Fabrikat}" SelectedIndex="{Binding Path=Herstellerindex, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="vsr_selectedfabrikat_changed">
+
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Fabrikat" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Fabrikat"/>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="200" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Liste_Herstellertyp}" SelectedIndex="{Binding Path=Herstellertypindex, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="vsr_selectedtyp_changed">
+
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Typ"/>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Vmin,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Vmin" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Regelbereich Vmin"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Vmax,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Vmax" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Vmax bei V = 6m/h"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = anmerkung,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Anmerkung" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anmerkung"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+
+
                 </TabItem>
                 <TabItem Header="VSR" Width="100">
-                    <ListView x:Name="lv_vsr1_getrennt" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR1_Selected_Changed_getrennt" >
-                        <ListView.Resources>
-                            <Style TargetType="{x:Type GridViewColumnHeader}">
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="10"/>
-                                <Setter Property="Height" Value="18"/>
-                            </Style>
-                        </ListView.Resources>
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
+                    <DataGrid x:Name="lv_vsr1_getrennt" Background="#FFC7EAF5" ItemsSource="{Binding}" CanUserSortColumns="False" SelectionChanged="VSR1_Selected_Changed_getrennt" HorizontalScrollBarVisibility="Auto" SelectionMode="Single">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="ToolTip" Value="{Binding tooltip}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding art}" Value="RZU">
                                         <Setter Property="Foreground" Value="Blue"/>
@@ -1410,92 +1502,194 @@
                                     <DataTrigger Binding="{Binding art}" Value="LAB">
                                         <Setter Property="Foreground" Value="orange"/>
                                     </DataTrigger>
-
                                 </Style.Triggers>
                             </Style>
-                        </ListView.ItemContainerStyle>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Resources>
+                            <Style TargetType="{x:Type DataGridColumnHeader}">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Height" Value="18"/>
+                                <Setter Property="Content" Value="{Binding}"/>
+                                <Setter Property="Height" Value="20"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="30" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="VSR1_checked_changed"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = art}"/>
+                                    </DataTemplate>
 
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="30" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Path = checked}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="VSR1_checked_changed"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Width="50" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = art}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Art" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="300" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="Familien und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname: Typenname"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = vsrid}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Planbezeichnung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="300">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Familie und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname:Typenname"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Dimension" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengenmin}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TagMinbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMin"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengenmax}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TagMaxbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMax"/>
-                                </GridViewColumn>
+                                </DataGridTemplateColumn.Header>
 
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengennacht}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengenmin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TagMinbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMin" />
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengenmax, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TagMaxbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMax" />
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengennacht, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Nachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Luftmengentnacht}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="250" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = raum}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="Einbauort" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Raumnummer"/>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
+                                </DataGridTemplateColumn.Header>
 
-                    </ListView>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Luftmengentnacht, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = raum}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Einbauort" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Raumnummer" TextWrapping="Wrap"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="150" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Path = Liste_Fabrikat,UpdateSourceTrigger=PropertyChanged}" SelectedIndex="{Binding Path=Herstellerindex, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="vsr_selectedfabrikat_changed">
+
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Fabrikat" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Fabrikat"/>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="200" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Path = Liste_Herstellertyp,UpdateSourceTrigger=PropertyChanged}" SelectedIndex="{Binding Path=Herstellertypindex, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="vsr_selectedtyp_changed">
+
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Typ"/>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Vmin,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Vmin" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Regelbereich Vmin"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Vmax,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Vmax" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Vmax bei V = 6m/h"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = anmerkung,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Anmerkung" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anmerkung"/>
+                                </DataGridTemplateColumn.Header>
+
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+
                 </TabItem>
                 <TabItem Header="Drosselklappe" Width="100">
-                    <ListView x:Name="lv_vsr2_getrennt" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR2_Selected_Changed_getrennt" >
+                    <ListView x:Name="lv_vsr2_getrennt" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="VSR2_Selected_Changed_getrennt" >
                         <ListView.Resources>
                             <Style TargetType="{x:Type GridViewColumnHeader}">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -1611,10 +1805,10 @@
                     </ListView>
                 </TabItem>
                 <TabItem Header="Luftauslässe" Width="100">
-                    <ListView x:Name="lv_auslass_getrennt" Background="LightBlue" ItemsSource="{Binding}" SelectionChanged="Auslass_Selected_Changed_getrennt" >
-
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
+                    <DataGrid x:Name="lv_auslass_getrennt" Background="#FFC7EAF5" ItemsSource="{Binding}" CanUserSortColumns="False" SelectionChanged="Auslass_Selected_Changed_getrennt" HorizontalScrollBarVisibility="Auto">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="ToolTip" Value="{Binding tooltip}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding art}" Value="RZU">
                                         <Setter Property="Foreground" Value="Blue"/>
@@ -1636,97 +1830,129 @@
                                     <DataTrigger Binding="{Binding art}" Value="LAB">
                                         <Setter Property="Foreground" Value="orange"/>
                                     </DataTrigger>
-
                                 </Style.Triggers>
                             </Style>
-                        </ListView.ItemContainerStyle>
-
-                        <ListView.Resources>
-                            <Style TargetType="{x:Type GridViewColumnHeader}">
+                        </DataGrid.CellStyle>
+                        <DataGrid.Resources>
+                            <Style TargetType="{x:Type DataGridColumnHeader}">
                                 <Setter Property="FontWeight" Value="Bold"/>
                                 <Setter Property="FontSize" Value="10"/>
                                 <Setter Property="Height" Value="18"/>
+                                <Setter Property="Content" Value="{Binding}"/>
+                                <Setter Property="Height" Value="20"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = art}"/>
+                                    </DataTemplate>
 
-                        </ListView.Resources>
-
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="80">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = art}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Art" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = slavevon}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Planbezeichnung" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="300">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="Familie und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname:Typenname"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
 
-                                <GridViewColumn Width="300" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = familyandtyp}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                    <TextBlock Text="Familien und Typ" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Familienname:Typenname"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = size}" TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Dimension" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengenmin, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_min" Width="55" IsEnabled="{Binding enabledmin}"/>
+                                </DataGridTemplateColumn.Header>
 
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengenmin, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_min" IsEnabled="{Binding enabledmin}"/>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="TagMinbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMin" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengenmax, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_max" Width="55" IsEnabled="{Binding enabledmax}"/>
+                                </DataGridTemplateColumn.Header>
 
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengenmax, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_max" IsEnabled="{Binding enabledmax}"/>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="TagMaxbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromMax" />
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengennacht, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_nacht" Width="55" IsEnabled="{Binding enablednacht}"/>
-                                        </DataTemplate>
+                                </DataGridTemplateColumn.Header>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengennacht, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_nacht" IsEnabled="{Binding enablednacht}"/>
+                                    </DataTemplate>
 
-                                    </GridViewColumn.CellTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Nachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn Width="100" >
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengentnacht, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_tnacht" Width="55" IsEnabled="{Binding enabledtnacht}"/>
-                                        </DataTemplate>
+                                </DataGridTemplateColumn.Header>
 
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="100" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox GotFocus="TextBox_GotFocus" Text="{Binding Path = Luftmengentnacht, UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Textinput1" TextChanged="Auslass_Volumen_changed_tnacht" IsEnabled="{Binding enabledtnacht}"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="TiefeNachtbetrieb" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="IGF_RLT_AuslassVolumenstromTiefeNacht"/>
-                                </GridViewColumn>
-                                <GridViewColumn>
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Path = Anmerkung, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
-                                        </DataTemplate>
+                                </DataGridTemplateColumn.Header>
 
-                                    </GridViewColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="*" MinWidth="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path = Anmerkung, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.Header>
                                     <TextBlock Text="Anmerkung" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Anmerkung"/>
-                                </GridViewColumn>
+                                </DataGridTemplateColumn.Header>
 
-                            </GridView>
-                        </ListView.View>
+                            </DataGridTemplateColumn>
 
-                    </ListView>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+
+
                 </TabItem>
 
             </TabControl>
@@ -1742,7 +1968,7 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="Ausstömung" Margin="2">
-                    <ListView x:Name="lv_ueber_aus" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="Ueber_aus_Selected_Changed">
+                    <ListView x:Name="lv_ueber_aus" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="Ueber_aus_Selected_Changed">
                         <ListView.Resources>
                             <Style TargetType="{x:Type GridViewColumnHeader}">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -1790,7 +2016,7 @@
                     </ListView>
                 </GroupBox>
                 <GroupBox Header="Einströmung" Margin="2" Grid.Column="1">
-                    <ListView x:Name="lv_ueber_in" Background="LightBlue" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="Ueber_in_Selected_Changed">
+                    <ListView x:Name="lv_ueber_in" Background="#FFC7EAF5" ItemsSource="{Binding}" SelectionMode="Single" SelectionChanged="Ueber_in_Selected_Changed">
                         <ListView.Resources>
                             <Style TargetType="{x:Type GridViewColumnHeader}">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -1840,7 +2066,6 @@
 
             </Grid>
         </GroupBox>
-
         <Grid Grid.Row="3" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -1850,10 +2075,13 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Content="Raumluftbilanz berechnen" Width="200" Height="50" Grid.Column="0" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben"/>
+            <Button Content="Raumluftbilanz berechnen" Height="50" Grid.Column="0" Click="Berechnen" ToolTip="Luftmengeberechnen aller Räumen unf die Werte in Revit schreiben" Margin="10,0,10,0"/>
 
-            <Button Width="200"   Height="50" Grid.Column="1" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" >
+            <Button   Height="50" Grid.Column="1" Click="luftmenge_gleich_verteilen_mep" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, nur für aktuellen Raum" Margin="10,0,9,0" >
                 <Button.Content>
                     <StackPanel>
                         <TextBlock Text="Luftmenge in akt. Raum" HorizontalAlignment="Center"/>
@@ -1863,7 +2091,7 @@
                 </Button.Content>
             </Button>
 
-            <Button Width="200" Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" >
+            <Button Height="50" Grid.Column="2" Click="luftmenge_gleich_verteilen_pro" ToolTip="Luftmengeberechnen in Auslässe verteilen und in Revit schreiben, für alle Räume" Margin="10,0,10,0" >
                 <Button.Content>
                     <StackPanel>
                         <TextBlock Text="Luftmenge für das Projekt" HorizontalAlignment="Center"/>
@@ -1872,8 +2100,8 @@
 
                 </Button.Content>
             </Button>
-            <Button Content="Änderung akt. Raum übernehmen" Width="200"   Height="50" Grid.Column="3" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben"/>
-            <Button Content="alle Änderung übernehmen" Width="200"   Height="50" Grid.Column="4" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben"/>
+            <Button Content="Änderung akt. Raum übernehmen"   Height="50" Grid.Column="3" Click="aenderung_uebernehmen_mep" ToolTip="manuelle Eingabe in Revit schreiben" Margin="10,0,10,0"/>
+            <Button Content="alle Änderung übernehmen"   Height="50" Grid.Column="4" Click="aenderung_uebernehmen_pro" ToolTip="manuelle Eingabe in Revit schreiben" Margin="10,0,10,0"/>
             <Button  Width="200"   Height="50" Grid.Column="5" Click="aus_revit_uebernehmen" ToolTip="geänderte Daten wie z.B. Auslässesinfo in GUI übertragen und Übersicht aktualisieren">
                 <Button.Content>
                     <StackPanel>
@@ -1882,7 +2110,10 @@
                     </StackPanel>
                 </Button.Content>
             </Button>
-            <Button Content="Programm schließen" Width="200"  Height="50" Grid.Column="6" Click="abbrechen" Visibility="Visible"/>
+            <Button Content="Raumluftbilanz exportieren"  Height="50" Grid.Column="6" Click="exportieren" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="Raumluft-Schacht exportieren"  Height="50" Grid.Column="7" Click="exportieren_schacht" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="VSR-Typ anpassen"  Height="50" Grid.Column="8" Click="changevsrtype" Visibility="Visible" Margin="10,0,10,0"/>
+            <Button Content="Programm schließen"  Height="50" Grid.Column="9" Click="abbrechen" Visibility="Visible" Margin="10,0,10,0"/>
             <Grid Grid.Column="2" Visibility="Hidden">
                 <Grid.RowDefinitions>
                     <RowDefinition/>

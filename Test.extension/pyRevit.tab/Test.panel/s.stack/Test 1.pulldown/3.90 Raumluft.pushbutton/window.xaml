@@ -1,0 +1,580 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av"
+        Title="MEP" Height="600" Width="800">
+    <TabControl Background="SkyBlue">
+        <TabItem Width="150" x:Name="schachtanlagentabitem" Header="Schächte u. Anlagen">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="50"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <GroupBox Margin="5,5,5,5" Grid.Row="1" Grid.ColumnSpan="2">
+                    <GroupBox.Header>
+                        <TextBlock Text="Anlagen" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox IsChecked="True" x:Name="cbAzu" Content="Anlage-RZU:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" ToolTip="IGF_RLT_AnlagenNr_RZU"/>
+                        <CheckBox IsChecked="True" x:Name="cbAab" Content="Anlage-RAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="0" ToolTip="IGF_RLT_AnlagenNr_RAB"/>
+                        <CheckBox IsChecked="True" x:Name="cbAtzu" Content="Anlage-TZU:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" ToolTip="IGF_RLT_AnlagenNr_TZU"/>
+                        <CheckBox IsChecked="True" x:Name="cbAtab" Content="Anlage-TAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="1" ToolTip="IGF_RLT_AnlagenNr_TAB"/>
+                        <CheckBox IsChecked="True" x:Name="cbA24h" Content="Anlage-24h:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2" ToolTip="IGF_RLT_AnlagenNr_24h"/>
+                        <CheckBox IsChecked="True" x:Name="cbAlab" Content="Anlage-LAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="2" ToolTip="IGF_RLT_AnlagenNr_LAB"/>
+
+                        <TextBox x:Name="AnlagenRZU" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                        <TextBox x:Name="AnlagenRAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="0" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                        <TextBox x:Name="AnlagenTZU" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                        <TextBox x:Name="AnlagenTAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="1" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                        <TextBox x:Name="Anlagen24h" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                        <TextBox x:Name="AnlagenLAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="2" Margin="0,0,20,0"  PreviewTextInput="Textinput0"/>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Margin="5,5,5,5" Grid.ColumnSpan="2">
+                    <GroupBox.Header>
+                        <TextBlock Text="Schächte" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox IsChecked="True" x:Name="cbSzu" Content="Schacht-RZU:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" ToolTip="TGA_RLT_SchachtZuluft"/>
+                        <CheckBox IsChecked="True" x:Name="cbSab" Content="Schacht-RAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="0" ToolTip="TGA_RLT_SchachtAbluft"/>
+                        <CheckBox IsChecked="True" x:Name="cbStzu" Content="Schacht-TZU:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="1" ToolTip="IGF_RLT_Schacht_TZU"/>
+                        <CheckBox IsChecked="True" x:Name="cbStab" Content="Schacht-TAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="1" ToolTip="IGF_RLT_Schacht_TAB"/>
+                        <CheckBox IsChecked="True" x:Name="cbS24h" Content="Schacht-24h:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Grid.Row="2" ToolTip="TGA_RLT_Schacht24hAbluft"/>
+                        <CheckBox IsChecked="True" x:Name="cbSlab" Content="Schacht-LAB:" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Grid.Row="2" ToolTip="IGF_RLT_Schacht_LAB"/>
+
+                        <ComboBox x:Name="SchachtRZU" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Margin="0,0,20,0"/>
+                        <ComboBox x:Name="SchachtRAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="0" Margin="0,0,20,0"/>
+                        <ComboBox x:Name="SchachtTZU" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Margin="0,0,20,0"/>
+                        <ComboBox x:Name="SchachtTAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="1" Margin="0,0,20,0"/>
+                        <ComboBox x:Name="Schacht24h" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Margin="0,0,20,0"/>
+                        <ComboBox x:Name="SchachtLAB" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Column="3" Grid.Row="2" Margin="0,0,20,0"/>
+
+                    </Grid>
+                </GroupBox>
+                <Grid Grid.Row="2" Grid.ColumnSpan="2" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Row="3" Height="25" Content="MEP auswählen (Bereich)" ToolTip="MEP-Räume auswählen" Click="auswahl" Margin="10,0,10,0"/>
+                    <Button Grid.Row="3" Height="25" Content="Daten aus MEP-Raum" Click="auswahl2" ToolTip="MEP-Raum auswählen" Margin="10,0,10,0" Grid.Column="1"/>
+                    <Button x:Name="button_uebernehmen" Grid.Column="2" Height="25" Content="markierte Daten übernehmen" Click="schreiben_schacht" ToolTip="den wert in den Parameter schreiben" Margin="10,0,10,0"/>
+
+                </Grid>
+
+
+
+            </Grid>
+        </TabItem>
+        <TabItem Header="Raumluft" Width="150" x:Name="Raumlufttabitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="50"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <GroupBox  Margin="5,5,5,5" Grid.ColumnSpan="2">
+                    <GroupBox.Header>
+                        <TextBlock Text="min. Luftwechsel" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid Margin="5,0,5,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+
+                        </Grid.RowDefinitions>
+                        <CheckBox IsChecked="True" x:Name="cbbn" Content="Berechnung nach: " VerticalAlignment="Center"  ToolTip="TGA_RLT_VolumenstromProName" Margin="0,5,0,0" Grid.ColumnSpan="3"/>
+                        <ComboBox x:Name="bezugsname" VerticalAlignment="Center" SelectionChanged="bezugsnameselectionchanged" Margin="0,5,0,0" Grid.Column="1"/>
+                        <CheckBox IsChecked="True" x:Name="cbfk" Content="Faktor:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="TGA_RLT_VolumenstromProFaktor" Margin="0,5,0,0" Grid.Row="1"/>
+                        <TextBox PreviewTextInput="Textinput1" x:Name="faktor" VerticalAlignment="Center" Margin="0,5,0,5" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" Grid.Row="1" Grid.Column="1"/>
+                        <TextBlock x:Name="einheit" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
+                        <CheckBox IsChecked="True" x:Name="cbds" Content="Druckstufe:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_RaumDruckstufeEingabe" Width="75" Height="18" Grid.Row="2" HorizontalAlignment="Left"/>
+                        <TextBox x:Name="druckeingabe" Height="18" PreviewTextInput="Textinput1" Grid.Row="2" Grid.Column="1"/>
+                        <CheckBox IsChecked="True" x:Name="cbrr" Content="RaumReduzierung:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="TGA_RLT_VRaumReduzierung" Height="18" Grid.Row="3" HorizontalAlignment="Left"/>
+                        <TextBox x:Name="reduRaumeingabe" Height="18" PreviewTextInput="Textinput1" Grid.Row="3" Grid.Column="1"/>
+                        <CheckBox IsChecked="True" x:Name="cbsr" Content="SchachtReduzierung:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="TGA_RLT_VSchachtReduzierung" Height="18" Grid.Row="4" HorizontalAlignment="Left"/>
+                        <TextBox x:Name="reduschachteingabe" Height="18" PreviewTextInput="Textinput1" Grid.Row="4" Grid.Column="1"/>
+
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox  Margin="5,5,5,5" Grid.Row="1">
+                    <GroupBox.Header>
+                        <CheckBox x:Name="cbnb" Content="Nachtbetrieb" FontWeight="Bold" IsChecked="True"/>
+                    </GroupBox.Header>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="30"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Nachtsbetrieb:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_Nachtbetrieb" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <CheckBox x:Name="isnachtbetrieb" Margin="0,0,0,0" VerticalContentAlignment="Center" Grid.Column="1" VerticalAlignment="Center"/>
+
+
+                        <TextBlock Text="Luftwechsel:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_NachtbetriebLW" Grid.Row="1" HorizontalAlignment="Left" Margin="10,0,0,0" Height="Auto"/>
+                        <TextBox x:Name="LW_nacht" PreviewTextInput="Textinput1" Grid.Column="1" Grid.Row="1" Height="20"/>
+                        <TextBlock Text="-1/h" Margin="5,0,0,0" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
+
+                        <TextBlock Text="Von:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_NachtbetriebVon" Grid.Row="2" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBox x:Name="von_nacht" Height="20"  PreviewTextInput="Textinput1" Grid.Row="2" Grid.Column="1"/>
+
+                        <TextBlock Text="Bis:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_NachtbetriebBis" Grid.Row="3" Margin="10,0,0,0" HorizontalAlignment="Left"/>
+                        <TextBox x:Name="bis_nacht" Height="20" PreviewTextInput="Textinput1" Grid.Row="3" Grid.Column="1"/>
+
+                    </Grid>
+                </GroupBox>
+                <GroupBox  Margin="5,5,5,5" Grid.Column="1" Grid.Row="1">
+                    <GroupBox.Header>
+                        <CheckBox x:Name="cbtnb" Content="TiefeNachtbetrieb" FontWeight="Bold" IsChecked="True"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="30"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="T-Nachtsbetrieb:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_TieferNachtbetrieb" Margin="10,0,0,0"/>
+                        <CheckBox x:Name="istiefenachtbetrieb" Margin="0,0,0,0" VerticalContentAlignment="Center" Grid.Column="1"/>
+
+                        <TextBlock Text="Luftwechsel:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_TieferNachtbetriebLW" Grid.Row="1" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBox x:Name="LW_tnacht" Height="20"  PreviewTextInput="Textinput1" Grid.Row="1" Grid.Column="1"/>
+                        <TextBlock Text="-1/h" Margin="5,0,0,0" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                        <TextBlock Text="Von:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_TieferNachtbetriebVon" Grid.Row="2" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBox x:Name="von_tnacht" Height="20" PreviewTextInput="Textinput1" Grid.Row="2" Grid.Column="1"/>
+
+                        <TextBlock Text="Bis:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_TieferNachtbetriebBis" Grid.Row="3" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBox x:Name="bis_tnacht" Height="20" PreviewTextInput="Textinput1" Grid.Row="3" Grid.Column="1"/>
+
+                    </Grid>
+                </GroupBox>
+                <Grid Grid.Row="2" Grid.ColumnSpan="2" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Row="3" Content="MEP auswählen (Bereich)" Click="auswahl" ToolTip="MEP-Raum auswählen" Margin="10,0,10,0" Height="25"/>
+                    <Button Grid.Row="3" Height="25" Content="Daten aus MEP-Raum" Click="auswahl1" ToolTip="MEP-Raum auswählen" Margin="10,0,10,0" Grid.Column="1"/>
+                    <Button x:Name="buttonwritemep" Grid.Row="3" Height="25" Content="markierte Daten übernehmen" Click="raunluftschreiben" ToolTip="den wert in den Parameter schreiben" Margin="10,0,10,0" Grid.Column="2"/>
+
+                </Grid>
+
+
+
+            </Grid>
+
+        </TabItem>
+        <TabItem Width="180" Header="Laboreinrichtung pro Raum" x:Name="labortabitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="60"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="200"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Raum:" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+                    <ComboBox Grid.Column="1" VerticalAlignment="Center" IsEditable="True" x:Name="Raumdatensource"/>
+                    <Button Grid.Column="2" Margin="10,0,10,0" Height="24" VerticalAlignment="Center" Content="Raum auswählen" Click="RaumLaborauswahl"/>
+
+                </Grid>
+                <GroupBox Margin="5,5,5,5" Grid.Row="1" >
+                    <GroupBox.Header>
+                        <TextBlock Text="manuelle Eingabe (m³/h)" FontWeight="Bold"/>
+                    </GroupBox.Header>
+
+                    <Grid Margin="5,0,5,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="LABmin:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftminSummeLabor" Height="18" HorizontalAlignment="Center"/>
+                        <TextBox x:Name="labmineingabe" Height="18" PreviewTextInput="Textinput1" Grid.Column="1"/>
+                        <TextBlock Text="LABmax:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftmaxSummeLabor" Height="18" Grid.Column="2" HorizontalAlignment="Center"/>
+                        <TextBox x:Name="labmaxeingabe" Height="18" PreviewTextInput="Textinput1" Grid.Column="3"/>
+                        <TextBlock Text="24h-Ab:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftSumme24h" Height="18" Grid.Column="4" HorizontalAlignment="Center"/>
+                        <TextBox x:Name="ab24heingabe" Height="18" PreviewTextInput="Textinput1" Grid.Column="5"/>
+                        <Button Content="Daten übertragen" Grid.Column="6" Margin="20,0,10,0" Height="20" Click="manuelllab"/>
+
+
+
+
+                    </Grid>
+                </GroupBox>
+                <GroupBox Grid.Row="2">
+                    <GroupBox.Header>
+                        <TextBlock Text="Eingabe Laboranschlüsse"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition />
+                            <RowDefinition/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="35
+                                           "/>
+                            <RowDefinition Height="30"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="105"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Laboranschluss:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            <ComboBox x:Name="labanschluss" IsEnabled="False" IsEditable="True" Margin="0,0,5,0" Height="24" VerticalAlignment="Center" Grid.Column="1" SelectionChanged="familychanged"/>
+                            <Button Content="anpassen" IsEnabled="False" Click="anpassen" ToolTip="Laboranschlüsse anpassen" Grid.Column="2" Height="24" Margin="0,0,5,0"/>
+                        </Grid>
+                        <DockPanel Grid.Row="1">
+                            <TextBlock Text="Suche:" Width="100" Margin="5,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBox x:Name="suche" TextChanged="suchetextchanged" Height="24" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <GroupBox Grid.Row="2">
+                            <DataGrid Background="LightBlue" x:Name="Anschlussart" CanUserResizeColumns="True" CanUserSortColumns="True">
+                                <DataGrid.Resources>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="10"/>
+                                        <Setter Property="Height" Value="18"/>
+                                        <Setter Property="Content" Value="{Binding}"/>
+                                        <Setter Property="Height" Value="20"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGrid.Resources>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="50" Header="Art" CanUserSort="True" SortMemberPath="art">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding art}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="*" Header="Name" CanUserSort="True" SortMemberPath="Name">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="*" Header="Anzahl (Bsp. 2xZeile03,...)" CanUserSort="True" SortMemberPath="Anzahl">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Path = Anzahl,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" TextChanged="anchanged"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+
+                                    </DataGridTemplateColumn>
+
+
+                                </DataGrid.Columns>
+
+
+                            </DataGrid>
+                        </GroupBox>
+                        <GroupBox Grid.Row="3">
+                            <GroupBox.Header>
+                                <TextBlock Text="Anzahl des Laboranschlusses im Raum"/>
+                            </GroupBox.Header>
+                            <DataGrid Background="LightBlue" x:Name="Anschlussdetail" CanUserResizeColumns="True" CanUserSortColumns="False">
+                                <DataGrid.Resources>
+                                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="10"/>
+                                        <Setter Property="Height" Value="18"/>
+                                        <Setter Property="Content" Value="{Binding}"/>
+                                        <Setter Property="Height" Value="20"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGrid.Resources>
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ganzahl}" Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="50" Header="Art" CanUserSort="True" SortMemberPath="art">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding art}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="*" Header="Name" CanUserSort="True" SortMemberPath="Name">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="*" Header="Anzahl (Bsp. 2xZeile03,...)" CanUserSort="True" SortMemberPath="ganzahl">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Path =ganzahl,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="*" Header="Anzahl-Detail" CanUserSort="True" SortMemberPath="Anzahl">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Path =Anzahl,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+
+                                    </DataGridTemplateColumn>
+
+
+                                </DataGrid.Columns>
+
+
+                            </DataGrid>
+
+                        </GroupBox>
+                        <Grid Grid.Row="4" Margin="0,0,10,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition  Width="0.8*"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition  Width="0.8*"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="LABmin:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftminSummeLabor" Height="18" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="labminresult" Height="18" Grid.Column="1" Margin="10,0,0,0" IsReadOnly="True"/>
+                            <TextBlock Text="LABmax:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftmaxSummeLabor" Height="18" Grid.Column="2" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="labmaxresult" Height="18" Grid.Column="3" Margin="10,0,0,0" IsReadOnly="True"/>
+                            <TextBlock Text="24h-Ab:" VerticalAlignment="Center" FontWeight="Normal" ToolTip="IGF_RLT_AbluftSumme24h" Height="18" Grid.Column="4" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="ab24hresult" Height="18" Grid.Column="5" Margin="10,0,0,0" IsReadOnly="True"/>
+                        </Grid>
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Button Height="24" Content="Daten aus Revit aktualisieren" ToolTip="Daten übernehmen und Labor-/24h-Abluft summieren" Click="Datenaktualisieren" Margin="10,0,10,0"/>
+                            <Button Height="24" Content="Daten in Raum übernehmen" ToolTip="Daten übernehmen und Labor-/24h-Abluft summieren" Click="Labordetailsschreiben" Margin="10,0,10,0" Grid.Column="1"/>
+
+                        </Grid>
+                        <GridSplitter Grid.Row="5" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="1" Background="#FF584D4D"/>
+                        <Grid Grid.Row="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <DockPanel>
+                                <TextBlock Text="Ebene:" VerticalAlignment="Center" Margin="10,0,0,0" Width="40"/>
+                                <ComboBox x:Name="ebene" IsEnabled="False" IsEditable="True" Height="24" VerticalAlignment="Center"/>
+
+                            </DockPanel>
+
+                            <DockPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Höhe von Ebene (mm): " VerticalAlignment="Center" Width="125" Margin="10,0,0,0" HorizontalAlignment="Stretch"/>
+                                <TextBox x:Name="heightvonebene" IsEnabled="False" Margin="0,0,10,0" PreviewTextInput="Textinput3" Height="24" HorizontalAlignment="Stretch"/>
+                            </DockPanel>
+                            <Button Height="24" IsEnabled="False" Content="Fehlenden Laboranschlüsse platzieren" ToolTip="Daten übernehmen und Labor-/24h-Abluft summieren" Click="laborplatz" Margin="10,0,10,0" Grid.Column="2"/>
+
+                        </Grid>
+
+                    </Grid>
+
+                </GroupBox>
+
+
+
+
+
+
+            </Grid>
+        </TabItem>
+        <TabItem Width="150" Header="Schächte definieren" x:Name="Schachttabitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <GroupBox Header="ausgewählte MEP Raum">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+
+
+                        </Grid.ColumnDefinitions>
+                        <ListView Background="LightBlue" x:Name="LVSchacht0" Grid.ColumnSpan="2">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Nummer" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding nummer}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Name" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="IstSchacht" Width="100" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding schacht}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="SchachtName" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Schachtname}" Width="135"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        <Button Grid.Row="1" Height="25" Content="Daten aus Revit aktualisieren" ToolTip="Schächt definieren" Click="Schachtakt" Margin="10,0,10,0" VerticalAlignment="Stretch"/>
+                        <Button Grid.Row="1" Height="25" Content="Daten übernehmen" ToolTip="Schächt definieren" Click="Schachtschreiben" Margin="10,0,10,0" VerticalAlignment="Stretch" Grid.Column="1"/>
+
+                    </Grid>
+
+                </GroupBox>
+                <GroupBox Grid.Row="1">
+                    <GroupBox.Header>
+                        <TextBlock Text="Schächte"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+                        <ListView Background="LightBlue" x:Name="LVSchacht">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Nummer" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding nummer}" TextWrapping="Wrap" Width="135"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Name" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="IstSchacht" Width="100" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding schacht}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="SchachtName" Width="150" >
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Schachtname}" Width="135"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        <Button Grid.Row="1" Height="25" Content="Daten übernehmen" ToolTip="Schächt definieren" Click="Schachtfinalschreiben" Margin="10,0,10,0" VerticalAlignment="Stretch"/>
+
+                    </Grid>
+
+                </GroupBox>
+
+            </Grid>
+        </TabItem>
+
+
+    </TabControl>
+
+</Window>
