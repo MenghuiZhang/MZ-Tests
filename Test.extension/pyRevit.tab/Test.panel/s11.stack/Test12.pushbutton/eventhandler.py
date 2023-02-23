@@ -868,7 +868,7 @@ class ListeExternalEvent(IExternalEventHandler):
                 if el.Schachtname in self.GUI.LISTE_SCHACHT:
                     self.GUI.LISTE_SCHACHT.remove(el.Schachtname)
         t.Commit()
-        self.GUI.LVSchacht.Item.Refresh()
+        self.GUI.LVSchacht.Items.Refresh()
         self.GUI.set_up_is()
 
     def SchreibenSchacht1(self,uiapp):
@@ -887,9 +887,20 @@ class ListeExternalEvent(IExternalEventHandler):
                     self.GUI.LISTE_SCHACHT.remove(el.Schachtname)
                 if el.Schachtname in _Dict.keys():
                     self.GUI.IS_Schacht_Neu.Remove(_Dict[el.Schachtname])
-                    del _Dict[schacht.schacht] 
+                    del _Dict[el.Schachtname] 
+            else:
+                if el.Schachtname not in _Dict.keys():
+                    temp_klasse = Schacht(el.elem,el.Schachtname)
+                    temp_klasse.reduzierfaktor = self.get_AnlagenInSchacht(doc,el.elem)
+                    temp_klasse.get_items()
+                    self.GUI.IS_Schacht_Neu.Add(temp_klasse)
+                
+                if el.Schachtname not in self.GUI.LISTE_SCHACHT:
+                    self.GUI.LISTE_SCHACHT.append(el.Schachtname)
+                    
           
         t.Commit()
+
         self.GUI.set_up_is()
     
     def schachtfaktorschreiben(self,uiapp):

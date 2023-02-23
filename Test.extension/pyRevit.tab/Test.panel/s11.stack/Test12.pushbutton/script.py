@@ -3,7 +3,7 @@ from IGF_log import getlog,getloglocal
 from pyrevit import forms
 from eventhandler import LISTE_SCHACHT,IS_Laboranschluss,\
     IS_Schacht,ListeExternalEvent,ExternalEvent,MEPRaum,ObservableCollection,\
-    Laboranschlusss,labanschluss_Dict,LEVEL_Dict,Dict_MEPRaum,IS_Schacht_Neu
+    Laboranschlusss,labanschluss_Dict,LEVEL_Dict,Dict_MEPRaum,IS_Schacht_Neu,ReduzierFaktor
 from System.Windows.Input import Key
 from System.Text.RegularExpressions import Regex
 
@@ -104,7 +104,8 @@ class GUI(forms.WPFWindow):
         self.labanschluss.ItemsSource = sorted(self.labanschluss_Dict.keys())
         self.ebene.ItemsSource = sorted(self.Levels.keys())
         self.schaechte_redu.ItemsSource = self.IS_Schacht_Neu
-        self.anl_schacht.ItemsSource = []
+        self.leer = ObservableCollection[ReduzierFaktor]()
+        self.anl_schacht.ItemsSource = self.leer
 
         self.set_up_is()
 
@@ -193,6 +194,9 @@ class GUI(forms.WPFWindow):
     def schachtselectionchanged(self,s,args):
         if self.schaechte_redu.SelectedIndex != -1:
             try:self.anl_schacht.ItemsSource = self.schaechte_redu.SelectedItem.reduzierfaktor
+            except Exception as e:print(e)
+        else:
+            try:self.anl_schacht.ItemsSource = self.leer
             except Exception as e:print(e)
 
     def suchetextchanged(self, sender, args):

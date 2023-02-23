@@ -1,74 +1,17 @@
 # coding: utf8
-from pyrevit import script, forms
-from IGF_log import getlog
 from System.Collections.ObjectModel import ObservableCollection
-# from eventhandler import *
+from Autodesk.Revit.UI import ExternalEvent
+from pyrevit import forms
+import os
 from System.Text.RegularExpressions import Regex
-from eventhandler import Luftauslass,VSR,DICT_MEP_ITEMSSOIRCE,VISIBLE,HIDDEN,RED,BLACK,ExtenalEventListe,ExternalEvent,LISTE_MEP
+from Luftbilanz_Klasse import Luftauslass,VSR
+from Luftbilanz_EventHandler import ExtenalEventListe
 
-__title__ = "Raumluftbilanz_NA"
-__doc__ = """
 
-imput Parameter:
--------------------------
-Fläche: Raumfläche
-Volumen: Raumvolumen
-Personenzahl: Anzahl der Personen für Luftmengenberechnung
-TGA_RLT_VolumenstromProFaktor: Volumenstromfaktor pro [Faktor oder m3/h]
-IGF_RLT_RaumDruckstufeEingabe: RaumDruckstufe
-IGF_RLT_ÜberströmungSummeIn: Überstromluft einströmend
-IGF_RLT_ÜberströmungSummeAus: Überstromluft ausströmend
-TGA_RLT_RaumÜberströmungMenge: Menge der Überströmung
-IGF_RLT_AbluftSumme24h: 24h Abluft
-IGF_RLT_AbluftminSummeLabor: min. Laborabluft
-IGF_RLT_AbluftmaxSummeLabor: max. Laborabluft
-IGF_RLT_Nachtbetrieb: Nachtbetrieb
-IGF_RLT_NachtbetriebVon: Beginn des Nachbetriebs
-IGF_RLT_NachtbetriebBis: Ende des Nachbetriebs
-IGF_RLT_NachtbetriebLW: Luftwechsel für Nacht [-1/h]
-IGF_RLT_TieferNachtbetrieb: Tiefnachtbetrieb
-IGF_RLT_TieferNachtbetriebVon: Beginn des Tiefnachtbetrieb
-IGF_RLT_TieferNachtbetriebBis: Ende des Tiefnachtbetrieb
-IGF_RLT_TieferNachtbetriebLW: Luftwechsel für Tiefnacht [-1/h]
-TGA_RLT_VolumenstromProNummer: Kennziffer für Luftmengenberechnung
-TGA_RLT_RaumÜberströmungAus: Überströmung aus Raum
-IGF_RLT_AbluftminSummeLabor24h: IGF_RLT_AbluftSumme24h + IGF_RLT_AbluftminSummeLabor
-IGF_RLT_AbluftmaxSummeLabor24h: IGF_RLT_AbluftSumme24h + IGF_RLT_AbluftmaxSummeLabor
-IGF_RLT_AbluftminRaum: min. Raumabluft, ohne Anteil der Überströmung
-IGF_RLT_AbluftmaxRaum: max. Raumabluft, ohne Anteil der Überströmung
-IGF_RLT_ZuluftminRaum: min. Raumzuluft
-IGF_RLT_ZuluftmaxRaum: max. Raumzuluft
-TGA_RLT_VolumenstromProEinheit: Einheit
-Angegebener Zuluftstrom:
-Angegebener Abluftluftstrom:
-IGF_RLT_AbluftminRaumGes:
-IGF_RLT_AnlagenRaumAbluft: Raumabluft für Anlagenberechnung. ohne Anteil der 24h Abluft
-IGF_RLT_AnlagenRaumZuluft: Raumzuluft für Anlagenberechnung
-IGF_RLT_AnlagenRaum24hAbluft: 24h Abluft für Anlagenberechnung
-IGF_RLT_RaumBilanz: Bilanz der aller Anschlüsse im Raum
-IGF_RLT_RaumDruckstufeLegende: Raum Druckstufe Legende
-IGF_RLT_Hinweis: Hinweis
-IGF_RLT_NachtbetriebDauer: Dauer des Nachbetriebs
-IGF_RLT_ZuluftNachtRaum: Zuluftmengen des Nachbetriebs
-IGF_RLT_AbluftNachtRaum: Abluftmengen des Nachbetriebs
-IGF_RLT_TieferNachtbetriebDauer: Dauer des Tiefnachtbetrieb
-IGF_RLT_ZuluftTieferNachtRaum: Zuluftmenegen des Tiefnachtbetrieb
-IGF_RLT_AbluftTieferNachtRaum: Abluftmengen des Tiefnachtbetrieb
-
--------------------------
-
-[2021.11.22]
-Version: 1.2
-"""
-__authors__ = "Menghui Zhang"
-
-try:
-    getlog(__title__)
-except:
-    pass
-
+XAML_FILES_DIR = os.path.dirname(__file__)
+            
 class MEPRaum_Uebersicht(forms.WPFWindow):
-    def __init__(self):
+    def __init__(self,RED,BLACK,LISTE_MEP,VISIBLE,HIDDEN,DICT_MEP_ITEMSSOIRCE):
         self.red = RED
         self.black = BLACK
         self.regex1 = Regex("[^0-9,]+")
@@ -80,21 +23,24 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.externalevent = ExternalEvent.Create(self.externaleventliste)
         self.visible = VISIBLE
         self.hidden = HIDDEN
-
-        forms.WPFWindow.__init__(self,'MEP.xaml',handle_esc=False)
+        forms.WPFWindow.__init__(self,os.path.join(XAML_FILES_DIR,'MEP.xaml'),handle_esc=False)
         self.mepraum_liste = DICT_MEP_ITEMSSOIRCE
-
         self.Raumnr.ItemsSource = sorted(self.mepraum_liste.keys())
-
         self.mepraum = None
         self.temp_luftauslass = ObservableCollection[Luftauslass]()
         self.temp_vsr = ObservableCollection[VSR]()
         self.temp_Iris = ObservableCollection[VSR]()
         self.warnung.Visibility= self.hidden
+        self.Closed += self.ReleaseResources
     
     def TextBox_GotFocus(self,sender,e):
         tb = sender
         tb.SelectAll()
+    
+    def ReleaseResources(self,sender,e):
+        self.externalevent.Dispose()
+        self.externaleventliste = None
+
     
     def vsr_selectedfabrikat_changed(self,sender,e):
         if self.lv_vsr1_getrennt.SelectedItem:
@@ -1149,7 +1095,6 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
             self.lv_ueber_in.SelectedIndex = -1
 
     def abbrechen(self, sender, args):
-        self.externalevent.Dispose()
         self.Close()
     
     def exportieren(self, sender, args):
@@ -1247,75 +1192,3 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         try:args.Handled = self.regex1.IsMatch(args.Text)
         except:args.Handled = True
     
-    def buero(self,sender,a):
-        self.LW_nacht.Text = '0'
-        self.LW_tnacht.Text = '0'
-        self.isnachtbetrieb.IsChecked = False
-        self.istiefenachtbetrieb.IsChecked = False
-        
-    
-    def lab1(self,sender,a):
-        self.LW_nacht.Text = '4'
-        self.LW_tnacht.Text = '0'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = False
-        
-    
-    def lab2(self,sender,a):
-        self.LW_nacht.Text = '4'
-        self.LW_tnacht.Text = '2'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = True
-        
-    def lab3(self,sender,a):
-        self.LW_nacht.Text = '2'
-        self.LW_tnacht.Text = '2'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = True
-        
-
-
-mepWPF = MEPRaum_Uebersicht()
-mepWPF.externaleventliste.GUI = mepWPF 
-mepWPF.Show()
-
-
-# from eventhandler import Raumdaten,IGF_LOGO,xlsxwriter
-# path = r'C:\Users\Zhang\Desktop\test12.xlsx'
-# e = xlsxwriter.Workbook(path)
-# worksheet = e.add_worksheet()
-
-# n = 0
-# rowstart = 0
-# Liste_Pagebreaks = []
-# for mepname in sorted(DICT_MEP_ITEMSSOIRCE.keys()):  
-#     mep = DICT_MEP_ITEMSSOIRCE[mepname]
-#     # raumdaten = Raumdaten(mep,rowstart)
-#     raumdaten = Raumdaten(mep,rowstart)
-#     raumdaten.book = e
-#     raumdaten.sheet = worksheet
-#     # raumdaten.exportheader1()
-#     raumdaten.GetFinalExportdaten()
-#             # while (raumdaten.rowende - rowstart > 36):
-#             #     Liste_Pagebreaks.append(rowstart+36)
-#             #     rowstart += 36
-#     rowstart = raumdaten.rowende
-
-#     Liste_Pagebreaks.extend(raumdaten.rowbreaks)
-
-# worksheet.set_landscape()
-# worksheet.set_column(0,1,17)
-# worksheet.set_column(2,5,13)
-# worksheet.set_column(6,6,7)
-# worksheet.set_column(7,7,13)
-# worksheet.set_column(8,10,7)
-# worksheet.set_column(11,18,11)
-# worksheet.set_column(19,19,18)
-# worksheet.set_column(20,20,25)
-# worksheet.set_paper(9)
-# worksheet.set_h_pagebreaks(Liste_Pagebreaks)   
-# header2 = '&L&G'  
-# worksheet.set_footer('&C&p / &N')   
-# worksheet.set_margins(top=1)
-# worksheet.set_header(header2, {'image_left': IGF_LOGO})
-# e.close() 

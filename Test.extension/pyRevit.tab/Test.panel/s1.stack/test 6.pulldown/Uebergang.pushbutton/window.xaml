@@ -1,59 +1,291 @@
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Übergangsstück" Height="300" Width="300" Background="LightBlue" ResizeMode="CanMinimize" WindowStartupLocation ="CenterOwner">
-    <Grid>
-        <TabControl>
-            <TabItem Header="erstellen">
-                <StackPanel Background="LightBlue">
-                <StackPanel Margin="5,5,5,5" >
-                    <GroupBox Header="Fix">
-                        <StackPanel>
-                            <RadioButton x:Name="erst" Content="eins Fix" IsChecked="True"></RadioButton>
-                            <RadioButton x:Name="zweit" Content="zwei Fix">
-                            </RadioButton>
-                        </StackPanel>
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="Filter (ausgewählte Elements)"  ShowInTaskbar="False"
+       WindowStartupLocation="CenterScreen" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center"  Background="SkyBlue" Width="1000" Height="600">
+    <TabControl Background="SkyBlue">
+        <TabItem Header="Allgemeine Bauteile" Width="200">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+
+
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <GroupBox Margin="5,0,5,0">
+                        <GroupBox.Header>
+                            <TextBlock Text="Kategorie" FontWeight="Bold"/>
+                        </GroupBox.Header>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_category">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="catechanged" Unchecked="catechanged"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Kategorie" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding category}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
                     </GroupBox>
-                    <TextBlock Text="1. Länge eingeben" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
-                    <GroupBox Header="Übergangslänge">
-                        <StackPanel>
-                            <RadioButton x:Name="auto" Content="auto." IsChecked="True"></RadioButton>
-                            <RadioButton x:Name="manuell">
-                                <RadioButton.Content>
-                                    <TextBox Width="100" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"></TextBox>
-                                </RadioButton.Content>
-                            </RadioButton>
-                        </StackPanel>
+                    <GroupBox Margin="5,0,5,0" Grid.Row="1">
+                        <GroupBox.Header>
+                            <TextBlock Text="System" FontWeight="Bold"/>
+                        </GroupBox.Header>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_System">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="systemchanged" Unchecked="systemchanged"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Systemtyp" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding systemtyp}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
                     </GroupBox>
-                    <TextBlock Text="2. Button klicken." Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
-                    <Button Content="erstellen" Click="erstellen" Width="250" Height="24" Margin="0,5,0,0"/>
-                    <TextBlock Text="3. zwei Luftkanäle auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                </Grid>
 
-                </StackPanel>
-                </StackPanel>
+                <GroupBox Grid.Column="1" Margin="0,0,5,0">
+                    <GroupBox.Header>
+                        <TextBlock Text="Familien" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <DockPanel>
+                            <TextBlock Text="Suche:" VerticalAlignment="Center" Width="60" HorizontalAlignment="Stretch" FontWeight="Bold"/>
+                            <TextBox TextChanged="suchechanged" Height="24" x:Name="suche"/>
+                        </DockPanel>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="DG_Familie" Grid.Row="1">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="familiechanged" Unchecked="familiechanged"></CheckBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="150" Header="Kategorie">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding category}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="*" Header="Familie">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding familyname}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="*" Header="Typ">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding typname}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="50" Header="Anzahl">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path = anzahl}"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-            </TabItem>
-            <TabItem Header="aktualisieren">
-                <StackPanel Background="LightBlue">
-                <StackPanel Margin="5,5,5,5">
-                    <TextBlock Text="1. Länge eingeben" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
-                    <DockPanel Margin="5,5,0,0" >
-                        <TextBlock Text="Länge: "/>
-                        <TextBox x:Name="length" Width="100" HorizontalAlignment="Left" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"/>
-                    </DockPanel>
-                    <TextBlock Text="2. Button klicken." Margin="5,5,0,0" Height="16"  Foreground="#FFCA0079"/>
-                    <Button Margin="5,5,0,0" Content="Übergang aktualisieren" Width="250" Click="aktu"/>
-                    <TextBlock Text="3. fixierten Luftkanal auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
-                    <TextBlock Text="4. Übergansstück auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                    </Grid>
+
+                </GroupBox>
+
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Margin="10,0,10,0" Height="24" Content="ausgewählte Elemente aus Revit aktualisieren" Click="ausrevit"/>
+                    <Button Grid.Column="1" Margin="10,0,10,0" Height="24" Content="ausgewählte Typen in Revit markieren" Click="inrevit"/>
+
+                </Grid>
 
 
 
 
-                </StackPanel>
-                </StackPanel>
+            </Grid>
 
-            </TabItem>
-        </TabControl>
+        </TabItem>
+        <TabItem Header="Beschriftung" Width="200">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
 
-    </Grid>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="30"/>
+
+
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <GroupBox Margin="5,0,5,0">
+                        <GroupBox.Header>
+                            <TextBlock Text="Familien" FontWeight="Bold"/>
+                        </GroupBox.Header>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_B_Familien">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="catechanged1" Unchecked="catechanged1"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Familien" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding category}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
+                    </GroupBox>
+                    <GroupBox Margin="5,0,5,0" Grid.Row="1">
+                        <GroupBox.Header>
+                            <TextBlock Text="Typ" FontWeight="Bold"/>
+                        </GroupBox.Header>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="LV_B_Typ">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="systemchanged1" Unchecked="systemchanged1"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Typ" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding systemtyp}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+
+                        </DataGrid>
+                    </GroupBox>
+                </Grid>
+
+                <GroupBox Grid.Column="1" Margin="0,0,5,0">
+                    <GroupBox.Header>
+                        <TextBlock Text="beschriftete Familien" FontWeight="Bold"/>
+                    </GroupBox.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <DockPanel>
+                            <TextBlock Text="Suche:" VerticalAlignment="Center" Width="60" HorizontalAlignment="Stretch" FontWeight="Bold"/>
+                            <TextBox TextChanged="suchechanged1" Height="24" x:Name="suche_beschriftung"/>
+                        </DockPanel>
+                        <DataGrid Background="SkyBlue" Margin="0,5,0,5" x:Name="DG_Familie_B" Grid.Row="1">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="30">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path= checked}" Checked="familiechanged1" Unchecked="familiechanged1"></CheckBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="150" Header="Beschriftungsfamilien">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding category}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="*" Header="Familie">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding familyname}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="*" Header="Typ">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding typname}"  TextWrapping="Wrap"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="50" Header="Anzahl">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path = anzahl}"></TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                    </Grid>
+
+                </GroupBox>
+
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Margin="10,0,10,0" Height="24" Content="ausgewählte Elemente aus Revit aktualisieren" Click="ausrevit1"/>
+                    <Button Grid.Column="1" Margin="10,0,10,0" Height="24" Content="ausgewählte Typen in Revit markieren" Click="inrevit1"/>
+
+                </Grid>
+
+
+
+
+            </Grid>
+
+        </TabItem>
+    </TabControl>
+
 </Window>

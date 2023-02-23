@@ -516,7 +516,7 @@
                                         <DataGridTemplateColumn Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding schacht}"/>
+                                                    <CheckBox IsChecked="{Binding schacht,UpdateSourceTrigger=PropertyChanged}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                             <DataGridTemplateColumn.Header>
@@ -526,7 +526,7 @@
                                         <DataGridTemplateColumn Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding Schachtname}" TextWrapping="Wrap"/>
+                                                    <TextBox Text="{Binding Schachtname,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                             <DataGridTemplateColumn.Header>
@@ -575,7 +575,7 @@
                                         <DataGridTemplateColumn Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding schacht}"/>
+                                                    <CheckBox IsChecked="{Binding schacht,UpdateSourceTrigger=PropertyChanged}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                             <DataGridTemplateColumn.Header>
@@ -614,7 +614,7 @@
                                 <DataGridTemplateColumn Width="30">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding checked,UpdateSourceTrigger=PropertyChanged}" Checked="schachtchecked" Unchecked="schachtchecked"/>
+                                            <CheckBox IsChecked="{Binding checked,UpdateSourceTrigger=PropertyChanged}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
 
@@ -631,7 +631,7 @@
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <DataGrid Background="LightBlue" x:Name="anl_schacht" Grid.Row="1" Margin="5,5,5,5">
+                        <DataGrid Background="LightBlue" x:Name="anl_schacht" Grid.Row="1" Margin="5,5,5,5" >
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
