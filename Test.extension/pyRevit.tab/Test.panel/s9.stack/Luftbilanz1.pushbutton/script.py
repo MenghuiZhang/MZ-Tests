@@ -162,6 +162,8 @@ class MEPRaum_Uebersicht(forms.WPFWindow):
         self.anlageninfo.Items.Refresh()
         self.schachtinfo.ItemsSource = self.mepraum.Schacht_info
         self.schachtinfo.Items.Refresh()
+        self.detail_min.ItemsSource = self.mepraum.Detail_Min
+        self.detail_min.Items.Refresh()
 
         self.lv_vsr_getrennt.ItemsSource = self.mepraum.list_vsr0
         self.lv_vsr.ItemsSource = self.mepraum.list_vsr0

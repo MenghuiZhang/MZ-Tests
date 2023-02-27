@@ -2461,6 +2461,7 @@ class MEPGrundInfo(TemplateItemBase):
         self.name = name
         self._soll = soll
         self._ist = ''
+        self._reduziert = soll
         self.tooltip = tooltip
     @property
     def soll(self):
@@ -2470,6 +2471,14 @@ class MEPGrundInfo(TemplateItemBase):
         if value != self._soll:
             self._soll = value
             self.RaisePropertyChanged('soll')
+    @property
+    def reduziert(self):
+        return self._reduziert
+    @reduziert.setter
+    def reduziert(self,value):
+        if value != self._reduziert:
+            self._reduziert = value
+            self.RaisePropertyChanged('reduziert')
     @property
     def ist(self):
         return self._ist
@@ -2558,6 +2567,126 @@ class MEPAnlagenInfo(TemplateItemBase):
             self._sys_mengen = value
             self.RaisePropertyChanged('sys_mengen')
 
+
+
+class MEPAuswertung(TemplateItemBase):
+    def __init__(self,zustand,name,Liste0,Liste1):
+        TemplateItemBase.__init__(self)
+        self.name = name
+        self.Liste0 = Liste0
+        self.Liste1 = Liste1
+        self._ist = 0
+        self._reduziert = 0
+        self.zustand = zustand
+        self._set_up()
+
+    @property
+    def reduziert(self):
+        return self._reduziert
+    @reduziert.setter
+    def reduziert(self,value):
+        if value != self._reduziert:
+            self._reduziert = value
+            self.RaisePropertyChanged('reduziert')
+
+    @property
+    def ist(self):
+        return self._ist
+    @ist.setter
+    def ist(self,value):
+        if value != self._ist:
+            self._ist = value
+            self.RaisePropertyChanged('ist')
+    
+    def _set_up(self):
+        try:self.ist = self._get_ist()
+        except:pass
+        try:self.reduziert = self._get_reduziert()
+        except:pass
+    
+    def _get_reduziert(self):
+        if self.name.find('Summe') != -1:
+            summe = 0
+            for el in self.Liste0:
+                summe += el.reduziert
+            return summe
+        elif self.name.find('Luftbilanz') != -1:
+            zuluft = 0
+            abluft = 0
+            for el in self.Liste0:
+                if el.name.find('Zuluft') != -1:
+                    zuluft = el.reduziert
+                elif el.name.find('Abluft') != -1:
+                    abluft = el.reduziert
+            return zuluft-abluft
+        
+        elif self.name.find('Auswertung') != -1:
+            summe = 0
+            Bilanz = 0
+            Druck = 0
+            for el in self.Liste0:
+                if el.name.find('Luftbilanz') != -1:
+                    Bilanz = el.reduziert
+                elif el.name.find('Druckstufe') != -1:
+                    Druck = el.reduziert
+            summe = Bilanz - Druck
+            if abs(summe) <= 3:
+                return 'OK'
+            else:return 'Passt nicht'
+        elif self.name.find('Tierhaltung') != -1:
+            return ''
+        else:
+            return self.Liste0.reduziert
+        
+    
+    def _get_ist(self):
+        if self.name.find('Summe') != -1:
+            summe = 0
+            for el in self.Liste0:
+                summe += el.ist
+            return summe
+        elif self.name.find('Luftbilanz') != -1:
+            zuluft = 0
+            abluft = 0
+            for el in self.Liste0:
+                if el.name.find('Zuluft') != -1:
+                    zuluft = el.ist
+                elif el.name.find('Abluft') != -1:
+                    abluft = el.ist
+            return zuluft-abluft
+        elif self.name.find('Manuel') != -1:
+            return self.Liste0.reduziert
+        
+        elif self.name.find('Tierhaltung') != -1:
+            return ''
+        
+        elif self.name.find('Auswertung') != -1:
+            summe = 0
+            Bilanz = 0
+            Druck = 0
+            for el in self.Liste0:
+                if el.name.find('Luftbilanz') != -1:
+                    Bilanz = el.ist
+                elif el.name.find('Druckstufe') != -1:
+                    Druck = el.ist
+            summe = Bilanz - Druck
+            if abs(summe) <= 3:
+                return 'OK'
+            else:return 'Passt nicht'
+        else:
+            summe = 0
+            for el in self.Liste1:
+                if self.zustand == 'min':
+                    summe += el.Luftmengenmin
+                elif self.zustand == 'max':
+                    summe += el.Luftmengenmax
+                elif self.zustand == 'nacht':
+                    summe += el.Luftmengennacht
+                elif self.zustand == 'tnacht':
+                    summe += el.Luftmengentnacht
+                return summe
+
+
 spaces_collector = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).WhereElementIsNotElementType().ToElements()
 Dict_Ueber_Manuell = {}
 for ele in spaces_collector:
@@ -2610,6 +2739,18 @@ class MEPRaum(object):
         self.list_vsr0 = ObservableCollection[VSR]() # Haupt
         self.list_vsr1 = ObservableCollection[VSR]() # VSR
         self.list_vsr2 = ObservableCollection[VSR]() # Iris
+        self.Liste_RZU = []
+        self.Liste_RAB = []
+        self.Liste_TZU = []
+        self.Liste_TAB = []
+        self.Liste_H24 = []
+        self.Liste_LAB = []
+        self.Liste_UIN = []
+        self.Liste_UAU = []
+        self.Detail_Min = ObservableCollection[MEPAuswertung]()
+        self.Detail_Max = ObservableCollection[MEPAuswertung]()
+        self.Detail_Nacht = ObservableCollection[MEPAuswertung]()
+        self.Detail_Tnahct = ObservableCollection[MEPAuswertung]()
         for el in self.list_vsr:
             if el.IsIris == True:
                 self.list_vsr2.Add(el)
@@ -2812,11 +2953,77 @@ class MEPRaum(object):
         self.Analyse()
         self.get_Anlagen_info()
         self.get_Schacht_info()
+        self.Luftauslass_Analyse()
+
+        self.D_T_MIN_Rzu   = MEPAuswertung('min','Zu-Raum',self.zu_min,self.Liste_RZU)
+        self.D_T_MIN_ZuUe  = MEPAuswertung('min','Zu-Über',self.ueber_in,self.Liste_UIN)
+        self.D_T_MIN_ZuUeM = MEPAuswertung('min','Zu-Über-Manuel',self.ueber_in_manuell,[])
+        self.D_T_MIN_Rab   = MEPAuswertung('min','Ab-Raum',self.ab_min,self.Liste_RAB)
+        self.D_T_MIN_AbUe  = MEPAuswertung('min','Ab-Über',self.ueber_aus,self.Liste_UAU)
+        self.D_T_MIN_AbUeM = MEPAuswertung('min','Ab-Über-Manuel',self.ueber_aus_manuell,[])
+        self.D_T_MIN_Lab   = MEPAuswertung('min','Ab-Labor',self.ab_lab_min,self.Liste_LAB)
+        self.D_T_MIN_24h   = MEPAuswertung('min','Ab-24h',self.ab_24h,self.Liste_H24)
+        self.D_T_MIN_ZuS   = MEPAuswertung('min','Zuluft-Summe',[self.D_T_MIN_Rzu,self.D_T_MIN_ZuUe,self.D_T_MIN_ZuUeM],[])
+        self.D_T_MIN_AbS   = MEPAuswertung('min','Abluft-Summe',[self.D_T_MIN_Rab,self.D_T_MIN_AbUe,self.D_T_MIN_AbUeM,self.D_T_MIN_24h,self.D_T_MIN_Lab],[])
+        self.D_T_MIN_BLZ   = MEPAuswertung('min','Luftbilanz',[self.D_T_MIN_ZuS,self.D_T_MIN_AbS],[])
+        self.D_T_Druckstufe= MEPAuswertung('min','Druckstufe',self.Druckstufe,[])
+        self.D_T_MIN_Aus   = MEPAuswertung('min','Auswertung',[self.D_T_MIN_BLZ,self.D_T_Druckstufe],[])
+        self.D_T_MIN_Tier  = MEPAuswertung('min','Tierhaltung',[],[])
+        self.D_T_MIN_TZu   = MEPAuswertung('min','Zu-TH',self.tier_zu_min,self.Liste_TZU)
+        self.D_T_MIN_TAb   = MEPAuswertung('min','Ab-TH',self.tier_ab_min,self.Liste_TAB)
+        self.Detail_Min.Add(self.D_T_MIN_Rzu)
+        self.Detail_Min.Add(self.D_T_MIN_ZuUe)
+        self.Detail_Min.Add(self.D_T_MIN_ZuUeM)
+        self.Detail_Min.Add(self.D_T_MIN_ZuS)
+        self.Detail_Min.Add(self.D_T_MIN_Rab)
+        self.Detail_Min.Add(self.D_T_MIN_AbUe)
+        self.Detail_Min.Add(self.D_T_MIN_AbUeM)
+        self.Detail_Min.Add(self.D_T_MIN_24h)
+        self.Detail_Min.Add(self.D_T_MIN_AbS)
+        self.Detail_Min.Add(self.D_T_MIN_BLZ)
+        self.Detail_Min.Add(self.D_T_Druckstufe)
+        self.Detail_Min.Add(self.D_T_MIN_Aus)
+        self.Detail_Min.Add(self.D_T_MIN_Tier)
+        self.Detail_Min.Add(self.D_T_MIN_TZu)
+        self.Detail_Min.Add(self.D_T_MIN_TAb)
+    
+
+    def update1(self):
+        for el in self.Detail_Min:
+            el._set_up()
+
     
     def update(self):        
         self.ab_24h.soll = self.get_element('IGF_RLT_AbluftSumme24h')
         self.ab_lab_min.soll = self.get_element('IGF_RLT_AbluftminSummeLabor') 
         self.Druckstufe.soll = self.get_element('IGF_RLT_RaumDruckstufeEingabe')
+    
+    def Luftauslass_Analyse(self):
+        Liste_RZU = []
+        Liste_RAB = []
+        Liste_TZU = []
+        Liste_TAB = []
+        Liste_H24 = []
+        Liste_LAB = []
+        Liste_UIN = self.list_ueber["Ein"]
+        Liste_UAU = self.list_ueber["Aus"]
+
+        for auslass in self.list_auslass:
+            if auslass.art == '24h':Liste_H24.append(auslass)
+            elif auslass.art == 'LAB':Liste_LAB.append(auslass)
+            elif auslass.art == 'RZU':Liste_RZU.append(auslass)
+            elif auslass.art == 'RAB':Liste_RAB.append(auslass)
+            elif auslass.art == 'TZU':Liste_TZU.append(auslass)
+            elif auslass.art == 'TAB':Liste_TAB.append(auslass)
+
+        self.Liste_UAU = Liste_UAU
+        self.Liste_UIN = Liste_UIN
+        self.Liste_LAB = Liste_LAB
+        self.Liste_H24 = Liste_H24
+        self.Liste_TAB = Liste_TAB
+        self.Liste_TZU = Liste_TZU
+        self.Liste_RAB = Liste_RAB
+        self.Liste_RZU = Liste_RZU
     
     def sum_update(self):
         self.ab_minsum.soll = str(int(round(float(self.ab_min.soll)+float(self.ab_lab_min.soll)+float(self.ab_24h.soll)+float(self.ueber_aus.soll)+float(self.ueber_aus_manuell.soll)))) + \
@@ -3097,6 +3304,7 @@ class MEPRaum(object):
         self.get_Schacht_info()
         self.get_Anlagen_info()
         self.sum_update()
+        self.update1()
 
     def Analyse(self):
         min_zu = 0
@@ -3173,6 +3381,8 @@ class MEPRaum(object):
         self.labtnacht = int(round(lab_tnacht))
         self.ab24nacht = int(round(ab24h_nacht))
         self.ab24tnacht = int(round(ab24h_tnacht))
+
+        self.update1()
         
     def get_Anlagen_info(self):
         self.Anlagen_info.Clear()
