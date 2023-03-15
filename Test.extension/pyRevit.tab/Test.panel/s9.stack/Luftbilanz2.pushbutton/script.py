@@ -1,10 +1,16 @@
 # coding: utf8
-from pyrevit import script, forms
-from IGF_log import getlog
+import System
+from System import Windows
 from System.Collections.ObjectModel import ObservableCollection
-# from eventhandler import *
-from System.Text.RegularExpressions import Regex
-from eventhandler import Luftauslass,VSR,DICT_MEP_ITEMSSOIRCE,VISIBLE,HIDDEN,RED,BLACK,ExtenalEventListe,ExternalEvent,LISTE_MEP
+
+from Luftbilanz_Config import config,doc,DB,uidoc
+from Luftbilanz_Herstellerdaten import Liste_Fabrikat,DICT_DatenBank,Liste_Datenbank,Liste_Datenbank1
+from Luftbilanz_Forms import Familien,forms,RED,BLACK,HIDDEN,VISIBLE
+from Luftbilanz_Uebersicht import MEPRaum_Uebersicht
+from Luftbilanz_Klasse import *
+from clr import GetClrType
+from IGF_lib import get_value
+from IGF_log import getlog
 
 __title__ = "Raumluftbilanz_NA"
 __doc__ = """
@@ -57,1265 +63,428 @@ IGF_RLT_AbluftTieferNachtRaum: Abluftmengen des Tiefnachtbetrieb
 
 -------------------------
 
-[2021.11.22]
+[2023.02.27]
 Version: 1.2
 """
 __authors__ = "Menghui Zhang"
 
-try:
-    getlog(__title__)
-except:
-    pass
+# try:
+#     getlog(__title__)
+# except:
+#     pass
 
-class MEPRaum_Uebersicht(forms.WPFWindow):
-    def __init__(self):
-        self.red = RED
-        self.black = BLACK
-        self.regex1 = Regex("[^0-9,]+")
-        self.regex2 = Regex("[^0-9]+")
-        self.regex3 = Regex("[^0-9-]+")
-        self.externaleventliste = ExtenalEventListe()
-        self.ListeMEP = LISTE_MEP
-        self.path = ''
-        self.externalevent = ExternalEvent.Create(self.externaleventliste)
-        self.visible = VISIBLE
-        self.hidden = HIDDEN
+DICT_MEP_NUMMER_NAME = {} # 100.103 : 100.103 - Büro
+DICT_MEP_AUSLASS = {} ## MEPID: OB(Auslässe)
+DICT_MEP_VSR = {} ## MEPID: [VSRID]
+DICT_MEP_UEBERSTROM = {} ## MEPID: {'Ein': ..., 'Aus':...}
 
-        forms.WPFWindow.__init__(self,'MEP.xaml',handle_esc=False)
-        self.mepraum_liste = DICT_MEP_ITEMSSOIRCE
+ELEMID_UEBER = [] ## ElememntId Überstrom
+LISTE_SCHACHT = []
 
-        self.Raumnr.ItemsSource = sorted(self.mepraum_liste.keys())
+DICT_VSR_MEP_NUR_NUMMER = {} ## VSRID: [MEPNr,MEPNr]
+DICT_MEP_UN_AUNLASS = {} #Raumluftbilanzunrelevante Auslässe, Raumid: [Auslass] 
+DICT_VSR_MEP = {} ## VSRID: [MEPNr-Name,MEPNr-Name]
+DICT_VSR_VSRLISTE = {} ## VSRID: [VSRID,VSRID]
+DICT_VSR_AUSLASS = {} ## VSRID: OB(Auslässe)
+DICT_VSR = {} ## VSRID: Class VSR
+LISTE_VSR = []
+LISTE_IRIS = []
+DICT_MEP_EINBAUTEILE = {}
+DICT_EINBAUTEILE_AUSLASS = {}
+DICT_MEP_VSRKLASSE = {}
 
-        self.mepraum = None
-        self.temp_luftauslass = ObservableCollection[Luftauslass]()
-        self.temp_vsr = ObservableCollection[VSR]()
-        self.temp_Iris = ObservableCollection[VSR]()
-        self.warnung.Visibility= self.hidden
-    
-    def TextBox_GotFocus(self,sender,e):
-        tb = sender
-        tb.SelectAll()
-    
-    def vsr_selectedfabrikat_changed(self,sender,e):
-        if self.lv_vsr1_getrennt.SelectedItem:
-            try:
-                item = sender.DataContext
-                item.vsrauswaelten()
-                item.vsrueberpruefen()
-            except Exception as e:
-                pass
-    
-    def vsr_selectedtyp_changed(self,sender,e):
-        if self.lv_vsr1_getrennt.SelectedItem:
-            try:
-                item = sender.DataContext
-                item.VSR_Hersteller = item.DICT_DatenBank[item.Liste_Herstellertyp[item.Herstellertypindex]]
-                item.vsrueberpruefen()
-            except Exception as e:
-                pass
+views = DB.FilteredElementCollector(doc).OfClass(GetClrType(DB.View3D)).ToElements()
+for el in views:
+    if el.Name == 'Berechnungsmodell_L_KG4xx_IGF':
+        uidoc.ActiveView = el
+        break
 
-    def set_up(self):
-        self.bezugsname.IsEnabled = True
-        self.bezugsname.ItemsSource = sorted(self.mepraum.berechnung_nach.values())
-        self.faktor.IsEnabled = True
-        self.isnachtbetrieb.IsEnabled = True
-        self.LW_nacht.IsEnabled = True
-        self.von_nacht.IsEnabled = True
-        self.bis_nacht.IsEnabled = True
-        self.istiefenachtbetrieb.IsEnabled = True
-        self.LW_tnacht.IsEnabled = True
-        self.von_tnacht.IsEnabled = True
-        self.bis_tnacht.IsEnabled = True
-        self.labmineingabe.IsEnabled = True
-        self.labmaxeingabe.IsEnabled = True
-        
-        self.ab24heingabe.IsEnabled = True
-        self.druckeingabe.IsEnabled = True
+active_view = uidoc.ActiveView
+if active_view.Name != 'Berechnungsmodell_L_KG4xx_IGF':
+    logger.error('die Ansicht "Berechnungsmodell_L_KG4xx_IGF "nicht gefunden!')
+    script.exit()
 
+IS_AUSLASS = ObservableCollection[Itemtemplate]()
+IS_AUSLASS_D = ObservableCollection[Itemtemplate]()
+IS_AUSLASS_LAB = ObservableCollection[Itemtemplate]()
+IS_AUSLASS_24H = ObservableCollection[Itemtemplate]()
+IS_VSR = ObservableCollection[Itemtemplate]()
+IS_DOSSEL = ObservableCollection[Itemtemplate]()
 
-        self.isnachtbetrieb.IsChecked = True if self.mepraum.nachtbetrieb  else False
-        self.istiefenachtbetrieb.IsChecked = True if self.mepraum.tiefenachtbetrieb  else False
-        self.LW_nacht.Text = str(self.mepraum.NB_LW)
-        self.von_nacht.Text = str(self.mepraum.nb_von.soll)
-        self.bis_nacht.Text = str(self.mepraum.nb_bis.soll)
+def get_IS():
+    Families = DB.FilteredElementCollector(doc).OfClass(GetClrType(DB.Family)).ToElements()
+    Liste_Auslass = []
+    Liste_Auslass_Lab = []
+    Liste_Zubehoer = []
+    for el in Families:
+        FamName = el.Name
+        if el.FamilyCategoryId.IntegerValue == -2008013:
+            if FamName not in Liste_Auslass:
+                Liste_Auslass.append(FamName)
+            for typid in el.GetFamilySymbolIds():
+                typ = doc.GetElement(typid)
+                typname = typ.get_Parameter(DB.BuiltInParameter.SYMBOL_FAMILY_AND_TYPE_NAMES_PARAM).AsString()
+                if typname not in Liste_Auslass_Lab:
+                    Liste_Auslass_Lab.append(typname)
+        elif el.FamilyCategoryId.IntegerValue == -2008016:
+            if FamName not in Liste_Auslass:
+                Liste_Zubehoer.append(FamName)
 
-        self.LW_tnacht.Text = str(self.mepraum.T_NB_LW)
-        self.von_tnacht.Text = str(self.mepraum.tnb_von.soll)
-        self.bis_tnacht.Text = str(self.mepraum.tnb_bis.soll)
+    for el in sorted(Liste_Auslass):
+        IS_AUSLASS_D.Add(Itemtemplate(el))
+    for el in sorted(Liste_Zubehoer):
+        IS_VSR.Add(Itemtemplate(el))
+        IS_DOSSEL.Add(Itemtemplate(el))
+    for el in sorted(Liste_Auslass_Lab):
+        IS_AUSLASS.Add(Itemtemplate(el,True))
+        IS_AUSLASS_LAB.Add(Itemtemplate(el))
+        IS_AUSLASS_24H.Add(Itemtemplate(el))
 
-        self.labmineingabe.Text = str(self.mepraum.ab_lab_min.soll)      
-        self.labmaxeingabe.Text = str(self.mepraum.ab_lab_max.soll)
-        self.ab24heingabe.Text = str(self.mepraum.ab_24h.soll)
-        self.druckeingabe.Text = str(self.mepraum.Druckstufe.soll)
+get_IS()
 
-        self.ebene.Text = str(self.mepraum.ebene)
-        self.bezugsname.Text = str(self.mepraum.bezugsname)
-        self.faktor.Text = str(self.mepraum.faktor)
-        self.einheit.Text = str(self.mepraum.einheit)
-        self.flaeche.Text = str(self.mepraum.flaeche)
-        self.volumen.Text = str(self.mepraum.volumen)
-        self.personen.Text = str(self.mepraum.personen)
-        self.hoehe.Text = str(self.mepraum.hoehe)
-        self.grundinfo.ItemsSource = self.mepraum.Uebersicht
-        self.grundinfo.Items.Refresh()
-        self.anlageninfo.ItemsSource = self.mepraum.Anlagen_info
-        self.anlageninfo.Items.Refresh()
-        self.schachtinfo.ItemsSource = self.mepraum.Schacht_info
-        self.schachtinfo.Items.Refresh()
+familien = Familien(IS_AUSLASS,IS_AUSLASS_D,IS_AUSLASS_LAB,IS_AUSLASS_24H,IS_VSR,IS_DOSSEL)
+try:familien.ShowDialog()
+except Exception as e:
+    logger.error(e)
+    familien.Close()
+    script.exit()
 
-        self.lv_vsr_getrennt.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr1_getrennt.ItemsSource = self.mepraum.list_vsr1
-        self.lv_vsr1.ItemsSource = self.mepraum.list_vsr1
-        self.lv_vsr2_getrennt.ItemsSource = self.mepraum.list_vsr2
-        self.lv_vsr2.ItemsSource = self.mepraum.list_vsr2
+VSR_AUSLASS_LISTE = config.get_value('auslass')
+DRO_AUSLASS_LISTE = config.get_value('auslassd')
+LAB_AUSLASS_LISTE = config.get_value('auslasslab')
+H24_AUSLASS_LISTE = config.get_value('auslass24h')
+VSR_FAMILIE_LISTE = config.get_value('vsr')
+DRO_FAMILIE_LISTE = config.get_value('drossel')
 
+print(LAB_AUSLASS_LISTE)
+# script.exit()
+# VSR_AUSLASS_LISTE = config.auslass
+# DRO_AUSLASS_LISTE = config.auslassd
+# LAB_AUSLASS_LISTE = config.auslasslab
+# H24_AUSLASS_LISTE = config.auslass24h
+# VSR_FAMILIE_LISTE = config.vsr
+# DRO_FAMILIE_LISTE = config.drossel
 
-        self.lv_auslass.ItemsSource = self.mepraum.list_auslass
-        self.lv_auslass_getrennt.ItemsSource = self.mepraum.list_auslass
-
-        self.lv_ueber_aus.ItemsSource = self.mepraum.list_ueber['Aus']
-        self.lv_ueber_in.ItemsSource = self.mepraum.list_ueber['Ein']
-
-        self.auswertung_nachtbetrieb.Visibility = self.visible
-
-        try:self.Auswertung_MEP()
-        except:pass
-        try:self.Auswertung_System()
-        except:pass
-
-    def Auswertung_System(self):
-        self.mepraum.get_Anlagen_info()
-
-        uber_in_m = self.mepraum.ueber_in_manuell.soll
-        uber_aus_m = self.mepraum.ueber_aus_manuell.soll
-        uber_in = 0
-        uber_aus = 0
-        ab24h = 0
-
-        lab_min = 0
-        lab_max = 0
-        lab_nb_ab = 0
-        lab_tnb_ab = 0
-
-        min_zu_raum = 0
-        max_zu_raum = 0
-        nb_zu_raum = 0
-        tnb_zu_raum = 0
-
-        min_ab_raum = 0
-        nb_ab_raum = 0
-        max_ab_raum = 0
-        tnb_ab_raum = 0
-
-        min_zu_tier = 0
-        nb_zu_tier = 0
-        max_zu_tier = 0
-        tnb_zu_tier = 0
-
-        min_ab_tier = 0
-        nb_ab_tier = 0
-        max_ab_tier = 0
-        tnb_ab_tier = 0
-
-        self.min_auswertung_druckstufe.Text = str(int(round(self.mepraum.Druckstufe.soll)))
-        self.nacht_auswertung_druckstufe.Text = str(int(round(self.mepraum.Druckstufe.soll)))
-        self.max_auswertung_druckstufe.Text = str(int(round(self.mepraum.Druckstufe.soll)))
-        self.tnacht_auswertung_druckstufe.Text = str(int(round(self.mepraum.Druckstufe.soll)))
-
-        for uber in self.mepraum.list_ueber["Ein"]:
-            uber_in += float(str(uber.menge).replace(',', '.'))
-        for uber in self.mepraum.list_ueber["Aus"]:
-            uber_aus += float(str(uber.menge).replace(',', '.'))
-        for auslass in self.mepraum.list_auslass:
-            if auslass.art == '24h':
-                ab24h += float(str(auslass.Luftmengenmin).replace(',', '.'))
-
-            elif auslass.art == 'LAB':
-                lab_min += float(str(auslass.Luftmengenmin).replace(',', '.'))
-                lab_nb_ab += float(str(auslass.Luftmengennacht).replace(',', '.'))
-                lab_max += float(str(auslass.Luftmengenmax).replace(',', '.'))
-                lab_tnb_ab += float(str(auslass.Luftmengentnacht).replace(',', '.'))
-
-            elif auslass.art == 'RZU':
-                min_zu_raum += float(str(auslass.Luftmengenmin).replace(',', '.'))
-                nb_zu_raum += float(str(auslass.Luftmengennacht).replace(',', '.'))
-                max_zu_raum += float(str(auslass.Luftmengenmax).replace(',', '.'))
-                tnb_zu_raum += float(str(auslass.Luftmengentnacht).replace(',', '.'))
-            elif auslass.art == 'RAB':
-                min_ab_raum += float(str(auslass.Luftmengenmin).replace(',', '.'))
-                nb_ab_raum += float(str(auslass.Luftmengennacht).replace(',', '.'))
-                max_ab_raum += float(str(auslass.Luftmengenmax).replace(',', '.'))
-                tnb_ab_raum += float(str(auslass.Luftmengentnacht).replace(',', '.'))
-            elif auslass.art == 'TZU':
-                min_zu_tier += float(str(auslass.Luftmengenmin).replace(',', '.'))
-                nb_zu_tier += float(str(auslass.Luftmengennacht).replace(',', '.'))
-                max_zu_tier += float(str(auslass.Luftmengenmax).replace(',', '.'))
-                tnb_zu_tier += float(str(auslass.Luftmengentnacht).replace(',', '.'))
-            elif auslass.art == 'TAB':
-                min_ab_tier += float(str(auslass.Luftmengenmin).replace(',', '.'))
-                nb_ab_tier += float(str(auslass.Luftmengennacht).replace(',', '.'))
-                max_ab_tier += float(str(auslass.Luftmengenmax).replace(',', '.'))
-                tnb_ab_tier += float(str(auslass.Luftmengentnacht).replace(',', '.'))
-
-        min_zu_sum = min_zu_raum + uber_in + uber_in_m
-        min_ab_sum = min_ab_raum + uber_aus + lab_min + ab24h + uber_aus_m
-        min_abweichung = min_zu_sum - min_ab_sum
-
-        self.b_zu_min_sum_sys.Text = str(int(round(min_zu_sum)))
-        self.b_zu_min_raum_sys.Text = str(int(round(min_zu_raum)))
-        self.b_zu_min_tier_sys.Text = str(int(round(min_zu_tier)))
-        self.b_zu_min_ueber_sys.Text = str(int(round(uber_in)))
-        self.b_zu_min_ueber_m_sys.Text = str(int(round(uber_in_m)))
-
-        self.b_ab_min_sum_sys.Text = str(int(round(min_ab_sum)))
-        self.b_ab_min_raum_sys.Text = str(int(round(min_ab_raum)))
-        self.b_ab_min_tier_sys.Text = str(int(round(min_ab_tier)))
-        self.b_ab_min_ueber_sys.Text = str(int(round(uber_aus)))
-        self.b_ab_min_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-        self.b_ab_min_lab_sys.Text = str(int(round(lab_min)))
-        self.b_ab_24h_min_sys.Text = str(int(round(ab24h)))
-
-        self.min_Abweichung_sys.Text = str(int(round(min_abweichung)))
-        if abs(round(min_abweichung)) <= 3:
-        #if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-            self.min_auswertung_sys.Text = 'OK'
-            self.min_Abweichung_sys.Foreground = self.black
-            self.min_auswertung_sys.Foreground = self.black
-        else:
-            self.min_auswertung_sys.Text = 'Passt Nicht'
-            self.min_auswertung_sys.Foreground = self.red
-            self.min_Abweichung_sys.Foreground = self.red
-
-        max_zu_sum = max_zu_raum + uber_in + uber_in_m
-        max_ab_sum = max_ab_raum + uber_aus + lab_max + ab24h + uber_aus_m
-        max_abweichung = max_zu_sum - max_ab_sum
-
-        self.b_zu_max_sum_sys.Text = str(int(round(max_zu_sum)))
-        self.b_zu_max_raum_sys.Text = str(int(round(max_zu_raum)))
-        self.b_zu_max_tier_sys.Text = str(int(round(max_zu_tier)))
-        self.b_zu_max_ueber_sys.Text = str(int(round(uber_in)))
-        self.b_zu_max_ueber_m_sys.Text = str(int(round(uber_in_m)))
-
-        self.b_ab_max_sum_sys.Text = str(int(round(max_ab_sum)))
-        self.b_ab_max_raum_sys.Text = str(int(round(max_ab_raum)))
-        self.b_ab_max_tier_sys.Text = str(int(round(max_ab_tier)))
-        self.b_ab_max_ueber_sys.Text = str(int(round(uber_aus)))
-        self.b_ab_max_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-        self.b_ab_max_lab_sys.Text = str(int(round(lab_max)))
-        self.b_ab_24h_max_sys.Text = str(int(round(ab24h)))
-
-        self.max_Abweichung_sys.Text = str(int(round(max_abweichung)))
-        if abs(round(max_abweichung)) <= 3:
-        #if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-            self.max_auswertung_sys.Text = 'OK'
-            self.max_Abweichung_sys.Foreground = self.black
-            self.max_auswertung_sys.Foreground = self.black
-        else:
-            self.max_auswertung_sys.Text = 'Passt Nicht'
-            self.max_auswertung_sys.Foreground = self.red
-            self.max_Abweichung_sys.Foreground = self.red
-
-        if self.mepraum.nachtbetrieb:
-            nb_zu_sum = nb_zu_raum + uber_in + uber_in_m
-            nb_ab_sum = nb_ab_raum + uber_aus + lab_nb_ab + ab24h + uber_aus_m
-            nb_abweichung = nb_zu_sum - nb_ab_sum
-        else:
-            nb_zu_sum = nb_zu_raum
-            nb_ab_sum = nb_ab_raum + ab24h 
-            nb_abweichung = nb_zu_sum - nb_ab_sum
-
-        self.b_zu_nacht_sum_sys.Text = str(int(round(nb_zu_sum)))
-        self.b_zu_nacht_raum_sys.Text = str(int(round(nb_zu_raum)))
-        if self.mepraum.nachtbetrieb:
-            self.b_zu_nacht_ueber_sys.Text = str(int(round(uber_in)))
-            self.b_zu_nacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
-            self.b_ab_nacht_ueber_sys.Text = str(int(round(uber_aus)))
-            self.b_ab_nacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-            self.b_ab_nacht_lab_sys.Text = str(int(round(lab_nb_ab)))
-        else:
-            self.b_zu_nacht_ueber_sys.Text = '0'
-            self.b_zu_nacht_ueber_m_sys.Text = '0'
-            self.b_ab_nacht_ueber_sys.Text = '0'
-            self.b_ab_nacht_ueber_m_sys.Text = '0'
-            self.b_ab_nacht_lab_sys.Text = '0'
+# def get_IS_VSR():
+#     Families = DB.FilteredElementCollector(doc).OfClass(GetClrType(DB.Family)).ToElements()
+#     Dict = {}
+#     for el in Families:
+#         FamName = el.Name
+#         if FamName in VSR_FAMILIE_LISTE:
+#             for typid in el.GetFamilySymbolIds():
+#                 typ = doc.GetElement(typid)
+#                 typname = typ.LookupParameter('Typenkommentare').AsString()
+#                 if typname not in Dict.keys():
+#                     Dict[typname] = typid
+#                 else:
+#                     logger.error('{} und {} haben gleiche Herstellertypname {}.'.format(typid,Dict[typname],typname))
+#     return Dict
 
 
-        self.b_ab_nacht_sum_sys.Text = str(int(round(nb_ab_sum)))
-        self.b_ab_nacht_raum_sys.Text = str(int(round(nb_ab_raum)))
-        self.b_ab_24h_nacht_sys.Text = str(int(round(ab24h)))
+# Dict_Herstellertyp = get_IS_VSR()
 
-        self.nacht_Abweichung_sys.Text = str(int(round(nb_abweichung)))
-        if abs(round(nb_abweichung)) <= 3:
-        #if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-            self.nacht_auswertung_sys.Text = 'OK'
-            self.nacht_Abweichung_sys.Foreground = self.black
-            self.nacht_auswertung_sys.Foreground = self.black
-        else:
-            self.nacht_auswertung_sys.Text = 'Passt Nicht'
-            self.nacht_auswertung_sys.Foreground = self.red
-            self.nacht_Abweichung_sys.Foreground = self.red
-        if self.mepraum.tiefenachtbetrieb:
-        
-            tnb_zu_sum = tnb_zu_raum + uber_in + uber_in_m
-            tnb_ab_sum = tnb_ab_raum + uber_aus + lab_tnb_ab + ab24h + uber_aus_m
-            tnb_abweichung = tnb_zu_sum - tnb_ab_sum
-            self.b_zu_tnacht_ueber_sys.Text = str(int(round(uber_in)))
-            self.b_zu_tnacht_ueber_m_sys.Text = str(int(round(uber_in_m)))
-            self.b_ab_tnacht_ueber_sys.Text = str(int(round(uber_aus)))
-            self.b_ab_tnacht_ueber_m_sys.Text = str(int(round(uber_aus_m)))
-            self.b_ab_tnacht_lab_sys.Text = str(int(round(lab_tnb_ab)))
-            self.b_ab_24h_tnacht_sys.Text = str(int(round(ab24h)))
-            #if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-            if abs(round(tnb_abweichung)) <= 3:
-                self.tnacht_auswertung_sys.Text = 'OK'
-                self.tnacht_Abweichung_sys.Foreground = self.black
-                self.tnacht_auswertung_sys.Foreground = self.black
-            else:
-                self.tnacht_auswertung_sys.Text = 'Passt Nicht'
-                self.tnacht_auswertung_sys.Foreground = self.red
-                self.tnacht_Abweichung_sys.Foreground = self.red
-        else:
-            tnb_zu_sum = tnb_zu_raum 
-            tnb_ab_sum = tnb_ab_raum 
-            tnb_abweichung = tnb_zu_sum - tnb_ab_sum
-            self.b_zu_tnacht_ueber_sys.Text = '0'
-            self.b_zu_tnacht_ueber_m_sys.Text = '0'
-            self.b_ab_tnacht_ueber_sys.Text = '0'
-            self.b_ab_tnacht_ueber_m_sys.Text = '0'
-            self.b_ab_tnacht_lab_sys.Text = '0'
-            self.b_ab_24h_tnacht_sys.Text = '0'
-            
-            self.tnacht_auswertung_sys.Text = 'OK'
-            self.tnacht_Abweichung_sys.Foreground = self.black
-            self.tnacht_auswertung_sys.Foreground = self.black
+# def get_MEP_NUMMER_NAMR():
+#     spaces = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).WhereElementIsNotElementType().ToElements()
+#     for el in spaces:
+#         DICT_MEP_NUMMER_NAME[el.Number] = [el.Number + ' - ' + el.LookupParameter('Name').AsString(),el.Id.ToString()]
+#         schacht = el.LookupParameter('TGA_RLT_InstallationsSchacht').AsInteger()
+#         if schacht == 1:
+#             name = el.LookupParameter('TGA_RLT_InstallationsSchachtName').AsString()
+#             if name not in LISTE_SCHACHT:
+#                 LISTE_SCHACHT.append(name)
+
+# get_MEP_NUMMER_NAMR() 
+# LISTE_SCHACHT.sort()
+
+# def Get_Ueberstrom_Info():
+#     """
+#     DICT_MEP_UEBERSTROM:  {[raumid:{'Ein':ObservableCollection[UeberStromAuslass](),'Aus':ObservableCollection[UeberStromAuslass]()}}
+#     ELEMID_UEBER:   [lemid.ToString()]
+#     """
+#     Baugruppen = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_Assemblies).WhereElementIsNotElementType().ToElements()
+#     with forms.ProgressBar(title = "{value}/{max_value} Überströmungsbaugruppen",cancellable=True,step=10) as pb:
+#         for n, BGid in enumerate(Baugruppen):
+#             if pb.cancelled:
+#                 script.exit()
+#             pb.update_progress(n + 1, len(Baugruppen))
+#             baugruppe = Baugruppe(BGid,logger,DICT_MEP_NUMMER_NAME)
+#             if not baugruppe.Pruefen():
+#                 continue
+#             if not baugruppe.Eingang.raumid in DICT_MEP_UEBERSTROM.keys():
+#                 DICT_MEP_UEBERSTROM[baugruppe.Eingang.raumid] = {'Ein':ObservableCollection[UeberStromAuslass](),'Aus':ObservableCollection[UeberStromAuslass]()}
+#             if not baugruppe.Ausgang.raumid in DICT_MEP_UEBERSTROM.keys():
+#                 DICT_MEP_UEBERSTROM[baugruppe.Ausgang.raumid] = {'Ein':ObservableCollection[UeberStromAuslass](),'Aus':ObservableCollection[UeberStromAuslass]()}
+#             DICT_MEP_UEBERSTROM[baugruppe.Eingang.raumid][baugruppe.Eingang.typ].Add(baugruppe.Eingang)
+#             DICT_MEP_UEBERSTROM[baugruppe.Ausgang.raumid][baugruppe.Ausgang.typ].Add(baugruppe.Ausgang)
+#             ELEMID_UEBER.append(baugruppe.Eingang.elemid.ToString())
+#             ELEMID_UEBER.append(baugruppe.Ausgang.elemid.ToString())
+
+# Get_Ueberstrom_Info()
+
+# def Get_Auslass_Info():
+#     """
+#     DICT_MEP_AUSLASS: {raumid:{auslass.art:{auslass.familyandtyp:[auslass(Klasse)]}}}
+#     DICT_VSR_MEP: {auslass.vsr: ["auslass.raumnr-auslass.raumname"],auslass.iris: ["auslass.raumnr-auslass.raumname"]}
+#     DICT_VSR_MEP_NUR_NUMMER: {auslass.vsr: [auslass.raumnummer],auslass.iris: [auslass.raumnummer]}
+#     DICT_VSR_VSRLISTE: {auslass.vsr: [auslass.VSR_Liste]} elemid: [elemid]
+#     DICT_MEP_VSR: {auslass.raumid: [auslass.iris,auslass.vsr]}
+#     DICT_VSR_AUSLASS: {auslass.vsr:{auslass.art:{auslass.familyandtyp:[auslass]}}}
+#     DICT_VSR: {vsrid:vsr}
+#     LISTE_VSR: [elemid]
+#     LISTE_IRIS: [elemid]
+
+#     """
+#     Ductterminalids = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_DuctTerminal).WhereElementIsNotElementType().ToElements()
+#     with forms.ProgressBar(title = "{value}/{max_value} Luftauslässe", cancellable=True,step=10) as pb:
+#         for n, ductid in enumerate(Ductterminalids):
+#             if pb.cancelled:
+#                 script.exit()
+#             pb.update_progress(n + 1, len(Ductterminalids))
+#             if ductid.Id.ToString() in ELEMID_UEBER:continue
+#             auslass = Luftauslass(ductid,DICT_MEP_NUMMER_NAME,logger,LAB_AUSLASS_LISTE,H24_AUSLASS_LISTE,VSR_FAMILIE_LISTE,DRO_FAMILIE_LISTE,VSR_AUSLASS_LISTE,DRO_AUSLASS_LISTE)
+#             einbauteil = Einbauteile(auslass.elem,DICT_MEP_NUMMER_NAME,logger,[auslass])
+#             if einbauteil.raumid not in DICT_MEP_EINBAUTEILE.keys():
+#                 DICT_MEP_EINBAUTEILE[auslass.raumid] = []
+#             DICT_MEP_EINBAUTEILE[auslass.raumid].append(einbauteil)
             
 
+#             if not auslass.raumluftrelevant:
+#                 if auslass.raumid not in DICT_MEP_UN_AUNLASS.keys():
+#                     DICT_MEP_UN_AUNLASS[auslass.raumid] = []
+#                 DICT_MEP_UN_AUNLASS[auslass.raumid].append(auslass)
 
-        self.b_zu_tnacht_sum_sys.Text = str(int(round(tnb_zu_sum)))
-        self.b_zu_tnacht_raum_sys.Text = str(int(round(tnb_zu_raum)))
-        self.b_ab_tnacht_sum_sys.Text = str(int(round(tnb_ab_sum)))
-        self.b_ab_tnacht_raum_sys.Text = str(int(round(tnb_ab_raum)))
-        self.tnacht_Abweichung_sys.Text = str(int(round(tnb_abweichung)))
-        
-
-        self.mepraum.zu_min.ist = int(round(min_zu_raum))
-        self.mepraum.zu_max.ist = int(round(max_zu_raum))
-        self.mepraum.ab_min.ist = int(round(min_ab_raum))
-        self.mepraum.ab_max.ist = int(round(max_ab_raum))
-        self.mepraum.ab_24h.ist = int(round(ab24h))
-        self.mepraum.ab_lab_min.ist = int(round(lab_min))
-        self.mepraum.ab_lab_max.ist = int(round(lab_max))
-        self.mepraum.nb_zu.ist = int(round(nb_zu_raum))
-        self.mepraum.nb_ab.ist = int(round(nb_ab_raum))
-        self.mepraum.tnb_zu.ist = int(round(tnb_zu_raum))
-        self.mepraum.tnb_ab.ist = int(round(tnb_ab_raum))
-
-        if self.mepraum.IsTierRaum != 0:
-            self.mepraum.tier_zu_min.ist = int(round(min_zu_tier))
-            self.mepraum.tier_ab_min.ist = int(round(min_ab_tier))
-            self.mepraum.tier_zu_max.ist = int(round(max_zu_tier))
-            self.mepraum.tier_ab_max.ist = int(round(max_ab_tier))
-        self.mepraum.ueber_in.ist = int(round(uber_in))
-        self.mepraum.ueber_aus.ist = int(round(uber_aus))
-        self.mepraum.ueber_sum.ist = int(round(uber_in-uber_aus))
-
-    def Auswertung_MEP(self):
-        # if self.mepraum.IsTierRaum != 0:
-        #     min_zu_sum = float(self.mepraum.zu_min.soll) + float(self.mepraum.tier_zu_min.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        #     min_ab_sum = float(self.mepraum.ab_min.soll) + float(self.mepraum.ab_lab_min.soll) + float(self.mepraum.tier_ab_min.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll)
-        #     max_zu_sum = float(self.mepraum.zu_max.soll) + float(self.mepraum.tier_zu_max.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        #     max_ab_sum = float(self.mepraum.ab_max.soll) + float(self.mepraum.ab_lab_max.soll) + float(self.mepraum.tier_ab_max.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll)
-        # else:
-        min_zu_sum = float(self.mepraum.zu_min.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        min_ab_sum = float(self.mepraum.ab_min.soll) + float(self.mepraum.ueber_aus.soll)+ float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
-        max_zu_sum = float(self.mepraum.zu_max.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-        max_ab_sum = float(self.mepraum.ab_max.soll) + float(self.mepraum.ueber_aus.soll)+ float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_max.soll)
-
-        min_abweichung = min_zu_sum - min_ab_sum
-        max_abweichung = max_zu_sum - max_ab_sum
-
-
-        self.b_zu_min_sum_mep.Text = str(int(round(min_zu_sum)))
-        self.b_zu_min_raum_mep.Text = str(int(round(float(self.mepraum.zu_min.soll))))
-        try:self.b_zu_min_tier_mep.Text = str(int(round(float(self.mepraum.tier_zu_min.soll))))
-        except:self.b_zu_min_tier_mep.Text = '0'
-        self.b_zu_min_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        self.b_zu_min_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
-
-        self.b_ab_min_sum_mep.Text = str(int(round(min_ab_sum)))
-        self.b_ab_min_raum_mep.Text = str(int(round(float(self.mepraum.ab_min.soll))))
-        try: self.b_ab_min_tier_mep.Text = str(int(round(float(self.mepraum.tier_ab_min.soll))))
-        except:self.b_ab_min_tier_mep.Text = '0'
-        self.b_ab_min_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-        self.b_ab_min_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-        self.b_ab_min_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
-        self.b_ab_24h_min_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
-
-        self.min_Abweichung_mep.Text = str(int(round(min_abweichung)))
-        #if abs(round(min_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-        if abs(round(min_abweichung)) <= 3:
-            self.min_auswertung_mep.Text = 'OK'
-            self.min_Abweichung_mep.Foreground = self.black
-            self.min_auswertung_mep.Foreground = self.black
-        else:
-            self.min_auswertung_mep.Text = 'Passt Nicht'
-            self.min_auswertung_mep.Foreground = self.red
-            self.min_Abweichung_mep.Foreground = self.red
-        
-        self.b_zu_max_sum_mep.Text = str(int(round(max_zu_sum)))
-        self.b_zu_max_raum_mep.Text = str(int(round(float(self.mepraum.zu_max.soll))))
-        try:self.b_zu_max_tier_mep.Text = str(int(round(float(self.mepraum.tier_zu_max.soll))))
-        except:self.b_zu_max_tier_mep.Text = '0'
-        self.b_zu_max_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        self.b_zu_max_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
-
-        self.b_ab_max_sum_mep.Text = str(int(round(max_ab_sum)))
-        self.b_ab_max_raum_mep.Text = str(int(round(float(self.mepraum.ab_max.soll))))
-        try: self.b_ab_max_tier_mep.Text = str(int(round(float(self.mepraum.tier_ab_max.soll))))
-        except:self.b_ab_max_tier_mep.Text = '0'
-        self.b_ab_max_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-        self.b_ab_max_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-        self.b_ab_max_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_max.soll))))
-        self.b_ab_24h_max_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
-
-        self.max_Abweichung_mep.Text = str(int(round(max_abweichung)))
-        #if abs(round(max_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-        if abs(round(max_abweichung)) <= 3:
-            self.max_auswertung_mep.Text = 'OK'
-            self.max_Abweichung_mep.Foreground = self.black
-            self.max_auswertung_mep.Foreground = self.black
-        else:
-            self.max_auswertung_mep.Text = 'Passt Nicht'
-            self.max_auswertung_mep.Foreground = self.red
-            self.max_Abweichung_mep.Foreground = self.red
-        
-        if not self.mepraum.nachtbetrieb:
-            nb_zu_sum = float(self.mepraum.nb_zu.soll) 
-            nb_ab_sum = float(self.mepraum.nb_ab.soll) + float(self.mepraum.ab_24h.soll) 
-        else:
-            nb_zu_sum = float(self.mepraum.nb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-            nb_ab_sum = float(self.mepraum.nb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
-        nb_abweichung = nb_zu_sum - nb_ab_sum
-        self.b_zu_nacht_sum_mep.Text = str(int(round(nb_zu_sum)))
-        self.b_zu_nacht_raum_mep.Text = str(int(round(float(self.mepraum.nb_zu.soll))))
-        if self.mepraum.nachtbetrieb:
-            self.b_zu_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        else:self.b_zu_nacht_ueber_mep.Text = '0'
-        if self.mepraum.nachtbetrieb:self.b_zu_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
-        else:self.b_zu_nacht_ueber_m_mep.Text = '0'
-
-        self.b_ab_nacht_sum_mep.Text = str(int(round(nb_ab_sum)))
-        self.b_ab_nacht_raum_mep.Text = str(int(round(float(self.mepraum.nb_ab.soll))))
-        if self.mepraum.nachtbetrieb:self.b_ab_nacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-        else:self.b_ab_nacht_ueber_mep.Text = '0'
-        if self.mepraum.nachtbetrieb:self.b_ab_nacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-        else:self.b_ab_nacht_ueber_m_mep.Text = '0'
-        if self.mepraum.nachtbetrieb:self.b_ab_nacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
-        else:self.b_ab_nacht_lab_mep.Text = '0'
-        self.b_ab_24h_nacht_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
-
-        self.nacht_Abweichung_mep.Text = str(int(round(nb_abweichung)))
-
-        #if abs(round(nb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-        if abs(round(nb_abweichung)) <= 3:
-            self.nacht_auswertung_mep.Text = 'OK'
-            self.nacht_Abweichung_mep.Foreground = self.black
-            self.nacht_auswertung_mep.Foreground = self.black
-        else:
-            self.nacht_auswertung_mep.Text = 'Passt Nicht'
-            self.nacht_auswertung_mep.Foreground = self.red
-            self.nacht_Abweichung_mep.Foreground = self.red
-        if self.mepraum.tiefenachtbetrieb:
-            tnb_zu_sum = float(self.mepraum.tnb_zu.soll) + float(self.mepraum.ueber_in.soll) + float(self.mepraum.ueber_in_manuell.soll)
-            tnb_ab_sum = float(self.mepraum.tnb_ab.soll) + float(self.mepraum.ueber_aus.soll) + float(self.mepraum.ab_24h.soll) + float(self.mepraum.ueber_aus_manuell.soll) + float(self.mepraum.ab_lab_min.soll)
-        else:
-            tnb_zu_sum = float(self.mepraum.tnb_zu.soll)
-            tnb_ab_sum = float(self.mepraum.tnb_ab.soll) + float(self.mepraum.ab_24h.soll) 
-        
-        tnb_abweichung = tnb_zu_sum - tnb_ab_sum
-        self.b_zu_tnacht_sum_mep.Text = str(int(round(tnb_zu_sum)))
-        self.b_zu_tnacht_raum_mep.Text = str(int(round(float(self.mepraum.tnb_zu.soll))))
-        if self.mepraum.tiefenachtbetrieb:self.b_zu_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_in.soll))))
-        else:self.b_zu_tnacht_ueber_mep.Text = '0'
-        if self.mepraum.tiefenachtbetrieb:self.b_zu_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_in_manuell.soll))))
-        else:self.b_zu_tnacht_ueber_m_mep.Text = '0'
-        
-        self.b_ab_tnacht_sum_mep.Text = str(int(round(tnb_ab_sum)))
-        self.b_ab_tnacht_raum_mep.Text = str(int(round(float(self.mepraum.tnb_ab.soll))))
-        if self.mepraum.tiefenachtbetrieb:
-            self.b_ab_tnacht_ueber_mep.Text = str(int(round(float(self.mepraum.ueber_aus.soll))))
-            self.b_ab_tnacht_ueber_m_mep.Text = str(int(round(float(self.mepraum.ueber_aus_manuell.soll))))
-            self.b_ab_tnacht_lab_mep.Text = str(int(round(float(self.mepraum.ab_lab_min.soll))))
-            self.b_ab_24h_tnacht_mep.Text = str(int(round(float(self.mepraum.ab_24h.soll))))
-            self.tnacht_Abweichung_mep.Text = str(int(round(tnb_abweichung)))
-            #if abs(round(tnb_abweichung-self.mepraum.Druckstufe.soll)) <= 3:
-            if abs(round(tnb_abweichung)) <= 3:
-                self.tnacht_auswertung_mep.Text = 'OK'
-                self.tnacht_Abweichung_mep.Foreground = self.black
-                self.tnacht_auswertung_mep.Foreground = self.black
-            else:
-                self.tnacht_auswertung_mep.Text = 'Passt Nicht'
-                self.tnacht_auswertung_mep.Foreground = self.red
-                self.tnacht_Abweichung_mep.Foreground = self.red
-        else:
-            self.b_ab_tnacht_ueber_mep.Text = '0'
-            self.b_ab_tnacht_ueber_m_mep.Text = '0'
-            self.b_ab_tnacht_lab_mep.Text = '0'
-            self.b_ab_24h_tnacht_mep.Text = '0'
-            self.tnacht_Abweichung_mep.Text = '0'
-            self.tnacht_auswertung_mep.Text = 'OK'
-            self.tnacht_Abweichung_mep.Foreground = self.black
-            self.tnacht_auswertung_mep.Foreground = self.black
-
-    def nachtbetriebchanged(self, sender, args):
-        try:
-            self.mepraum.nachtbetrieb = 1 if sender.IsChecked else 0
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except Exception as e:print(e)
-
-    def tnachtbetriebchanged(self, sender, args):
-        try:
-            self.mepraum.tiefenachtbetrieb = 1 if sender.IsChecked else 0
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except Exception as e:print(e)
-
-    def labmineingabe_changed(self, sender, args):
-        try:
-            self.mepraum.ab_lab_min.soll = round(float(str(sender.Text).replace(',', '.')))
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-    def labmaxeingabe_changed(self, sender, args):
-        try:
-            self.mepraum.ab_lab_max.soll = round(float(str(sender.Text).replace(',', '.')))
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-
-    def ab24heingabe_changed(self, sender, args):
-        try:
-            self.mepraum.ab_24h.soll = round(float(str(sender.Text).replace(',', '.')))
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-    def druckeingabe_changed(self, sender, args):
-        try:
-            self.mepraum.Druckstufe.soll = round(float(str(sender.Text).replace(',', '.')))
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-    
-    def hoehechanged(self, sender, args):
-        try:
-            self.mepraum.hoehe = int(float(str(sender.Text)))
-            self.mepraum.volumen = round(self.mepraum.flaeche * self.mepraum.hoehe / 1000,2)
-            self.volumen.Text = str(self.mepraum.volumen)
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except Exception as e:print(e)
-
-    def LW_nacht_changed(self, sender, args):
-        try:
-            self.mepraum.NB_LW = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-
-    def LW_tnacht_changed(self, sender, args):
-        try:
-            self.mepraum.T_NB_LW = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-
-    def von_nacht_changed(self, sender, args):
-        try:
-            self.mepraum.nb_von.soll = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.Nachtbetrieb_Berechnen()
-            # self.grundinfo.Items.Refresh()
-        except:pass
-
-    def bis_nacht_changed(self, sender, args):
-        try:
-            self.mepraum.nb_bis.soll = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.Nachtbetrieb_Berechnen()
-            # self.grundinfo.Items.Refresh()
-        except:pass
-
-    def von_tnacht_changed(self, sender, args):
-        try:
-            self.mepraum.tnb_von.soll = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.Nachtbetrieb_Berechnen()
-            # self.grundinfo.Items.Refresh()
-        except:pass
-
-    def bis_tnacht_changed(self, sender, args):
-        try:
-            self.mepraum.tnb_bis.soll = float(str(sender.Text).replace(',', '.'))
-            self.mepraum.TiefeNachtbetrieb_Berechnen()
-            # self.grundinfo.Items.Refresh()
-        except:pass
-
-    def faktorchanged(self, sender, args):
-        try:
-            self.mepraum.faktor = float(str(sender.Text).replace(',', '.'))
-        except:pass
-        try:
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-            # self.grundinfo.Items.Refresh()
-            # self.anlageninfo.Items.Refresh()
-            # self.schachtinfo.Items.Refresh()
-        except:pass
-
-    def bezugsnameselectionchanged(self, sender, args):
-        self.mepraum.bezugsname = self.bezugsname.SelectedItem.ToString()
-        for el in self.mepraum.berechnung_nach.keys():
-            if self.mepraum.berechnung_nach[el] == self.bezugsname.SelectedItem.ToString():
-                self.mepraum.bezugsnummer = el
-        self.einheit.Text = self.mepraum.einheit = self.mepraum.einheit_liste[self.mepraum.bezugsnummer]
-        try:
-            self.mepraum.Tagesbetrieb_Berechnen()
-            self.mepraum.Nachtbetrieb_Berechnen()
-            self.mepraum.Druckstufe_Berechnen()
-            self.Auswertung_MEP()
-        except:pass
-
-    def MEP_changed(self, sender, args):
-        try:
-            text = str(self.Raumnr.SelectedItem)
+#                 continue
             
-            self.rauman.IsEnabled = True
-            self.rauman1.IsEnabled = True
+#             if not auslass.raumid in DICT_MEP_AUSLASS.keys():
+#                  DICT_MEP_AUSLASS[auslass.raumid] = {}
+#             if not auslass.art in DICT_MEP_AUSLASS[auslass.raumid].keys():
+#                 DICT_MEP_AUSLASS[auslass.raumid][auslass.art] = {}
+#             if not auslass.familyandtyp in DICT_MEP_AUSLASS[auslass.raumid][auslass.art].keys():
+#                 DICT_MEP_AUSLASS[auslass.raumid][auslass.art][auslass.familyandtyp] = []
+#             DICT_MEP_AUSLASS[auslass.raumid][auslass.art][auslass.familyandtyp].append(auslass)
+
+#             for elemid in auslass.Einbauteile_Liste:
+               
+#                 if elemid not in DICT_EINBAUTEILE_AUSLASS.keys():
+#                     DICT_EINBAUTEILE_AUSLASS[elemid] = []
+#                 DICT_EINBAUTEILE_AUSLASS[elemid].append(auslass)
+
+
+#             if auslass.familyandtyp in VSR_AUSLASS_LISTE:
+#                 continue
+#             if not auslass.vsr:
+#                 if auslass.Muster_Pruefen() != True:
+#                     logger.error('Kein VSR mit Auslass {} angeschlossen. Raum {}, Familie: {}'.format(auslass.elemid,auslass.raumnummer,auslass.familyandtyp))
+#                 continue
             
-            self.temp_luftauslass.Clear()
-            self.temp_vsr.Clear()
-            self.temp_Iris.Clear()
+#             if not auslass.vsr in DICT_VSR_MEP.keys():
+#                 DICT_VSR_MEP[auslass.vsr] = [auslass.raum]
+#                 DICT_VSR_MEP_NUR_NUMMER[auslass.vsr] = [auslass.raumnummer]
+#             else:
+#                 if auslass.raum not in DICT_VSR_MEP[auslass.vsr]:
+#                     DICT_VSR_MEP[auslass.vsr].append(auslass.raum)
+#                     DICT_VSR_MEP_NUR_NUMMER[auslass.vsr].append(auslass.raumnummer)
+#             if auslass.iris not in [-1,'']:
+
+#                 if not auslass.iris in DICT_VSR_MEP.keys():
+#                     DICT_VSR_MEP[auslass.iris] = [auslass.raum]
+#                     DICT_VSR_MEP_NUR_NUMMER[auslass.iris] = [auslass.raumnummer]
+#                 else:
+#                     if auslass.raum not in DICT_VSR_MEP[auslass.iris]:
+#                         DICT_VSR_MEP[auslass.iris].append(auslass.raum)
+#                         DICT_VSR_MEP_NUR_NUMMER[auslass.iris].append(auslass.raumnummer)
             
-            try:
-                self.mepraum = self.mepraum_liste[text]
-                self.warnung.Visibility= self.hidden
-                self.auswahl.Visibility= self.hidden
-           
-                for el in self.mepraum.list_vsr:
-                    el.checked = False
-                try:self.set_up()
-                except Exception as e:print(e)
-            except Exception as ex: print(ex)
-        except Exception as exx:
-            print(exx)
-
-    def MEP_Suche_changed(self, sender, args):
-        try:
-            temp = []
-            text = self.suche.Text
-            if text in [None,'']:
-                self.suche.Text = ''
-                self.Raumnr.ItemsSource = sorted(self.mepraum_liste.keys())
-            else:
-                for el in sorted(self.mepraum_liste.keys()):
-                    if el.upper().find(text.upper()) != -1:
-                        temp.append(el)
-                self.Raumnr.ItemsSource = temp
-        except:pass
-
-    def VSR_MEPRaum_changed(self, sender, args):
-        text = str(self.auswahl.SelectedItem)
-        text_original = str(self.Raumnr.SelectedItem)
-        if text != text_original:
-            self.rauman.IsEnabled = False
-            self.Rauminfo.Visibility = self.visible
-            self.Rauminfo.Text = "Die angezeigte Rauminfomationen beziehen sich auf Raum => " + text
-        else:
-            self.rauman.IsEnabled = True
-            self.Rauminfo.Visibility = self.hidden
-        try:
-            temp = None
-            for el in self.lv_vsr.Items:
-                if el.checked:
-                    temp = el
-                    break
-            self.mepraum = self.mepraum_liste[text]
-            self.set_up()
-            self.temp_luftauslass.Clear()
-            self.temp_Iris.Clear()
-            self.temp_vsr.Clear()
-            for el in temp.Auslass:
-                if el.raumid == self.mepraum.elemid.ToString():
-                    self.temp_luftauslass.Add(el)
-            self.lv_auslass.ItemsSource = self.temp_luftauslass
-            self.lv_auslass_getrennt.ItemsSource = self.temp_luftauslass
-
-            if temp.IsHaupt:
-                for el_vsr in temp.List_VSR:
-                    if self.mepraum.list_vsr1.Contains(el_vsr):
-                        self.temp_vsr.Add(el)
-                self.lv_vsr1_getrennt.ItemsSource = self.temp_vsr
-                self.lv_vsr1.ItemsSource = self.temp_vsr
-
-                for el_iris in temp.List_Iris:
-                    if self.mepraum.list_vsr2.Contains(el_iris):
-                        self.temp_Iris.Add(el)
-                self.lv_vsr2_getrennt.ItemsSource = self.temp_Iris
-                self.lv_vsr2.ItemsSource = self.temp_Iris
-            elif temp.IsIris:
-                pass
-            else:
-                for el_iris in temp.List_Iris:
-                    if self.mepraum.list_vsr2.Contains(el_iris):
-                        self.temp_Iris.Add(el)
-                self.lv_vsr2_getrennt.ItemsSource = self.temp_Iris
-                self.lv_vsr2.ItemsSource = self.temp_Iris
-
-        except Exception as e:print(e)
-
-    def VSR_checked_changed(self, sender, args):
-        self.lv_vsr_getrennt.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr.ItemsSource = self.mepraum.list_vsr0
-        Checked = sender.IsChecked
-        item = sender.DataContext
-
-        self.temp_luftauslass.Clear()
-        self.temp_vsr.Clear()
-        self.temp_Iris.Clear()
-        if Checked:
-            for el in self.lv_vsr.Items:
-                el.checked = False
-            for el in self.lv_vsr1.Items:
-                el.checked = False
-            for el in self.lv_vsr2.Items:
-                el.checked = False
-            item.checked = True
-
-            for el in item.Auslass:
-                if el.raumid == self.mepraum.elemid.ToString():
-                    self.temp_luftauslass.Add(el)
-            self.lv_auslass.ItemsSource = self.temp_luftauslass
-            self.lv_auslass_getrennt.ItemsSource = self.temp_luftauslass
+#             if len(auslass.VSR_Liste) != 0 and auslass.vsr not in auslass.VSR_Liste:
+#                 if auslass.vsr not in DICT_VSR_VSRLISTE.keys():
+#                     DICT_VSR_VSRLISTE[auslass.vsr] = auslass.VSR_Liste
+#                 else:
+#                     DICT_VSR_VSRLISTE[auslass.vsr].extend(auslass.VSR_Liste)
+#             else:
+#                 LISTE_VSR.append(auslass.vsr)
             
+#             if auslass.iris not in [-1,'']:
+#                 LISTE_IRIS.append(auslass.iris)
 
-            for el_vsr in item.List_VSR:
-                if self.mepraum.list_vsr1.Contains(el_vsr):
-                    self.temp_vsr.Add(el_vsr)
-            self.lv_vsr1_getrennt.ItemsSource = self.temp_vsr
-            self.lv_vsr1.ItemsSource = self.temp_vsr
+#             if not auslass.raumid in DICT_MEP_VSR.keys():
+#                 DICT_MEP_VSR[auslass.raumid] = []
+#                 DICT_MEP_VSR[auslass.raumid].append(auslass.vsr) 
+#                 if auslass.iris not in [-1,'']:
+#                     DICT_MEP_VSR[auslass.raumid].append(auslass.iris)
+#             else:
+#                 if auslass.vsr not in DICT_MEP_VSR[auslass.raumid]:
+#                     DICT_MEP_VSR[auslass.raumid].append(auslass.vsr)
+#                 if auslass.iris not in [-1,'']:
+#                     DICT_MEP_VSR[auslass.raumid].append(auslass.iris)
 
-            for el_iris in item.List_Iris:
-                if self.mepraum.list_vsr2.Contains(el_iris):
-                    self.temp_Iris.Add(el_iris)
-            self.lv_vsr2_getrennt.ItemsSource = self.temp_Iris
-            self.lv_vsr2.ItemsSource = self.temp_Iris
+#             if not auslass.vsr in DICT_VSR_AUSLASS.keys():
+#                 DICT_VSR_AUSLASS[auslass.vsr] = {}
+#             if not auslass.art in DICT_VSR_AUSLASS[auslass.vsr].keys():
+#                 DICT_VSR_AUSLASS[auslass.vsr][auslass.art] = {}
+#             if not auslass.familyandtyp in DICT_VSR_AUSLASS[auslass.vsr][auslass.art].keys():
+#                 DICT_VSR_AUSLASS[auslass.vsr][auslass.art][auslass.familyandtyp] = []
+#             DICT_VSR_AUSLASS[auslass.vsr][auslass.art][auslass.familyandtyp].append(auslass)
+#             if auslass.iris not in [-1,'']:
+#                 if not auslass.iris in DICT_VSR_AUSLASS.keys():
+#                     DICT_VSR_AUSLASS[auslass.iris] = {}
+#                 if not auslass.art in DICT_VSR_AUSLASS[auslass.iris].keys():
+#                     DICT_VSR_AUSLASS[auslass.iris][auslass.art] = {}
+#                 if not auslass.familyandtyp in DICT_VSR_AUSLASS[auslass.iris][auslass.art].keys():
+#                     DICT_VSR_AUSLASS[auslass.iris][auslass.art][auslass.familyandtyp] = []
+#                 DICT_VSR_AUSLASS[auslass.iris][auslass.art][auslass.familyandtyp].append(auslass)  
 
-            if len(item.liste_Raum) > 1:
-                self.raumwechsel_hinweis.Visibility= self.visible
-                self.warnung.Visibility= self.visible
-                self.auswahl.Visibility= self.visible
-                self.auswahl.ItemsSource = sorted(item.liste_Raum)
-            else:
-                self.raumwechsel_hinweis.Visibility= self.hidden
-                self.warnung.Visibility= self.hidden
-                self.auswahl.Visibility= self.hidden
 
-        else:
-            self.raumwechsel_hinweis.Visibility= self.hidden
-            self.warnung.Visibility= self.hidden
-            self.auswahl.Visibility= self.hidden
-            self.lv_auslass.ItemsSource = self.mepraum.list_auslass
-            self.lv_auslass_getrennt.ItemsSource = self.mepraum.list_auslass
-            self.lv_vsr2_getrennt.ItemsSource = self.mepraum.list_vsr2
-            self.lv_vsr2.ItemsSource = self.mepraum.list_vsr2
-            self.lv_vsr1_getrennt.ItemsSource = self.mepraum.list_vsr1
-            self.lv_vsr1.ItemsSource = self.mepraum.list_vsr1
-    
-    def VSR1_checked_changed(self, sender, args):
-        self.lv_vsr_getrennt.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr1_getrennt.ItemsSource = self.mepraum.list_vsr1
-        self.lv_vsr2.ItemsSource = self.mepraum.list_vsr1
-        Checked = sender.IsChecked
-        item = sender.DataContext
-        self.temp_luftauslass.Clear()
-        self.temp_Iris.Clear()
-        if Checked:
-            for el in self.lv_vsr.Items:
-                el.checked = False
-            for el in self.lv_vsr1.Items:
-                el.checked = False
-            for el in self.lv_vsr2.Items:
-                el.checked = False
-            item.checked = True
-
-            for el in item.Auslass:
-                if el.raumid == self.mepraum.elemid.ToString():
-                    self.temp_luftauslass.Add(el)
-            self.lv_auslass.ItemsSource = self.temp_luftauslass
-            self.lv_auslass_getrennt.ItemsSource = self.temp_luftauslass
-            
-            for el_iris in item.List_Iris:
-                if self.mepraum.list_vsr2.Contains(el_iris):
-                    self.temp_Iris.Add(el_iris)
-            self.lv_vsr2_getrennt.ItemsSource = self.temp_Iris
-            self.lv_vsr2.ItemsSource = self.temp_Iris
-
-            if len(item.liste_Raum) > 1:
-                self.raumwechsel_hinweis.Visibility= self.visible
-                self.warnung.Visibility= self.visible
-                self.auswahl.Visibility= self.visible
-                self.auswahl.ItemsSource = sorted(item.liste_Raum)
-            else:
-                self.raumwechsel_hinweis.Visibility= self.hidden
-                self.warnung.Visibility= self.hidden
-                self.auswahl.Visibility= self.hidden
-
-        else:            
-            self.raumwechsel_hinweis.Visibility= self.hidden
-            self.warnung.Visibility= self.hidden
-            self.auswahl.Visibility= self.hidden
-            self.lv_auslass.ItemsSource = self.mepraum.list_auslass
-            self.lv_auslass_getrennt.ItemsSource = self.mepraum.list_auslass
-            self.lv_vsr2_getrennt.ItemsSource = self.mepraum.list_vsr2
-            self.lv_vsr2.ItemsSource = self.mepraum.list_vsr2
-    
-    def VSR2_checked_changed(self, sender, args):
-        self.lv_vsr_getrennt.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr.ItemsSource = self.mepraum.list_vsr0
-        self.lv_vsr1_getrennt.ItemsSource = self.mepraum.list_vsr1
-        self.lv_vsr2.ItemsSource = self.mepraum.list_vsr1
-        self.lv_vsr2_getrennt.ItemsSource = self.mepraum.list_vsr2
-        self.lv_vsr1.ItemsSource = self.mepraum.list_vsr2
-        Checked = sender.IsChecked
-        item = sender.DataContext
-        self.temp_luftauslass.Clear()
-        if Checked:
-            for el in self.lv_vsr.Items:
-                el.checked = False
-            for el in self.lv_vsr1.Items:
-                el.checked = False
-            for el in self.lv_vsr2.Items:
-                el.checked = False
-            item.checked = True
-
-            for el in item.Auslass:
-                if el.raumid == self.mepraum.elemid.ToString():
-                    self.temp_luftauslass.Add(el)
-            self.lv_auslass.ItemsSource = self.temp_luftauslass
-            self.lv_auslass_getrennt.ItemsSource = self.temp_luftauslass
-            
-
-            if len(item.liste_Raum) > 1:
-                self.raumwechsel_hinweis.Visibility= self.visible
-                self.warnung.Visibility= self.visible
-                self.auswahl.Visibility= self.visible
-                self.auswahl.ItemsSource = sorted(item.liste_Raum)
-            else:
-                self.raumwechsel_hinweis.Visibility= self.hidden
-                self.warnung.Visibility= self.hidden
-                self.auswahl.Visibility= self.hidden
-
-        else:
-            self.lv_auslass.ItemsSource = self.mepraum.list_auslass
-            self.lv_auslass_getrennt.ItemsSource = self.mepraum.list_auslass
-            self.raumwechsel_hinweis.Visibility= self.hidden
-            self.warnung.Visibility= self.hidden
-            self.auswahl.Visibility= self.hidden
-                  
-    def Auslass_Volumen_changed_max(self,sender,args):
-        item = sender.DataContext
-        if self.lv_auslass_getrennt.SelectedIndex != -1:
-            if item in self.lv_auslass_getrennt.SelectedItems:
-                for el in self.lv_auslass_getrennt.SelectedItems:
-                    if el.art != '24h':
-                        el.Luftmengenmax = item.Luftmengenmax
-                        self.Auslass_Volumen_changed(el)
-        else:
-            self.Auslass_Volumen_changed(item)
-    
-    def Auslass_Volumen_changed_tnacht(self,sender,args):
-        item = sender.DataContext
-        if self.lv_auslass_getrennt.SelectedIndex != -1:
-            if item in self.lv_auslass_getrennt.SelectedItems:
-                for el in self.lv_auslass_getrennt.SelectedItems:
-                    if el.art != '24h':
-                        el.Luftmengentnacht = item.Luftmengentnacht
-                        self.Auslass_Volumen_changed(el)
-        else:
-            self.Auslass_Volumen_changed(item)
-    
-    def Auslass_Volumen_changed_min(self,sender,args):
-        item = sender.DataContext
-        if self.lv_auslass_getrennt.SelectedIndex != -1:
-            if item in self.lv_auslass_getrennt.SelectedItems:
-                for el in self.lv_auslass_getrennt.SelectedItems:
-                    el.Luftmengenmin = item.Luftmengenmin
-                    if el.art == '24h':
-                        el.Luftmengentnacht = item.Luftmengenmin
-                        el.Luftmengenmax = item.Luftmengenmin
-                        if self.mepraum.tiefenachtbetrieb:el.Luftmengennacht = item.Luftmengenmin
-                    self.Auslass_Volumen_changed(el)
-        else:
-            if item.art == '24h':
-                item.Luftmengentnacht = item.Luftmengenmin
-                item.Luftmengenmax = item.Luftmengenmin
-                if self.mepraum.tiefenachtbetrieb:item.Luftmengennacht = item.Luftmengenmin
-            self.Auslass_Volumen_changed(item)
-    
-    def Auslass_Volumen_changed_nacht(self,sender,args):
-        item = sender.DataContext
-        if self.lv_auslass_getrennt.SelectedIndex != -1:
-            if item in self.lv_auslass_getrennt.SelectedItems:
-                for el in self.lv_auslass_getrennt.SelectedItems:
-                    if el.art != '24h':
-                        el.Luftmengennacht = item.Luftmengennacht
-                        self.Auslass_Volumen_changed(el)
-        else:
-            self.Auslass_Volumen_changed(item)
-
-    def Auslass_Volumen_changed(self, auslass):
-        try:
-            vsr = auslass.VSR_Class
-            if vsr:
-                vsr.Luftmengenermitteln_new()
-                vsr.vsrauswaelten()
-                vsr.vsrueberpruefen()
-            iris = auslass.IRIS_Class
-            if iris:
-                iris.Luftmengenermitteln_new()
-            haupt = auslass.Haupt_Class
-            if haupt:
-                haupt.Luftmengenermitteln_new()
-                haupt.vsrauswaelten()
-                haupt.vsrueberpruefen()
-        except:pass
-        try:
-            self.Auswertung_System()
-        except:pass
-
-    def Auslass_Selected_Changed(self, sender, args):
-        if self.lv_auslass.SelectedIndex != -1 and self.lv_auslass_getrennt.SelectedIndex != self.lv_auslass.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_auslass.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Auslass')
-            self.lv_auslass_getrennt.SelectedIndex = self.lv_auslass.SelectedIndex
-        else:
-            return
-    
-    def Auslass_Selected_Changed_getrennt(self, sender, args):
-        if self.lv_auslass_getrennt.SelectedIndex != -1 and self.lv_auslass_getrennt.SelectedIndex != self.lv_auslass.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_auslass_getrennt.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Auslass')
-            self.lv_auslass.SelectedIndex = self.lv_auslass_getrennt.SelectedIndex
-        else:
-            return
-    
-    def VSR_Selected_Changed(self, sender, args):
-        if self.lv_vsr.SelectedIndex != -1 and self.lv_vsr_getrennt.SelectedIndex != self.lv_vsr.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Haupt')
-            self.lv_vsr_getrennt.SelectedIndex = self.lv_vsr.SelectedIndex
-        else:
-            return
-    
-    def VSR_Selected_Changed_getrennt(self, sender, args):
-        if self.lv_vsr_getrennt.SelectedIndex != -1 and self.lv_vsr_getrennt.SelectedIndex != self.lv_vsr.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr_getrennt.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Haupt')
-            self.lv_vsr.SelectedIndex = self.lv_vsr_getrennt.SelectedIndex
-        else:
-            return   
-    
-    def VSR1_Selected_Changed(self, sender, args):
-        if self.lv_vsr1.SelectedIndex != -1 and self.lv_vsr1_getrennt.SelectedIndex != self.lv_vsr1.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr1.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('VSR')
-            self.lv_vsr1_getrennt.SelectedIndex = self.lv_vsr1.SelectedIndex
-        else:
-            return
-    
-    def VSR1_Selected_Changed_getrennt(self, sender, args):
-        if self.lv_vsr1_getrennt.SelectedIndex != -1 and self.lv_vsr1_getrennt.SelectedIndex != self.lv_vsr1.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr1_getrennt.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('VSR')
-            self.lv_vsr1.SelectedIndex = self.lv_vsr1_getrennt.SelectedIndex
-        else:
-            return
-    
-    def VSR2_Selected_Changed(self, sender, args):
-        if self.lv_vsr2.SelectedIndex != -1 and self.lv_vsr2_getrennt.SelectedIndex != self.lv_vsr2.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr2.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Iris')
-            self.lv_vsr2_getrennt.SelectedIndex = self.lv_vsr2.SelectedIndex
-        else:
-            return
+#     liste_temp = DICT_VSR_AUSLASS.keys()[:]
+#     liste_temp1 = LISTE_VSR[:]
+#     liste_temp2 = LISTE_IRIS[:]
+#     liste_temp.extend(liste_temp1)
+#     liste_temp.extend(liste_temp2)
+#     liste_temp = set(liste_temp)
+#     liste_temp = list(liste_temp)
    
-    def VSR2_Selected_Changed_getrennt(self, sender, args):
-        if self.lv_vsr2_getrennt.SelectedIndex != -1 and self.lv_vsr2_getrennt.SelectedIndex != self.lv_vsr2.SelectedIndex:
-            self.externaleventliste.Liste = [self.lv_vsr2_getrennt.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Iris')
-            self.lv_vsr2.SelectedIndex = self.lv_vsr2_getrennt.SelectedIndex
-        else:
-            return
 
-    def Ueber_aus_Selected_Changed(self, sender, args):
-        if self.lv_ueber_aus.SelectedIndex != -1:
-            self.externaleventliste.Liste = [self.lv_ueber_aus.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Üeberaus')
-        else:
-            return
+#     with forms.ProgressBar(title = "{value}/{max_value} Volumenstromregler", cancellable=True, step=10) as pb:
+#         for n, vsrid in enumerate(liste_temp):
+#             if pb.cancelled:
+#                 script.exit()
+#             pb.update_progress(n + 1, len(liste_temp))
+#             if vsrid in DICT_VSR_VSRLISTE.keys():
+#                 vsrliste = set(DICT_VSR_VSRLISTE[vsrid])
+#                 vsrliste = list(vsrliste)                
+#                 for vsrid_neu in vsrliste:
+#                     if vsrid != vsrid_neu:
+#                         if vsrid_neu not in DICT_VSR_AUSLASS.keys():
+#                             logger.error('Kein Auslass mit VSR {} verbunden.'.format(vsrid_neu))
+#                             continue
+#                         for key0 in DICT_VSR_AUSLASS[vsrid_neu].keys():
+#                             for key1 in DICT_VSR_AUSLASS[vsrid_neu][key0].keys():
+#                                 for auslass in DICT_VSR_AUSLASS[vsrid_neu][key0][key1]:
+#                                     if key0 not in DICT_VSR_AUSLASS[vsrid].keys():
+#                                         DICT_VSR_AUSLASS[vsrid][key0] = {}
+#                                     if key1 not in DICT_VSR_AUSLASS[vsrid][key0].keys():
+#                                         DICT_VSR_AUSLASS[vsrid][key0][key1] = []
+#                                     if auslass not in DICT_VSR_AUSLASS[vsrid][key0][key1]:
+#                                         DICT_VSR_AUSLASS[vsrid][key0][key1].append(auslass)
+#                                     if auslass.raumid not in DICT_MEP_VSR.keys():
+#                                         DICT_MEP_VSR[auslass.raumid] = []
+#                                     if vsrid not in DICT_MEP_VSR[auslass.raumid]:DICT_MEP_VSR[auslass.raumid].append(vsrid) 
+#                         for mep in DICT_VSR_MEP[vsrid_neu]:
+#                             if mep not in DICT_VSR_MEP[vsrid]:
+#                                 DICT_VSR_MEP[vsrid].append(mep)
+#                         for mep in DICT_VSR_MEP_NUR_NUMMER[vsrid_neu]:
+#                             if mep not in DICT_VSR_MEP_NUR_NUMMER[vsrid]:
+#                                 DICT_VSR_MEP_NUR_NUMMER[vsrid].append(mep)
+                        
+#                         if not auslass.raumid in DICT_MEP_VSR.keys():
+#                             DICT_MEP_VSR[auslass.raumid] = []
+#                             DICT_MEP_VSR[auslass.raumid].append(auslass.vsr) 
+#                             if auslass.iris not in [-1,'']:
+#                                 DICT_MEP_VSR[auslass.raumid].append(auslass.iris)
+                  
+#             rvt_vsr = doc.GetElement(DB.ElementId(int(vsrid)))
+#             vsr = VSR(rvt_vsr,DICT_MEP_NUMMER_NAME,logger,DICT_DatenBank,Liste_Fabrikat,Liste_Datenbank,Liste_Datenbank1,Dict_Herstellertyp)
+#             if vsr.elemid.ToString() in LISTE_IRIS:
+#                 vsr.IsIris = True
+#             elif vsrid in DICT_VSR_VSRLISTE.keys():
+#                 vsr.IsHaupt = True
 
-    def Ueber_in_Selected_Changed(self, sender, args):
-        if self.lv_ueber_in.SelectedIndex != -1:
-            self.externaleventliste.Liste = [self.lv_ueber_in.SelectedItem.elemid]
-            self.externaleventliste.Executeapp = self.externaleventliste.SelectElements
-            self.externalevent.Raise()
-            self.SelectedIndex('Üeberin')
-        else:
-            return
-    
-    def SelectedIndex(self,Art):
-        if Art != 'Haupt':
-            self.lv_vsr.SelectedIndex = -1
-            self.lv_vsr_getrennt.SelectedIndex = -1
-        if Art != 'VSR':
-            self.lv_vsr1.SelectedIndex = -1
-            self.lv_vsr1_getrennt.SelectedIndex = -1
-        if Art != 'Iris':
-            self.lv_vsr2.SelectedIndex = -1
-            self.lv_vsr2_getrennt.SelectedIndex = -1
-        if Art != 'Auslass':
-            self.lv_auslass.SelectedIndex = -1
-            self.lv_auslass_getrennt.SelectedIndex = -1
-        if Art != 'Üeberaus':
-            self.lv_ueber_aus.SelectedIndex = -1
-        if Art != 'Üeberin':
-            self.lv_ueber_in.SelectedIndex = -1
-
-    def abbrechen(self, sender, args):
-        self.externalevent.Dispose()
-        self.Close()
-    
-    def exportieren(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.ExportRaumluftbilanz
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-    
-    def exportieren_schacht(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.ExportLuftmengenInSchacht
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-    
-    def raumanzeigen(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.RaumAnzeigen
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-
-    def bauteilundraumanzeigen(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.RaumundBauteileanzeigen
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-    
-    def Berechnen(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.RaumluftBerechnen
-
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-
-    def changevsrtype(self, sender, args):
-        try:
+#             vsr.Auslass = ObservableCollection[Luftauslass]()
+#             for art in sorted(DICT_VSR_AUSLASS[vsrid].keys()):
+#                 for fam in sorted(DICT_VSR_AUSLASS[vsrid][art].keys()):
+#                     for terminal in DICT_VSR_AUSLASS[vsrid][art][fam]:
+#                         vsr.Auslass.Add(terminal)
+#             vsr.get_Art()
+#             vsr.Luftmengenermitteln()
+#             vsr.vsrauswaelten()
+#             vsr.vsrueberpruefen()
+#             vsr.liste_Raum = DICT_VSR_MEP[vsrid]
+#             vsr.liste_Raum_nurNummer = DICT_VSR_MEP_NUR_NUMMER[vsrid]
             
-            self.externaleventliste.Executeapp = self.externaleventliste.vsranpassen
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-
-    def luftmenge_gleich_verteilen_mep(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.LuftmengeverteilenMEP
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-
-    def luftmenge_gleich_verteilen_pro(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.LuftmengeverteilenProjekt
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-    
-    def aenderung_uebernehmen_mep(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.AederungUebernehmenMEP
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-
-    def aenderung_uebernehmen_pro(self, sender, args):
-        try:
-            self.externaleventliste.Executeapp = self.externaleventliste.AederungUebernehmenProjekt
-            self.externalevent.Raise()
-        except Exception as e:print(e)
-    
-    def aus_revit_uebernehmen(self, sender, args):
-        try:
-            for el in self.mepraum.list_auslass:
-                el.set_up()
-
-            for el in self.mepraum.list_vsr:
-                el.set_up()
-                el.Luftmengenermitteln_new()
+#             DICT_VSR[vsrid] = vsr
+#             for auslass in vsr.Auslass:
+#                 if vsr.IsIris:
+#                     auslass.IRIS_Class = vsr
+#                 elif vsr.IsHaupt:
+#                     auslass.Haupt_Class = vsr
+#                 else:
+#                     auslass.VSR_Class = vsr
             
-            self.Auswertung_System()
-            self.Auswertung_MEP()
-        except Exception as e:print(e)
+#             if vsr.raumid not in DICT_MEP_VSRKLASSE.keys():
+#                 DICT_MEP_VSRKLASSE[vsr.raumid] = []
+#             DICT_MEP_VSRKLASSE[vsr.raumid].append(vsr)
+
+#     with forms.ProgressBar(title = "{value}/{max_value} Einbauteile", cancellable=True, step=10) as pb:
+#         for n, einbauteilid in enumerate(DICT_EINBAUTEILE_AUSLASS.keys()):
+#             if pb.cancelled:
+#                 script.exit()
+#             pb.update_progress(n + 1, len(DICT_EINBAUTEILE_AUSLASS.keys()))
+                  
+#             rvt_einbauteil = doc.GetElement(DB.ElementId(int(einbauteilid)))
+#             einbauteil = Einbauteile(rvt_einbauteil,DICT_MEP_NUMMER_NAME,logger,DICT_EINBAUTEILE_AUSLASS[einbauteilid])
+#             if einbauteil.raumid not in DICT_MEP_EINBAUTEILE.keys():
+#                 DICT_MEP_EINBAUTEILE[einbauteil.raumid] = []
+#             DICT_MEP_EINBAUTEILE[einbauteil.raumid].append(einbauteil)
+
+# Get_Auslass_Info()
+
+# spaces_collector = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).WhereElementIsNotElementType().ToElements()
+# Dict_Ueber_Manuell = {}
+# for ele in spaces_collector:
+#     raum = get_value(ele.LookupParameter("TGA_RLT_RaumÜberströmungAus"))
+#     if raum:
+#         summe2 = get_value(ele.LookupParameter('TGA_RLT_RaumÜberströmungMenge'))
+#         if raum not in Dict_Ueber_Manuell.keys():
+#             Dict_Ueber_Manuell[raum] = summe2
+#         else:Dict_Ueber_Manuell[raum] += summe2
+
+# DICT_MEP_ITEMSSOIRCE = {}
+# LISTE_MEP = ObservableCollection[MEPFOREXPORTITEM]()
+# Schachte = []
+# def Get_MEP_Info():
+#     spaces = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaces).WhereElementIsNotElementType().ToElements()
+#     with forms.ProgressBar(title="{value}/{max_value} MEP-Räume",cancellable=True, step=10) as pb:
+#         for n,space_id in enumerate(spaces):
+#             if pb.cancelled:
+#                 script.exit()
+#             pb.update_progress(n+1, len(spaces))
+            
+#             if space_id.Id.ToString() in DICT_MEP_VSR.keys():
+#                 list_vsr = ObservableCollection[VSR]()
+#                 dict_vsr = {}
+#                 for e in DICT_MEP_VSR[space_id.Id.ToString()]:
+#                     temp = DICT_VSR[e]
+#                     if temp.art not in dict_vsr.keys():
+#                         dict_vsr[temp.art] = {}
+#                     if temp.familyandtyp not in dict_vsr[temp.art].keys():
+#                         dict_vsr[temp.art][temp.familyandtyp] = []
+#                     dict_vsr[temp.art][temp.familyandtyp].append(temp)
+#                 for art in sorted(dict_vsr.keys()):
+#                     for fam in sorted(dict_vsr[art].keys()):
+#                         for kla in dict_vsr[art][fam]:
+#                             try:list_vsr.Add(kla)
+#                             except:pass
+#             else:list_vsr = ObservableCollection[VSR]()
+#             einbauteilliste = []
+#             if space_id.Id.ToString() in DICT_MEP_EINBAUTEILE.keys():
+#                 einbauteilliste = DICT_MEP_EINBAUTEILE[space_id.Id.ToString()]
+            
+#             vsrliste = []
+#             if space_id.Id.ToString() in DICT_MEP_VSRKLASSE.keys():
+#                 vsrliste = DICT_MEP_VSRKLASSE[space_id.Id.ToString()]
+            
+
+#             mepraum = MEPRaum(space_id,list_vsr,LISTE_SCHACHT,logger,DICT_MEP_AUSLASS,DICT_MEP_UEBERSTROM,Dict_Ueber_Manuell,DICT_MEP_UN_AUNLASS,einbauteilliste,vsrliste)
+            
+#             if mepraum.flaeche == 0 and mepraum.volumen == 0:
+#                 continue
+#             if mepraum.IsSchacht:Schachte.append(mepraum)
+#             # if not mepraum.IsSchacht:
+#             DICT_MEP_ITEMSSOIRCE[mepraum.Raumnr] = mepraum
+#     for Raumnr in sorted(DICT_MEP_ITEMSSOIRCE.keys()):
+#         LISTE_MEP.Add(MEPFOREXPORTITEM(Raumnr,DICT_MEP_ITEMSSOIRCE[Raumnr].bezugsname))
     
-    def Textinput0(self, sender, args):
-        try:args.Handled = self.regex2.IsMatch(args.Text)
-        except:args.Handled = True
-    
-    def Textinput1(self, sender, args):
-        if sender.Text not in [None,'']:
-            if sender.Text.find(',') != -1:
-                if args.Text == ',':args.Handled = True
-                return
-        try:args.Handled = self.regex1.IsMatch(args.Text)
-        except:args.Handled = True
-    
-    def Textinput2(self, sender, args):
-        if sender.Text not in [None,'']:
-            if sender.Text.find('-') != -1:
-                if args.Text == '-':args.Handled = True
-                return
-        try:args.Handled = self.regex1.IsMatch(args.Text)
-        except:args.Handled = True
-    
-    def buero(self,sender,a):
-        self.LW_nacht.Text = '0'
-        self.LW_tnacht.Text = '0'
-        self.isnachtbetrieb.IsChecked = False
-        self.istiefenachtbetrieb.IsChecked = False
-        
-    
-    def lab1(self,sender,a):
-        self.LW_nacht.Text = '4'
-        self.LW_tnacht.Text = '0'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = False
-        
-    
-    def lab2(self,sender,a):
-        self.LW_nacht.Text = '4'
-        self.LW_tnacht.Text = '2'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = True
-        
-    def lab3(self,sender,a):
-        self.LW_nacht.Text = '2'
-        self.LW_tnacht.Text = '2'
-        self.isnachtbetrieb.IsChecked = True
-        self.istiefenachtbetrieb.IsChecked = True
-        
 
+# Get_MEP_Info()
 
-mepWPF = MEPRaum_Uebersicht()
-mepWPF.externaleventliste.GUI = mepWPF 
-mepWPF.Show()
-
-
-# from eventhandler import Raumdaten,IGF_LOGO,xlsxwriter
-# path = r'C:\Users\Zhang\Desktop\test12.xlsx'
-# e = xlsxwriter.Workbook(path)
-# worksheet = e.add_worksheet()
-
-# n = 0
-# rowstart = 0
-# Liste_Pagebreaks = []
-# for mepname in sorted(DICT_MEP_ITEMSSOIRCE.keys()):  
-#     mep = DICT_MEP_ITEMSSOIRCE[mepname]
-#     # raumdaten = Raumdaten(mep,rowstart)
-#     raumdaten = Raumdaten(mep,rowstart)
-#     raumdaten.book = e
-#     raumdaten.sheet = worksheet
-#     # raumdaten.exportheader1()
-#     raumdaten.GetFinalExportdaten()
-#             # while (raumdaten.rowende - rowstart > 36):
-#             #     Liste_Pagebreaks.append(rowstart+36)
-#             #     rowstart += 36
-#     rowstart = raumdaten.rowende
-
-#     Liste_Pagebreaks.extend(raumdaten.rowbreaks)
-
-# worksheet.set_landscape()
-# worksheet.set_column(0,1,17)
-# worksheet.set_column(2,5,13)
-# worksheet.set_column(6,6,7)
-# worksheet.set_column(7,7,13)
-# worksheet.set_column(8,10,7)
-# worksheet.set_column(11,18,11)
-# worksheet.set_column(19,19,18)
-# worksheet.set_column(20,20,25)
-# worksheet.set_paper(9)
-# worksheet.set_h_pagebreaks(Liste_Pagebreaks)   
-# header2 = '&L&G'  
-# worksheet.set_footer('&C&p / &N')   
-# worksheet.set_margins(top=1)
-# worksheet.set_header(header2, {'image_left': IGF_LOGO})
-# e.close() 
+# uebersicht = MEPRaum_Uebersicht(RED,BLACK,LISTE_MEP,VISIBLE,HIDDEN,DICT_MEP_ITEMSSOIRCE,Schachte)
+# uebersicht.externaleventliste.GUI = uebersicht
+# uebersicht.Show()

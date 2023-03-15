@@ -26,26 +26,19 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_Lab"/>
                     </DockPanel>
-                    <ListView x:Name="auslass_lab" Grid.Row="1"  >
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="30">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_lab"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="Familietyp">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding name}" MinWidth="100"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                    <ListBox x:Name="auslass_lab" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_lab" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
+
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
 
             </TabItem>
@@ -59,26 +52,19 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_24h"/>
                     </DockPanel>
-                    <ListView x:Name="auslass_24h" Grid.Row="1"  >
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="30">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_24h"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="Familietyp">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding name}"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                    <ListBox x:Name="auslass_24h" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_24h" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
+
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
 
 
@@ -94,27 +80,19 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_auslass"/>
                     </DockPanel>
-                    <ListView x:Name="auslass" Grid.Row="1"  >
+                    <ListBox x:Name="auslass" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
 
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Width="30">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="Familietyp">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding name}"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
 
             </TabItem>
@@ -129,27 +107,18 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_auslass_d"/>
                     </DockPanel>
-                    <ListView x:Name="auslass_d" Grid.Row="1" >
+                    <ListBox x:Name="auslass_d" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_d" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
 
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_auslass_d"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Familie">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding name}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </TabItem>
             <TabItem Header="Volumenstromregler">
@@ -163,27 +132,19 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_vsr"/>
                     </DockPanel>
-                    <ListView x:Name="vsr" Grid.Row="1"  >
+                    <ListBox x:Name="vsr" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_vsr" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
 
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_vsr"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Familie">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding name}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
             </TabItem>
             <TabItem Header="Drosselklappe">
@@ -197,27 +158,19 @@
                         <TextBlock Text="Suche:" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
                         <TextBox Height="20" TextChanged="suche_textchanged_klappe"/>
                     </DockPanel>
-                    <ListView x:Name="klappe" Grid.Row="1"  >
+                    <ListBox x:Name="klappe" Grid.Row="1" SelectionMode="Extended">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_klappe" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding name}" TextWrapping="Wrap" />
 
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding Path = checked}" Click="checkedchanged_klappe"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Familie">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding name}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                                </DockPanel>
+
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
             </TabItem>
         </TabControl>

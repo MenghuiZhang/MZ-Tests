@@ -1,7 +1,8 @@
 # coding: utf8
 from System.Collections.ObjectModel import ObservableCollection
-from Autodesk.Revit.UI import TaskDialog,ExternalEvent
-from System.Windows import GridLength
+from Autodesk.Revit.UI import TaskDialog
+from System.Windows import Visibility,GridLength
+from System.Windows.Media import Brushes
 from pyrevit import script,forms
 import os
 from System.Windows.Forms import FolderBrowserDialog,DialogResult
@@ -10,6 +11,13 @@ from Luftbilanz_Config import config
 
 
 XAML_FILES_DIR = os.path.dirname(__file__)
+
+RED = Brushes.Red
+BLACK = Brushes.Black
+BLUE = Brushes.Blue
+BLUEVIOLET = Brushes.BlueViolet
+HIDDEN = Visibility.Hidden
+VISIBLE = Visibility.Visible
             
 class ABFRAGE(forms.WPFWindow):
     def __init__(self,maininfo = '',checked=True,height = None,minmax = True):
@@ -82,29 +90,49 @@ class Familien(forms.WPFWindow):
             for el in liste:
                 if el.name in liste1:
                     el.checked = checked
-        try:readconfig_intern(self.IS_Auslass0,config.auslass,False)
+        # try:readconfig_intern(self.IS_Auslass0,config.get_value('auslass')  config.auslass,False)
+        # except Exception as e:print(e)
+        # try:readconfig_intern(self.IS_Auslass1,config.auslassd,True)
+        # except Exception as e:print(e)
+        # try:readconfig_intern(self.IS_VSR,config.vsr,True)
+        # except Exception as e:print(e)
+        # try:readconfig_intern(self.IS_Drossel,config.drossel,True)
+        # except Exception as e:print(e)
+        # try:readconfig_intern(self.IS_Auslass2,config.auslasslab,True)
+        # except Exception as e:print(e)
+        # try:readconfig_intern(self.IS_Auslass3,config.auslass24h,True)
+        # except Exception as e:print(e)
+        try:readconfig_intern(self.IS_Auslass0,config.get_value('auslass'),False)
         except Exception as e:print(e)
-        try:readconfig_intern(self.IS_Auslass1,config.auslassd,True)
+        try:readconfig_intern(self.IS_Auslass1,config.get_value('auslassd'),True)
         except Exception as e:print(e)
-        try:readconfig_intern(self.IS_VSR,config.vsr,True)
+        try:readconfig_intern(self.IS_VSR,config.get_value('vsr'),True)
         except Exception as e:print(e)
-        try:readconfig_intern(self.IS_Drossel,config.drossel,True)
+        try:readconfig_intern(self.IS_Drossel,config.get_value('drossel'),True)
         except Exception as e:print(e)
-        try:readconfig_intern(self.IS_Auslass2,config.auslasslab,True)
+        try:readconfig_intern(self.IS_Auslass2,config.get_value('auslasslab'),True)
         except Exception as e:print(e)
-        try:readconfig_intern(self.IS_Auslass3,config.auslass24h,True)
+        try:readconfig_intern(self.IS_Auslass3,config.get_value('auslass24h'),True)
         except Exception as e:print(e)
     
     def write_config(self):
         def write_config_intern(liste0,checked):
             return [el.name for el in liste0 if el.checked == checked]
-        config.auslass = write_config_intern(self.IS_Auslass0,False)
-        config.auslassd = write_config_intern(self.IS_Auslass1,True)
-        config.vsr = write_config_intern(self.IS_VSR,True)
-        config.drossel = write_config_intern(self.IS_Drossel,True)
-        config.auslasslab = write_config_intern(self.IS_Auslass2,True)
-        config.auslass24h = write_config_intern(self.IS_Auslass3,True)
-        script.save_config()
+        config.set_value('auslass',write_config_intern(self.IS_Auslass0,False))
+        config.set_value('auslassd',write_config_intern(self.IS_Auslass1,True))
+        config.set_value('vsr',write_config_intern(self.IS_VSR,True))
+        config.set_value('drossel',write_config_intern(self.IS_Drossel,True))
+        config.set_value('auslasslab',write_config_intern(self.IS_Auslass2,True))
+        config.set_value('auslass24h',write_config_intern(self.IS_Auslass3,True))
+        config.save_config()
+
+        # config.auslass = write_config_intern(self.IS_Auslass0,False)
+        # config.auslassd = write_config_intern(self.IS_Auslass1,True)
+        # config.vsr = write_config_intern(self.IS_VSR,True)
+        # config.drossel = write_config_intern(self.IS_Drossel,True)
+        # config.auslasslab = write_config_intern(self.IS_Auslass2,True)
+        # config.auslass24h = write_config_intern(self.IS_Auslass3,True)
+        # script.save_config()
     
     def checkedchanged(self,sender,liste):
         Checked = sender.IsChecked

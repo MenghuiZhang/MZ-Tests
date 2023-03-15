@@ -1,0 +1,49 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Height="150" Width="300" Background="SkyBlue" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" WindowStyle="None" MouseLeftButtonDown="movewindow">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="2"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="2"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="2"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <GridSplitter Background="#FFAFAAAA"  IsEnabled="False" Grid.Row="1" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <GridSplitter Background="#FFAFAAAA"  IsEnabled="False" Grid.Row="3" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <GridSplitter Background="#FFAFAAAA"  IsEnabled="False" Grid.Row="5" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <TextBlock Text="Bauteil drehen" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="White" FontFamily="Dubai"/>
+        <Image x:Name="igf_logo" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <Button  Content="X" HorizontalAlignment="Right" FontWeight="Bold" Background="#FFC45656" RenderTransformOrigin="1.133,0.533" VerticalAlignment="Center" Click="close" FontFamily="Dubai" Width="20" Height="20" Margin="0,0,5,0"/>
+        <Grid Grid.Row="2" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <RadioButton x:Name="einzel" Content="jede einzeln drehen" HorizontalAlignment="Center" IsChecked="True"/>
+            <RadioButton x:Name="gesamt" Content="Als Gruppe drehen" Grid.Column="1" HorizontalAlignment="Center"/>
+        </Grid>
+        <Grid Grid.Row="4" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <RadioButton x:Name="X_Achse" Content="X-Achse" HorizontalAlignment="Center" IsChecked="True"/>
+            <RadioButton x:Name="Y_Achse" Content="Y-Achse" Grid.Column="1" HorizontalAlignment="Center"/>
+            <RadioButton x:Name="Z_Achse" Content="Z-Achse" Grid.Column="2" HorizontalAlignment="Center"/>
+        </Grid>
+        <DockPanel Grid.Row="6">
+            <TextBlock Text="Winkel:" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0" Width="50"/>
+            <TextBox x:Name="winkel" Height="24" VerticalAlignment="Center" Margin="0,0,10,0" PreviewTextInput="textinput"/>
+        </DockPanel>
+
+        <Button Content="Elements drehen" Grid.Row="7" Height="20" Margin="10,5,10,0" Click="rotate"/>
+
+    </Grid>
+</Window>

@@ -6,8 +6,20 @@ import math
 
 class ZubFilter(Selection.ISelectionFilter):
     def AllowElement(self,element):
-        return True
-        if element.Category.Id.ToString() in ['-2008055', '-2001140', '-2008044','-2001160', '-2008049','-2008099', '-2008050']:
+        if element.Category.Name == 'Luftkanalzubehör':
+            return True
+        if element.Category.Id.ToString() in ['-2008055', '-2001140', '-2008044','-2001160', '-2008049','-2008099', '-2008050','-2008020']:
+            return True
+        else:
+            return False
+    def AllowReference(self,reference,XYZ):
+        return False
+
+class ZubFilter1(Selection.ISelectionFilter):
+    def AllowElement(self,element):
+        if element.Category.Name == 'Luftkanalformteile':
+            return True
+        if element.Category.Id.ToString() in ['-2008055', '-2001140', '-2008044','-2001160', '-2008049','-2008099', '-2008050','-2008020']:
             return True
         else:
             return False
@@ -30,45 +42,143 @@ class VERBINDEN(IExternalEventHandler):
     def Execute(self,app):
         uidoc = app.ActiveUIDocument
         doc = uidoc.Document
-        while(True):
-            try:
-                el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter(),'Wählt den Rohrzubehör aus')
-                el1_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter(),'Wählt den Rohr aus')
+        elemids = uidoc.Selection.GetElementIds()
+        el0 = None
+        el1 = None
+        # el2 = None
+        for elid in elemids:
+            el = doc.GetElement(elid)
+            if el.Category.Name == 'Luftdurchlässe':
+                el0 = el
+            else:
+                if not el1:
+                    el1 = el
+                # else:
+                #     el2 = el
+        # el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter(),'Wählt den Rohrzubehör aus')
+        # el1_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter1(),'Wählt den Rohr aus')
+        # el2_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter1(),'Wählt den Rohr aus')
 
-                el0 = doc.GetElement(el0_ref)
-                el1 = doc.GetElement(el1_ref)
+        # el0 = doc.GetElement(el0_ref)
+        # el1 = doc.GetElement(el1_ref)
+        # el2 = doc.GetElement(el2_ref)
 
-                conns0 = list(el0.MEPModel.ConnectorManager.Connectors)
-                try:
-                    conns1 = list(el1.ConnectorManager.Connectors)
-                except:
-                    conns1 = list(el1.MEPModel.ConnectorManager.Connectors)
-                conn0 = ''
-                conn1 = ''
-                dis = 1000
-                for co0 in conns0:
-                    for co1 in conns1:
-                        if co1.IsConnected == False and co0.IsConnected == False:
-                            l0 = co0.Origin.DistanceTo(co1.Origin)
-                            if l0 < dis:
-                                dis = l0
-                                conn0 = co0
-                                conn1 = co1
+        # conns0 = list(el0.MEPModel.ConnectorManager.Connectors)
+        try:
+            conns0 = list(el0.ConnectorManager.Connectors)
+        except:
+            conns0 = list(el0.MEPModel.ConnectorManager.Connectors)
+        try:
+            conns1 = list(el1.ConnectorManager.Connectors)
+        except:
+            conns1 = list(el1.MEPModel.ConnectorManager.Connectors)
+        # try:
+        #     conns2 = list(el2.ConnectorManager.Connectors)
+        # except:
+        #     conns2 = list(el2.MEPModel.ConnectorManager.Connectors)
+        conn0 = ''
+        conn1 = ''
+        dis = 1000
+        for co0 in conns0:
+            for co1 in conns1:
+                if co1.IsConnected == False and co0.IsConnected == False:
+                    l0 = co0.Origin.DistanceTo(co1.Origin)
+                    if l0 < dis:
+                        dis = l0
+                        conn0 = co0
+                        conn1 = co1
+        
+        # conn2 = ''
+        # conn3 = ''
+        # dis = 1000
+        # for co0 in conns0:
+        #     for co1 in conns2:
+        #         if co1.IsConnected == False and co0.IsConnected == False:
+        #             l0 = co0.Origin.DistanceTo(co1.Origin)
+        #             if l0 < dis:
+        #                 dis = l0
+        #                 conn2 = co0
+        #                 conn3 = co1
 
-                if not(conn0 and conn1):
-                    print('fehler')
-                    return
+        if not(conn0 and conn1):
+            print('fehler')
+            return
 
-                t = DB.Transaction(doc,'Verbinden')
-                t.Start()
-                try:
-                    conn0.ConnectTo(conn1)
-                except Exception as e:
-                    print(e)
+        t = DB.Transaction(doc,'Verbinden')
+        t.Start()
+        try:
+            conn0.ConnectTo(conn1)
+            conn1.Origin = conn0.Origin
+        except Exception as e:
+            print(e)
+        # try:
+        #     conn2.ConnectTo(conn3)
+        # except Exception as e:
+        #     print(e)
+        
+        t.Commit()
+        t.Dispose()
+        # while(True):
+        #     try:
+        #         el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter(),'Wählt den Rohrzubehör aus')
+        #         el1_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter1(),'Wählt den Rohr aus')
+        #         el2_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,ZubFilter1(),'Wählt den Rohr aus')
+
+        #         el0 = doc.GetElement(el0_ref)
+        #         el1 = doc.GetElement(el1_ref)
+        #         el2 = doc.GetElement(el2_ref)
+
+        #         conns0 = list(el0.MEPModel.ConnectorManager.Connectors)
+        #         try:
+        #             conns1 = list(el1.ConnectorManager.Connectors)
+        #         except:
+        #             conns1 = list(el1.MEPModel.ConnectorManager.Connectors)
+        #         try:
+        #             conns2 = list(el2.ConnectorManager.Connectors)
+        #         except:
+        #             conns2 = list(el2.MEPModel.ConnectorManager.Connectors)
+        #         conn0 = ''
+        #         conn1 = ''
+        #         dis = 1000
+        #         for co0 in conns0:
+        #             for co1 in conns1:
+        #                 if co1.IsConnected == False and co0.IsConnected == False:
+        #                     l0 = co0.Origin.DistanceTo(co1.Origin)
+        #                     if l0 < dis:
+        #                         dis = l0
+        #                         conn0 = co0
+        #                         conn1 = co1
                 
-                t.Commit()
-                t.Dispose()
-            except:break
+        #         conn2 = ''
+        #         conn3 = ''
+        #         dis = 1000
+        #         for co0 in conns0:
+        #             for co1 in conns2:
+        #                 if co1.IsConnected == False and co0.IsConnected == False:
+        #                     l0 = co0.Origin.DistanceTo(co1.Origin)
+        #                     if l0 < dis:
+        #                         dis = l0
+        #                         conn2 = co0
+        #                         conn3 = co1
+
+        #         if not(conn0 and conn1):
+        #             print('fehler')
+        #             return
+
+        #         t = DB.Transaction(doc,'Verbinden')
+        #         t.Start()
+        #         try:
+        #             conn0.ConnectTo(conn1)
+        #         except Exception as e:
+        #             print(e)
+        #         try:
+        #             conn2.ConnectTo(conn3)
+        #         except Exception as e:
+        #             print(e)
+                
+        #         t.Commit()
+        #         t.Dispose()
+        #     except:break
 
 
     def GetName(self):

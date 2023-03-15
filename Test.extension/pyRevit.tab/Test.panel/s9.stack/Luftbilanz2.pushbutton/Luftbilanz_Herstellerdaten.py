@@ -41,8 +41,11 @@ def get_Herstellerdaten(datenbankadresse):
                     Nennstrom = sheet.Cells[row, 9].Value
                     Leistung = sheet.Cells[row, 10].Value
                     vmin = sheet.Cells[row, 11].Value
+                    if not vmin:vmin = 0
                     vmax = sheet.Cells[row, 12].Value
+                    if not vmax:vmax = 0
                     vnenn = sheet.Cells[row, 13].Value
+                    if not vnenn:vnenn = 0
                     Bemerkung = sheet.Cells[row, 16].Value
                     
                     if any([A,B,D]):
@@ -84,15 +87,15 @@ def get_Herstellerdaten(datenbankadresse):
                             DICT_DatenBank[daten.typ] = daten
 
             except Exception as e:
+                print(e)
                 TaskDialog.Show('Fehler','Fehler beim Lesen der Excel-Datei')        
                 break   
             
-            finally:
-                book.Save()
-                book.Dispose()
-                fs.Dispose()
-                del fs
-                del book
+   
+        book.Dispose()
+        fs.Dispose()
+        del fs
+        del book
     return Liste_Fabrikat,DICT_DatenBank,Liste_Datenbank,Liste_Datenbank1
 
 Liste_Fabrikat,DICT_DatenBank,Liste_Datenbank,Liste_Datenbank1 = get_Herstellerdaten(datenbankadresse)

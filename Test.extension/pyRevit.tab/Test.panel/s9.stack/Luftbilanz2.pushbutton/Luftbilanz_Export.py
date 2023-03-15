@@ -60,7 +60,7 @@ class Raumdaten:
         self.meplabmax = self.raum.ab_lab_max.soll
         self.mepab24h = self.raum.ab_24h.soll
         self.mepdruck = self.raum.Druckstufe.soll
-        self.mepueber = self.raum.ueber_in_manuell.soll + self.raum.ueber_in.soll - self.raum.ueber_aus.soll - self.raum.ueber_aus_manuell.soll 
+        self.mepueber = self.raum.ueber_sum.soll
         self.mepnachtdruck = self.mepdruck
         self.meptnachtdruck = self.mepdruck
         self.mepnacht24h = self.mepab24h
