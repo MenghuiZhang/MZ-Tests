@@ -1,5 +1,5 @@
 # coding: utf8
-from __init__ import DB
+from IGF_Klasse import DB
 doc = __revit__.ActiveUIDocument.Document
 
 class SharedParameter(object):
@@ -11,9 +11,7 @@ class SharedParameter(object):
         self.userinfo = userinfo
         self.externaldefinition = externaldefinition
         self.group = group
-        self.get_grundinfo()
-        self.get_type()
-        self.get_discipline()
+        self.set_up_shared()
     
     def get_grundinfo(self):
         if self.externaldefinition:
@@ -42,6 +40,11 @@ class SharedParameter(object):
 
             except:
                 self.disziplin = DB.LabelUtils.GetLabelForDiscipline(DB.UnitUtils.GetDiscipline(self.externaldefinition.GetDataType()))
+    
+    def set_up_shared(self):
+        self.get_grundinfo()
+        self.get_type()
+        self.get_discipline()
 
 class ProjektParameter(SharedParameter):
     def __init__(self, bindingmap = None):
@@ -53,15 +56,8 @@ class ProjektParameter(SharedParameter):
         self.binding = ''
         self.internaldefinition = ''
         self.cates = ''
-        self.get_binding()
-        self.get_paramtyp()
-        self.get_sharedparameter()
-        self.get_externaldefinition()
-        self.get_cates()
-        self.get_paramgroup()
-        self.get_grundinfo()
-        self.get_type()
-        self.get_discipline()
+        self.set_up_projekt()
+        self.set_up_shared()
     
     def get_binding(self):
         if self.bindingmap:
@@ -104,3 +100,12 @@ class ProjektParameter(SharedParameter):
             for cate in cates:
                 cateName = cateName + cate.Name + ','
             self.cates = cateName[:-1]
+    
+    def set_up_projekt(self):
+        self.get_binding()
+        self.get_paramtyp()
+        self.get_sharedparameter()
+        self.get_externaldefinition()
+        self.get_cates()
+        self.get_paramgroup()
+        

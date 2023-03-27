@@ -1,0 +1,19 @@
+<Window
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          Title="Material:" Height="90" Width="400" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+
+    <Grid Margin="10">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Grid.Row="1" Grid.Column="0" Margin="0" Click="blech" Content="Blech" Width="100" Height="24" />
+        <Button Grid.Row="1" Grid.Column="1" Margin="0" Click="pps" Content="PPs" Width="100" Height="24" />
+        <Button Grid.Row="1" Grid.Column="2" Margin="0" Click="v2" Content="V2" Height="24" Width="100" />
+
+    </Grid>
+</Window>

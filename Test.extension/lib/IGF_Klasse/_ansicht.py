@@ -1,6 +1,6 @@
 # coding: utf8
-from __init__ import ItemTemplateMitElem,DB
-from System.Collections.ObjectModel import ObservableCollection
+from IGF_Klasse import ItemTemplateMitElem,DB,ItemTemplateMitElemUndName,ObservableCollection
+import Autodesk.Revit.UI as UI
 
 class AllgemeinerAnsicht(ItemTemplateMitElem):
     def __init__(self,elem):
@@ -41,7 +41,7 @@ class Bauteilliste(ItemTemplateMitElem):
 
     def get_Data_MitFormat(self):
         Liste = []
-        units_default = DB.Units(DB.UnitSystem.Metric)
+        units_default = self.doc.GetUnits()
         ColumnHeadings = self.ColumnHeadings
         tableData = self.elem.GetTableData()
         sectionBody = tableData.GetSectionData(DB.SectionType.Body)
@@ -194,6 +194,96 @@ class Ansicht(object):
         #     temp.Add(RVItem(el,temp_dict[el].Id,Ansicht.doc))
         # return temp
 
+class SchnittInGrundriss(ItemTemplateMitElemUndName):
+    def __init__(self,elem,name = ''):
+        ItemTemplateMitElemUndName.__init__(self,name,elem)
+        self.name = self.elem.Name
+        self.schnittanschit = None
+    
+    def get_schnittAnschit(self):
+        coll = DB.FilteredElementCollector(self.elem.Document).OfCategory(DB.BuiltInCategory.OST_Views)\
+            .WherePasses(DB.ElementParameterFilter(DB.FilterStringRule(DB.ParameterValueProvider(\
+            DB.ElementId(DB.BuiltInParameter.VIEW_NAME)),DB.FilterStringEquals(),self.name,True)))\
+                .WhereElementIsNotElementType().ToElements()
+
+        if len(coll) > 0:
+            self.schnittanschit = coll[0]
+        else:
+            return 
+    
+    def verschieben(self,Liste_elems):
+        max_x,max_y = -1100000000,-10000000
+        min_x,min_y = 10000000,10000000
+        for el in Liste_elems:
+            box_temp = el.get_BoundingBox(None)
+            max_x = max(max_x,box_temp.Max.X)
+            max_y = max(max_y,box_temp.Max.Y)
+            min_x = min(min_x,box_temp.Min.X)
+            min_y = min(min_y,box_temp.Min.Y)
+            box_temp.Dispose()
+        
+        cx = (max_x + min_x) /2
+        cy = (max_y + min_y) /2
+
+        box1 = self.elem.get_BoundingBox(UI.UIDocument(self.elem.Document).ActiveView)
+        origin_0 = (box1.Max + box1.Min) /2
+        box1.Dispose()
+        
+        o = origin_0 - self.schnittanschit.ViewDirection * \
+            (self.elem.get_Parameter(DB.BuiltInParameter.VIEWER_BOUND_OFFSET_FAR).AsDouble() + 0.5) / 2
+
+        self.elem.Location.Move(DB.XYZ((cx- o.X),(cy-o.Y),0))
+    
+    def verschieben_dynamische(self,Liste_elems):
+        max_x,max_y = -1100000000,-10000000
+        min_x,min_y = 10000000,10000000
+        for el in Liste_elems:
+            box_temp = el.get_BoundingBox(None)
+            max_x = max(max_x,box_temp.Max.X)
+            max_y = max(max_y,box_temp.Max.Y)
+            min_x = min(min_x,box_temp.Min.X)
+            min_y = min(min_y,box_temp.Min.Y)
+            box_temp.Dispose()
+        
+        
+        cx = (max_x + min_x) /2
+        cy = (max_y + min_y) /2
+
+        box1 = self.elem.get_BoundingBox(UI.UIDocument(self.elem.Document).ActiveView)
+        origin_0 = (box1.Max + box1.Min) /2
+        box1.Dispose()
+
+        p_vektor0 = DB.XYZ((max_x-min_x),(max_y-min_y),0)
+        p_vektor1 = DB.XYZ((min_x-max_x),(max_y-min_y),0)
+        length0 = abs(p_vektor0.DotProduct(self.schnittanschit.ViewDirection.Normalize()))  + 2
+        length1 = abs(p_vektor1.DotProduct(self.schnittanschit.ViewDirection.Normalize()))  + 2
+        length = max(length0,length1)
+        self.elem.get_Parameter(DB.BuiltInParameter.VIEWER_BOUND_OFFSET_FAR).Set(length)
+
+        o = origin_0 - self.schnittanschit.ViewDirection * \
+            (length+ 0.5) / 2
+        
+        self.elem.Location.Move(DB.XYZ((cx- o.X),(cy-o.Y),0))
+
+
+class Grundriss(object):
+    def __init__(self,elem):
+        self.elem = elem
+        self.schnitt_Liste = ObservableCollection[SchnittInGrundriss]()
+    
+    def getAllSchnitt(self):
+        coll = DB.FilteredElementCollector(self.elem.Document,self.elem.Id).OfCategory(DB.BuiltInCategory.OST_Viewers).WhereElementIsNotElementType().ToElements()
+        _dict = {el.Name:el for el in coll}
+        for name in sorted(_dict.keys()):
+            schnitt = SchnittInGrundriss(_dict[name])
+            schnitt.get_schnittAnschit()
+            if schnitt.schnittanschit:
+                self.schnitt_Liste.Add(schnitt)
+        return self.schnitt_Liste
+    
+    @staticmethod
+    def get_schnitt_ansciht(elem):
+        return Grundriss(elem).getAllSchnitt()
 
 
 

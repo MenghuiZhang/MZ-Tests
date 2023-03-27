@@ -1,6 +1,26 @@
 # coding: utf8
 import Autodesk.Revit.DB as DB
 
+
+
+#1554083
+#KG431_Raumlufttechnische Anlagen, 800
+#OST_DuctAccessory
+#1510576
+
+#rule = DB.ParameterFilterRuleFactory.CreateEqualsRule(DB.ElementId(178683),'BSK',True)
+#1510702
+#1554079
+
+#0.1**6
+#filt = DB.ElementParameterFilter(rule)
+#coll = DB.FilteredElementCollector(doc).WherePasses(filt)
+#elemids = [el.Id.IntegerValue for el in coll]
+#1554083 in elemids
+
+
+
+
 doc = __revit__.ActiveUIDocument.Document
 
 def ElementFamilyEquals_Filter(fam_name = None, ansicht = False, Category = None, EntwurfsOption = True):

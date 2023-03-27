@@ -73,11 +73,15 @@ class RBLItem(RVItem):
                 if Headerformat.UseDefault:
                     param = self.doc.GetElement(dict_params[headers[c]].ParameterId)
                     if param:
-                        Headerformat = units_default.GetFormatOptions(param.GetDefinition().UnitType)
+                        try:Headerformat = units_default.GetFormatOptions(param.GetDefinition().UnitType)
+                        except:
+                            try:Headerformat = units_default.GetFormatOptions(param.GetDefinition().GetSpecTypeId())
+                            except:Headerformat = None
                 
                 try:
-                    if param.GetDefinition().UnitType.ToString() == '' 
                     Accuracy = Headerformat.Accuracy
+                    if Accuracy < 0.000001:
+                        Accuracy = ''
                 except:
                     Accuracy = ''
                 try:

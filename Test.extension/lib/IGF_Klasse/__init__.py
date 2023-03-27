@@ -2,6 +2,7 @@ import clr
 clr.AddReference('System.ComponentModel')
 from System.ComponentModel import INotifyPropertyChanged ,PropertyChangedEventArgs
 import Autodesk.Revit.DB as DB
+from System.Collections.ObjectModel import ObservableCollection
 
 class TemplateItemBase(INotifyPropertyChanged):
     def __init__(self):
@@ -36,6 +37,12 @@ class ItemTemplateMitName(ItemTemplate):
     def __init__(self,name):
         ItemTemplate.__init__(self)
         self.name = name
+
+class ItemTemplateMitElemUndName(ItemTemplate):
+    def __init__(self,name,elem):
+        ItemTemplate.__init__(self)
+        self.name = name
+        self.elem = elem
 
 class ItemTemplateMitElem(ItemTemplate):
     def __init__(self,elem):

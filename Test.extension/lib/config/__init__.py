@@ -3,19 +3,27 @@ import ConfigParser
 import os
 import json
 home_dir = os.path.expanduser("~") + '\\DC\\ACCDocs\\IGF\\IGF_pyrevit\\Projektdateien\\xx_Projektconfig'
+
 appdata = os.getenv('APPDATA')
 
 class ProjektConfig(object):
-    def __init__(self,nummername = ''):
+    def __init__(self,nummername = '',lokal = False):
         self.config = ConfigParser.ConfigParser()
         self.nummername = nummername
-        self.config_rvt = home_dir + '\\' + self.nummername
-        self.condigdatei = appdata + '\\pyRevit'
-        self.lokal = False
-        self._cfg_file_path0 = self.condigdatei + '\\pyRevit_config.ini'
-        self._cfg_file_path1 = self.config_rvt + '\\pyRevit_config.conf'
+        self.home_dir_0 = os.path.expanduser("~") + '\\DC\\ACCDocs\\IGF\\IGF_pyrevit\\Project Files\\xx_Projektconfig'
+        self.home_dir_1 = os.path.expanduser("~") + '\\DC\\ACCDocs\\IGF\\IGF_pyrevit\\Projektdateien\\xx_Projektconfig'
+        if os.path.exists(self.home_dir_0):
+            self.config_rvt = self.home_dir_0 + '\\' + self.nummername
+        else:
+            self.config_rvt = self.home_dir_1 + '\\' + self.nummername
+            
+        self.configfile = appdata + '\\pyRevit'
+        self.lokal = lokal
+        self._cfg_file_path_local = self.configfile + '\\pyRevit_config.conf'
+        self._cfg_file_path_cental = self.config_rvt + '\\pyRevit_config.conf'
         self.isconfig = True
-        self._cfg_file_path = self._cfg_file_path1
+        self._cfg_file_path = self._cfg_file_path_cental
+        self.config_ermitterl()
 
         if not self.isconfig:return
         
@@ -30,34 +38,57 @@ class ProjektConfig(object):
         return self._cfg_file_path
 
     def config_ermitterl(self):
-        if not os.path.exists(self._cfg_file_path1):
-            self._cfg_file_path = self._cfg_file_path1
+        if self.lokal:
+            self._cfg_file_path = self._cfg_file_path_local
+            if not os.path.exists(self._cfg_file_path_local):
+                if not os.path.exists(self.configfile):
+                    try:
+                        os.makedirs(self.configfile)
+                    except:
+                        self.isconfig = False
+                        return
+                else:
+                    try:
+                        with open(self._cfg_file_path_local,'w') as file:
+                            pass
+                        return
+                    except:
+                        self.isconfig = False
+                        return
+            else:
+                return
+
+        if not os.path.exists(self._cfg_file_path_cental):
+            self._cfg_file_path = self._cfg_file_path_cental
             if not os.path.exists(self.config_rvt):
                 try:
                     os.makedirs(self.config_rvt)
                 except:
                     try:
-                        if not os.path.exists(self._cfg_file_path0):
-                            self._cfg_file_path = self._cfg_file_path0
-                            if not os.path.exists(self.condigdatei):
+                        self.lokal = True
+                        if not os.path.exists(self._cfg_file_path_local):
+                            self._cfg_file_path = self._cfg_file_path_local
+                            if not os.path.exists(self.configfile):
                                 try:
-                                    os.makedirs(self.condigdatei)
+                                    os.makedirs(self.configfile)
                                 except:
                                     self.isconfig = False
                                     return
                             else:
                                 try:
-                                    with open(self._cfg_file_path0,'w') as file:
+                                    with open(self._cfg_file_path_local,'w') as file:
                                         pass
                                 except:
                                     self.isconfig = False
                                     return
+                        else:
+                            return
                     except:
                         self.isconfig = False
                         return
 
             try:
-                with open(self._cfg_file_path1,'w') as file:
+                with open(self._cfg_file_path_cental,'w') as file:
                     pass
             except:
                 self.isconfig = False
@@ -65,8 +96,8 @@ class ProjektConfig(object):
 
     
     @staticmethod
-    def get_config_static(nummername,section='Default'):
-        klass = ProjektConfig(nummername)
+    def get_config_static(nummername,section='Default',lokal = False):
+        klass = ProjektConfig(nummername,lokal)
         if klass.isconfig:
             klass.get_config(section)
             return klass
