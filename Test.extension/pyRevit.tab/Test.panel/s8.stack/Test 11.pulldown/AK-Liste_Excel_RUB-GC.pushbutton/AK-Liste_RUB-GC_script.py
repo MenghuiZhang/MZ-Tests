@@ -206,22 +206,68 @@ H_Segel =    DB.FilteredElementCollector(doc)\
 HK_Liste = [Endverbraucher(elem,True,'Regelventil','6_Wege','IGF_X_Bauteilnummerierung') for elem in HK_Segel]
 H_Liste = [Endverbraucher(elem,True,'Regelventil',None,'IGF_X_Bauteilnummerierung') for elem in H_Segel]
 
-Ids_DeS = []
-for el in HK_Liste:
-    if el.BauteilNummer not in Ids_DeS:
-        Ids_DeS.append(el.BauteilNummer)
-    else:
-        print(el.BauteilNummer,el.elemid.IntegerValue)
-    if not el.BauteilNummer:
-        print(el.elemid)
-for el in H_Liste:
-    if el.BauteilNummer not in Ids_DeS:
-        Ids_DeS.append(el.BauteilNummer)
-    else:
-        print(el.BauteilNummer,el.elemid.IntegerValue)
-    if not el.BauteilNummer:
-        print(el.elemid)
-print('-------------------------')
+def get_text(liste):
+    text = ''
+    liste.sort()
+    if len(liste) == 0:
+        return text
+    for el in liste:
+        text += el + ', '
+    return text[:-2]
+
+def get_Liste_DES(Liste):
+    _dict = {}
+    liste = []
+    for el in Liste:
+        if el.Raum:
+            if el.Raum.Id.IntegerValue not in _dict.keys():
+                _dict[el.Raum.Id.IntegerValue] = []
+            _dict[el.Raum.Id.IntegerValue].append(el.BauteilNummer)
+    
+    for el in _dict.keys():
+        raumnummer = doc.GetElement(DB.ElementId(el)).Number
+        text = get_text(_dict[el])
+        liste.append([raumnummer,text,len(_dict[el])])
+    return liste
+
+
+def export(liste):
+    path = excel.Adresse.Text
+    workbook = xlsxwriter.Workbook(path)
+    worksheet = workbook.add_worksheet('DeS')
+
+    for row in range(len(liste)):
+        for col in range(len(liste[0])):
+            worksheet.write(row, col, liste[row][col])
+    workbook.close()
+
+def exportdeckensegel():
+    liste = []
+    liste.extend(get_Liste_DES(HK_Liste))
+    liste.extend(get_Liste_DES(H_Liste))
+    liste.sort()
+    liste.insert(0, ['raumnummer','des','anzahl'])
+    export(liste)
+
+
+exportdeckensegel()
+
+# Ids_DeS = []
+# for el in HK_Liste:
+#     if el.BauteilNummer not in Ids_DeS:
+#         Ids_DeS.append(el.BauteilNummer)
+#     else:
+#         print(el.BauteilNummer,el.elemid.IntegerValue)
+#     if not el.BauteilNummer:
+#         print(el.elemid)
+# for el in H_Liste:
+#     if el.BauteilNummer not in Ids_DeS:
+#         Ids_DeS.append(el.BauteilNummer)
+#     else:
+#         print(el.BauteilNummer,el.elemid.IntegerValue)
+#     if not el.BauteilNummer:
+#         print(el.elemid)
+# print('-------------------------')
         
 # HK_Segel =   DB.FilteredElementCollector(doc)\
 #             .OfCategory(DB.BuiltInCategory.OST_MechanicalEquipment)\
@@ -261,59 +307,59 @@ print('-------------------------')
 # print(len(HK_Segel))
 # print(len(H_Segel))
 
-dict_regelventile = {}
+# dict_regelventile = {}
 
-dict_6_wege_ventile = {}
+# dict_6_wege_ventile = {}
 
-for el in HK_Liste:
-    if el.regelventil:
-        if el.regelventil not in dict_regelventile.keys():
-            dict_regelventile[el.regelventil] = []
-        dict_regelventile[el.regelventil].append(el)
-    if el.sechswege:
-        if el.sechswege not in dict_6_wege_ventile.keys():
-            dict_6_wege_ventile[el.sechswege] = []
-        dict_6_wege_ventile[el.sechswege].append(el)
+# for el in HK_Liste:
+#     if el.regelventil:
+#         if el.regelventil not in dict_regelventile.keys():
+#             dict_regelventile[el.regelventil] = []
+#         dict_regelventile[el.regelventil].append(el)
+#     if el.sechswege:
+#         if el.sechswege not in dict_6_wege_ventile.keys():
+#             dict_6_wege_ventile[el.sechswege] = []
+#         dict_6_wege_ventile[el.sechswege].append(el)
 
-for el in H_Liste:
-    if el.regelventil:
-        if el.regelventil not in dict_regelventile.keys():
-            dict_regelventile[el.regelventil] = []
-        dict_regelventile[el.regelventil].append(el)
+# for el in H_Liste:
+#     if el.regelventil:
+#         if el.regelventil not in dict_regelventile.keys():
+#             dict_regelventile[el.regelventil] = []
+#         dict_regelventile[el.regelventil].append(el)
 
 
-Liste_Regelventil = []
-Liste_6Wegeventil = []
+# Liste_Regelventil = []
+# Liste_6Wegeventil = []
 
-Ids_Regelventil = []
-Ids_6Wegeventil = []
+# Ids_Regelventil = []
+# Ids_6Wegeventil = []
 
-for elid in dict_regelventile.keys():
-    elem = doc.GetElement(DB.ElementId(int(elid)))
-    regel = Regelkomponent(elem,dict_regelventile[elid],'IGF_X_Bauteilnummerierung')
-    Liste_Regelventil.append(regel.Ausgabe)
-    if not regel.BauteilNummer:
-        print(regel.elem.Id.IntegerValue)
-    if regel.BauteilNummer not in Ids_Regelventil:
-        Ids_Regelventil.append(regel.BauteilNummer)
-    else:
-        print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
-print('---')
-for elid in dict_6_wege_ventile.keys():
-    elem = doc.GetElement(DB.ElementId(int(elid)))
-    regel = Regelkomponent(elem,dict_6_wege_ventile[elid],'IGF_X_Bauteilnummerierung')
-    Liste_6Wegeventil.append(regel.Ausgabe)
-    if not regel.BauteilNummer:
-        print(regel.elem.Id.IntegerValue)
-    if regel.BauteilNummer not in Ids_6Wegeventil:
-        Ids_6Wegeventil.append(regel.BauteilNummer)
-    else:
-        print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
+# for elid in dict_regelventile.keys():
+#     elem = doc.GetElement(DB.ElementId(int(elid)))
+#     regel = Regelkomponent(elem,dict_regelventile[elid],'IGF_X_Bauteilnummerierung')
+#     Liste_Regelventil.append(regel.Ausgabe)
+#     if not regel.BauteilNummer:
+#         print(regel.elem.Id.IntegerValue)
+#     if regel.BauteilNummer not in Ids_Regelventil:
+#         Ids_Regelventil.append(regel.BauteilNummer)
+#     else:
+#         print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
+# print('---')
+# for elid in dict_6_wege_ventile.keys():
+#     elem = doc.GetElement(DB.ElementId(int(elid)))
+#     regel = Regelkomponent(elem,dict_6_wege_ventile[elid],'IGF_X_Bauteilnummerierung')
+#     Liste_6Wegeventil.append(regel.Ausgabe)
+#     if not regel.BauteilNummer:
+#         print(regel.elem.Id.IntegerValue)
+#     if regel.BauteilNummer not in Ids_6Wegeventil:
+#         Ids_6Wegeventil.append(regel.BauteilNummer)
+#     else:
+#         print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
 
-Liste_Regelventil.sort()
-Liste_6Wegeventil.sort()
-Liste_Regelventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
-Liste_6Wegeventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
+# Liste_Regelventil.sort()
+# Liste_6Wegeventil.sort()
+# Liste_Regelventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
+# Liste_6Wegeventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
 
 
 # Excel Export
