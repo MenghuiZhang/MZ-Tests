@@ -208,3 +208,26 @@ ScheduleWPF.ShowDialog()
 #     script.get_logger().error(e)
 #     ScheduleWPF.Close()
 #     script.exit()
+
+
+liste = []
+for el in cl:
+    _id = el.LookupParameter('IGF_X_Bauteil_ID_Text').AsString()
+    if _id not in liste:
+        liste.append(_id)
+    else:
+        print(_id)
+print(liste)
+
+liste = ['HK_E7_20', 'HK_E8_02', 'HK_E8_03', 'HK_E6_02', 'HK_E6_03', 'HK_E5_24', 'HK_E5_25', 'HK_E4_02', 'HK_E4_03', 'HK_E3_15', 'HK_E3_16', 'HK_E2_02', 'HK_E2_03', 'HK_E7_16', 'HK_E7_17', 'HK_E03_103', 'HK_E03_104', 'HK_E03_102', 'HK_E03_105', 'HK_E03_101', 'HK_E04_54', 'HK_E04_56', 'HK_E04_55', 'HK_E04_58', 'HK_E04_53', 'HK_E05_20', 'HK_E05_22', 'HK_E05_21', 'HK_E05_19', 'HK_E05_18', 'HK_E02_48', 'HK_E02_50', 'HK_E02_49', 'HK_E02_47', 'HK_E02_46', 'HK_E1_18', 'HK_E1_20', 'HK_E1_19', 'HK_E1_17', 'HK_E1_16', 'HK_E2_11', 'HK_E2_13', 'HK_E2_12', 'HK_E2_10', 'HK_E2_09', 'HK_E3_24', 'HK_E3_26', 'HK_E3_25', 'HK_E3_29', 'HK_E3_23', 'HK_E4_12', 'HK_E4_14', 'HK_E4_13', 'HK_E4_11', 'HK_E4_10', 'HK_E5_20', 'HK_E5_22', 'HK_E5_21', 'HK_E5_19', 'HK_E5_18', 'HK_E6_12', 'HK_E6_14', 'HK_E6_13', 'HK_E6_11', 'HK_E6_10', 'HK_E7_26', 'HK_E7_27', 'HK_E7_25', 'HK_E7_24', 'HK_E8_12', 'HK_E8_14', 'HK_E8_13', 'HK_E8_11', 'HK_E8_10', 'HK_E8_01', 'HK_E8_05', 'HK_E7_15', 'HK_E7_19', 'HK_E6_01', 'HK_E6_05', 'HK_E5_23', 'HK_E5_27', 'HK_E4_01', 'HK_E4_04', 'HK_E3_14', 'HK_E2_01', 'HK_E2_04', 'HK_E04_59', 'HK_E04_60', 'HK_E04_61', 'HK_E04_51', 'HK_E04_52', 'HK_E05_11', 'HK_E05_13', 'HK_E05_14', 'HK_E05_23', 'HK_E05_24', 'HK_E06_03', 'HK_E06_04', 'HK_E06_01', 'HK_E05_06', 'HK_E05_07', 'HK_E05_27', 'HK_E05_26', 'HK_E05_28', 'HK_E05_29', 'HK_E05_25', 'HK_E05_16', 'HK_E05_17', 'HK_E03_99', 'HK_E03_100', 'HK_E02_43', 'HK_E02_44', 'HK_E1_13', 'HK_E1_14', 'HK_E2_06', 'HK_E2_07', 'HK_E3_19', 'HK_E3_20', 'HK_E4_07', 'HK_E4_08', 'HK_E5_15', 'HK_E5_16', 'HK_E6_07', 'HK_E6_08', 'HK_E7_22', 'HK_E7_23', 'HK_E8_07', 'HK_E8_08', 'HK_E05_15', 'HK_E04_50', 'HK_E03_98', 'HK_E02_42', 'HK_E1_12', 'HK_E2_05', 'HK_E3_18', 'HK_E4_06', 'HK_E5_14', 'HK_E6_06', 'HK_E7_21', 'HK_E8_06', 'HK_E9_01', 'HK_E05_30', 'HK_E05_31', 'HK_E05_33', 'HK_E05_34', 'HK_E05_32', 'HK_E03_95', 'HK_E03_96', 'HK_E03_94', 'HK_E03_97', 'HK_E03_91', 'HK_E03_90', 'HK_E03_89', 'HK_E03_88', 'HK_E03_87', 'HK_E03_86', 'HK_E03_92', 'HK_E02_52', 'HK_E02_41', 'HK_E02_45', 'HK_E02_40', 'HK_E1_15', 'HK_E1_11', 'HK_E3_17', 'HK_E8_04', 'HK_E7_18', 'HK_E6_04', 'HK_E5_26', 'HK_E4_05', 'HK_E3_27', 'HK_E2_27', 'HK_E6_09', 'HK_E5_17', 'HK_E4_09', 'HK_E3_21', 'HK_E2_08', 'HK_E02_51', 'HK_E03_93', 'HK_E04_09', 'HK_E04_10', 'HK_E04_07', 'HK_E04_08', 'HK_E04_05', 'HK_E04_06', 'HK_E04_03', 'HK_E04_04', 'HK_E04_01', 'HK_E04_02', 'HK_E05_10', 'HK_E05_12', 'HK_E05_40', 'HK_E05_41', 'HK_E05_42', 'HK_E7_28', 'HK_E8_29', 'HK_E05_39', 'HK_E06_02', 'HK_E05_36', 'HK_E05_38', 'HK_E05_37', 'HK_E05_43', 'HK_E05_44']
+for el in cl:
+    _id = el.LookupParameter('IGF_X_Bauteil_ID_Text').AsString()
+    if _id in liste:
+        liste.remove(_id)
+    else:
+        print(_id)
+print(liste)
+
+HK_E7_19
+HK_E03_98
+['HK_E7_17', 'HK_E03_99']

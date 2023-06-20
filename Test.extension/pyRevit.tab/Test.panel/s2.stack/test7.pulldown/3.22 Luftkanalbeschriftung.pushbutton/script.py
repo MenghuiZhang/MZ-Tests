@@ -5,7 +5,7 @@ from eventhandler import ExternalEvent,BESCHIFTUNG2
 import os
 
 
-__title__ = "Beschriftung ausrichten (in Grundriss)"
+__title__ = "Bauteil ausrichten (in Grundriss)"
 __doc__ = """
 
 Beschriftung ausrichten

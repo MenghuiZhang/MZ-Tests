@@ -1,0 +1,92 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Übergang/Bogen" Height="400" Width="370" Background="LightBlue" ResizeMode="CanMinimize" WindowStartupLocation ="CenterOwner">
+    <Grid>
+        <TabControl>
+            <TabItem Header="erstellen" Name="create">
+                <StackPanel Background="LightBlue">
+                    <StackPanel Margin="5,5,5,5" >
+                        <GroupBox Header="Einstellungen">
+                            <StackPanel>
+                                <GroupBox Header="Fix">
+                                    <StackPanel>
+                                        <RadioButton x:Name="erst" Content="ersten Bauteil fixieren" IsChecked="True"></RadioButton>
+                                        <RadioButton x:Name="zweit" Content="zweiten Bauteil fixieren">
+                                        </RadioButton>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Header="Übergangslänge (in mm)">
+                                    <StackPanel>
+                                        <RadioButton x:Name="auto" Content="automatische anpassen" IsChecked="True"></RadioButton>
+                                        <RadioButton x:Name="manuell">
+                                            <RadioButton.Content>
+                                                <TextBox Width="100" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"></TextBox>
+                                            </RadioButton.Content>
+                                        </RadioButton>
+                                    </StackPanel>
+                                </GroupBox>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <Button Content="Einstellungen übernehmen und Übergang erstellen" Click="erstellen" Width="320" Height="24" Margin="0,10,0,10" x:Name="button_1"/>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,0">
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="Einstellungen ändern:" Margin="5,5,5,05" Height="16" Foreground="Red"/>
+                                <TextBlock Text="1. Esc drucken." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                <TextBlock Text="2. Einstellungen ändern." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                <TextBlock Text="3. Button klicken." Margin="5,5,5,5" Height="16" Foreground="Red"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+            </TabItem>
+            <TabItem Header="aktualisieren" x:Name="update">
+                <StackPanel Background="LightBlue">
+                    <StackPanel Margin="5,5,5,5">
+                        <GroupBox Header="Einstellungen">
+                            <StackPanel>
+                            <GroupBox Header="Modus">
+                                <DockPanel Margin="10,0,0,0">
+                                    <RadioButton x:Name="luftkanal" Content="Luftkanal/Flexkanal" IsChecked="True"/>
+                                    <RadioButton x:Name="formteil" Content="Formteil/Zubehör" Margin="10,0,0,0"/>
+                                </DockPanel>
+                            </GroupBox>
+                            <GroupBox Header="Länge (in mm)">
+                                <DockPanel Margin="10,0,0,0">
+                                    <TextBlock Text="Länge: "/>
+                                    <TextBox x:Name="length" Width="80" HorizontalAlignment="Left" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"/>
+                                    <TextBlock Text="mm " Margin="5,0,0,0"/>
+                                    </DockPanel>
+                            </GroupBox>
+                            </StackPanel>
+
+                        </GroupBox>
+
+                        <Button Margin="0,10,0,10" Content="Einstellungen übernehmen und Übergang aktualisieren" Width="320" Click="aktu" x:Name="button_2"/>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1">
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="Hinweis:" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                <TextBlock Text="1. fixierten Luftkanal/Kanalteil auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                <TextBlock Text="2. Übergangsstück auswählen" Margin="5,5,0,5" Height="16" Foreground="#FFCA0079"/>
+                            </StackPanel>
+                        </Border>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,0">
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="Einstellungen ändern:" Margin="5,5,5,05" Height="16" Foreground="Red"/>
+                                <TextBlock Text="1. Esc drucken." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                <TextBlock Text="2. Einstellungen ändern." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                <TextBlock Text="3. Button klicken." Margin="5,5,5,5" Height="16" Foreground="Red"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </StackPanel>
+
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>

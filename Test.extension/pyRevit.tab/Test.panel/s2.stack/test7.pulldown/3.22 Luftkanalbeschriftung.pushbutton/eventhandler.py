@@ -39,9 +39,9 @@ class BESCHIFTUNG2(IExternalEventHandler):
 
         while(True):
             try:
-                el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element,Filters(),'Wählt die fixierte Beschriftung aus')
+                el0_ref = uidoc.Selection.PickObject(Selection.ObjectType.Element)
                 el0 = doc.GetElement(el0_ref)
-                el1_ref = uidoc.Selection.PickObjects(Selection.ObjectType.Element,Filter1(el0.Category.Id.ToString()),'Wählt die zu veränderte MEP-Raumbeschriftung aus')
+                el1_ref = uidoc.Selection.PickObjects(Selection.ObjectType.Element,Filter1(el0.Category.Id.ToString()))
                 
                 t = DB.Transaction(doc,'anpassen')
                 

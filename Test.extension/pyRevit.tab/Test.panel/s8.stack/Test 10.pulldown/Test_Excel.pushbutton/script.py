@@ -4,29 +4,90 @@
 # from pyrevit import script
 # from IGF_Elementfilter import ElementFamilyTypeSeparatelyContains_Filter,ElementFamilyTypeSeparatelyEquals_Filter
 import time
+from rpw import revit,DB
 __title__ = "Test_Excel"
 __doc__ = """Exportiert eine AK-Liste. Verbesserte Filterfunktion"""
 __authors__ = "Maximilian Prachtel"
 
 
-from IGF_log import getlog
-from excel._NPOI_2020 import getlog1
-t0 = time.time()
-try:
-    getlog(__title__)
-except:
-    pass
-t1 = time.time()
+# from IGF_log import getlog
+# from excel._NPOI_2020 import getlog1
+# t0 = time.time()
+# try:
+#     getlog(__title__)
+# except:
+#     pass
+# t1 = time.time()
 
-try:
-    getlog1(__title__)
-except:
-    pass
-t2 = time.time()
-print(t1-t0,t2-t1,(t1-t0)/(t2-t1))
+# try:
+#     getlog1(__title__)
+# except:
+#     pass
+# t2 = time.time()
+# print(t1-t0,t2-t1,(t1-t0)/(t2-t1))
 
-# doc = revit.doc
-# uidoc = revit.uidoc
+doc = revit.doc
+uidoc = revit.uidoc
+
+cl = DB.FilteredElementCollector(doc,uidoc.ActiveView.Id).OfCategory(DB.BuiltInCategory.OST_MechanicalEquipment)
+connset = DB.ConnectorSet()
+for el in cl:
+    conns = el.MEPModel.ConnectorManager.Connectors
+    for conn in conns:
+        if conn.Direction.ToString() == 'Out' and conn.MEPSystem == None:
+            connset.Insert(conn)
+t = DB.Transaction(doc,'System')
+t.Start()
+doc.GetElement(DB.ElementId(14613235)).Add(connset)
+t.Commit()
+
+t = DB.Transaction(doc,'System')
+t.Start()
+connset = DB.ConnectorSet()
+rohr = None
+zube = None
+for el in cl:
+    if el.Category.Name == 'Rohre':
+        rohr = el
+    else:
+        zube = el
+conns = zube.MEPModel.ConnectorManager.Connectors
+conn0 = None
+
+for conn in conns:
+    if conn.MEPSystem:
+        conn0 = conn
+    else:
+        connset.Insert(conn)
+conn0.MEPSystem.Add(rohr.ConnectorManager.Connectors)
+t.Commit()
+
+t = DB.Transaction(doc,'System')
+t.Start()
+cl = DB.FilteredElementCollector(doc,uidoc.ActiveView.Id).OfCategory(DB.BuiltInCategory.OST_MechanicalEquipment).WhereElementIsNotElementType()
+for el in cl:
+    bearbeitungsbereich = el.get_Parameter(DB.BuiltInParameter.ELEM_PARTITION_PARAM).AsInteger()
+    doc.GetWorksetTable().SetActiveWorksetId(DB.WorksetId(bearbeitungsbereich))
+    try:
+        conns = el.MEPModel.ConnectorManager.Connectors
+        for conn in conns:
+            if conn.IsConnected:
+                refs = conn.AllRefs
+                for ref in refs:
+                    if ref.Owner.Category.Name == 'Rohrzubehör':
+                        conn.DisconnectFrom(ref)
+                        ref.Owner.Location.Move(conn.CoordinateSystem.BasisZ * 10 / 304.8)
+                        try:DB.Plumbing.Pipe.Create(doc,DB.ElementId(11593842),el.LevelId,conn,ref)
+                        except:print(el.Id)
+                        break
+    except:print(el.Id)
+
+t.Commit()  
+
+
+
+
+
 # logger = script.get_logger()
 
 # DICT_MEP_NUMMER_NAME  = {}

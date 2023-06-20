@@ -279,3 +279,50 @@ with forms.ProgressBar(title="{value}/{max_value} Verteiler",cancellable=True, s
         doc.Regenerate()
 
 t.Commit()
+
+
+###
+# t = DB.Transaction(doc,'test')
+# t.Start()
+# for conn in el.MEPModel.ConnectorManager.Connectors:
+#     if conn.MEPSystem.Name == 'H VL_HK S28':
+#         break
+
+# connset = DB.ConnectorSet()
+# connset.Insert(conn)
+
+# try:
+#     conn.MEPSystem.Remove(connset)
+# except Exception as e:print(e)
+
+# # el.Symbol.LookupParameter('DS').SetValueString('15')
+# # for el in cl:
+# #     conns = el.MEPModel.ConnectorManager.Connectors
+# #     for conn in conns:
+# #         if conn.IsConnected:
+# #             allrefs = conn.AllRefs
+# #             for ref in allrefs:
+# #                 if ref.Owner.Category.Name == 'Rohre':
+# #                     ref.Owner.LookupParameter('Durchmesser').SetValueString('15')
+# t.Commit()
+
+# for el in cl:
+#     system  =el.LookupParameter('Systemname').AsString()
+
+#     # if system.find(',') != -1:
+#         print(el.Id)
+
+#         14443381
+# 14443421
+
+# 14443380
+# 14443420
+
+#
+# cl = DB.FilteredElementCollector(doc,uidoc.Activeview.Id)
+# liste = []
+# for el in cl:
+#     _id = el.LookupParameter('IGF_X_Bauteil_ID_Text').AsString()
+#     if _id not in liste:liste.append(_id)
+#     else:
+#         print(el.Id)

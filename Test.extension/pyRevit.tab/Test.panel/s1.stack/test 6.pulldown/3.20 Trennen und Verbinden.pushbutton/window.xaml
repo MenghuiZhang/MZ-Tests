@@ -6,8 +6,6 @@
   <StackPanel Margin="5,5,5,5">
 
       <Button Content="Trennen" Click="erstellen1" Width="150" Height="24" Margin="0,5,0,0"/>
-      <Button Content="Verbinden" Click="erstellen" Width="150" Height="24" Margin="0,5,0,0"/>
-      <Button Content="Rohr" Click="rohrerstellen" Width="150" Height="24" Margin="0,5,0,0"/>
   </StackPanel>
 </Grid>
 </Window>

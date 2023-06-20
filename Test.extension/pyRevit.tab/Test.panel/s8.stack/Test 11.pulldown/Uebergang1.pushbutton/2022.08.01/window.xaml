@@ -1,0 +1,61 @@
+<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Übergangsstück" Height="300" Width="320" Background="LightBlue" ResizeMode="CanMinimize" WindowStartupLocation ="CenterOwner">
+    <Grid>
+        <TabControl>
+            <TabItem Header="erstellen">
+                <StackPanel Background="LightBlue">
+                    <StackPanel Margin="5,5,5,5" >
+                        <GroupBox Header="Fix">
+                            <StackPanel>
+                                <RadioButton x:Name="erst" Content="eins Fix" IsChecked="True"></RadioButton>
+                                <RadioButton x:Name="zweit" Content="zwei Fix">
+                                </RadioButton>
+                            </StackPanel>
+                        </GroupBox>
+                        <TextBlock Text="1. Länge eingeben" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                        <GroupBox Header="Übergangslänge (in mm)">
+                            <StackPanel>
+                                <RadioButton x:Name="auto" Content="auto." IsChecked="True"></RadioButton>
+                                <RadioButton x:Name="manuell">
+                                    <RadioButton.Content>
+                                        <TextBox Width="100" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"></TextBox>
+                                    </RadioButton.Content>
+                                </RadioButton>
+                            </StackPanel>
+                        </GroupBox>
+                        <TextBlock Text="2. Button klicken." Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                        <Button Content="erstellen" Click="erstellen" Width="250" Height="24" Margin="0,5,0,0"/>
+                        <TextBlock Text="3. zwei Luftkanäle auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+
+                    </StackPanel>
+                </StackPanel>
+
+            </TabItem>
+            <TabItem Header="aktualisieren">
+                <StackPanel Background="LightBlue">
+                    <StackPanel Margin="5,5,5,5">
+                        <GroupBox Header="Modus">
+                            <DockPanel>
+                                <RadioButton x:Name="luftkanal" Content="Luftkanal" IsChecked="True"/>
+                                <RadioButton x:Name="formteil" Content="Formteil/Zubehör" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </GroupBox>
+                        <TextBlock Text="1. Länge eingeben" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                        <DockPanel Margin="5,5,0,0" >
+                            <TextBlock Text="Länge (in mm): "/>
+                            <TextBox x:Name="length" Width="100" HorizontalAlignment="Left" InputMethod.IsInputMethodEnabled="False" KeyDown="Setkey" Text="100"/>
+                        </DockPanel>
+                        <TextBlock Text="2. Button klicken." Margin="5,5,0,0" Height="16"  Foreground="#FFCA0079"/>
+                        <Button Margin="5,5,0,0" Content="Übergang aktualisieren" Width="250" Click="aktu"/>
+                        <TextBlock Text="3. fixierten Luftkanal/Formteil/Zubehör auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                        <TextBlock Text="4. Übergangsstück auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                    </StackPanel>
+                </StackPanel>
+
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>

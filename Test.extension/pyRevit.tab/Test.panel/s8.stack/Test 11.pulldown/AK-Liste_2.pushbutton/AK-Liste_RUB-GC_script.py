@@ -91,14 +91,16 @@ try:
                 
     book.Save()
     book.Dispose()
+    fs.Close()
     fs.Dispose()
 except Exception as e:
     logger.error(e)
     book.Save()
     book.Dispose()
+    fs.Close()
     fs.Dispose()
-    script.exit()
 
+    script.exit()
 
 class Endverbraucher:
     def __init__(self, elem, IstVorlauf = True, Regelventil = None, Wege_6 = None, BauteilId = None):
@@ -327,12 +329,14 @@ HK_Segel =   DB.FilteredElementCollector(doc)\
             .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel',False)))\
             .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel_k',False)))\
             .WhereElementIsNotElementType()\
+            .ContainedInDesignOption(DB.ElementId(-1))\
             .ToElements()
 H_Segel =    DB.FilteredElementCollector(doc)\
             .OfCategory(DB.BuiltInCategory.OST_MechanicalEquipment)\
             .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel',False)))\
             .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel_h',False)))\
             .WhereElementIsNotElementType()\
+            .ContainedInDesignOption(DB.ElementId(-1))\
             .ToElements()
 
 HK_Liste = [Endverbraucher(elem,True,'ABQM','DET_W_V3W_R3','IGF_X_Bauteilnummerierung') for elem in HK_Segel]
@@ -355,6 +359,8 @@ def get_Liste_DES(Liste):
             if el.Raum.Id.IntegerValue not in _dict.keys():
                 _dict[el.Raum.Id.IntegerValue] = []
             _dict[el.Raum.Id.IntegerValue].append(el.BauteilNummer)
+        else:
+            print(el.Id)
     
     return _dict
 
@@ -377,12 +383,12 @@ def funktion0():
     for el in dict_regelventile_excel.keys():
         if el not in liste0:
             print(el)
-    # t = DB.Transaction(doc,'Test')
-    # t.Start()
-    # for el in Liste:
-    #     el.wert_Schreiben()
-    # t.Commit()
-    # t.Dispose()
+    t = DB.Transaction(doc,'Test')
+    t.Start()
+    for el in Liste:
+        el.wert_Schreiben()
+    t.Commit()
+    t.Dispose()
 
 
 funktion0()
