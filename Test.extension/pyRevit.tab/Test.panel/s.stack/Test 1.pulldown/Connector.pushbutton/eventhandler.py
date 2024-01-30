@@ -1,6 +1,7 @@
 # coding: utf8
 from Autodesk.Revit.UI import IExternalEventHandler,ExternalEvent,TaskDialog
 import Autodesk.Revit.DB as DB
+from IGF_Filters._selectionfilter import PickElementOptionFactory
 
 
 class Verbinden(IExternalEventHandler):
@@ -10,21 +11,13 @@ class Verbinden(IExternalEventHandler):
     def Execute(self,app):
         uidoc = app.ActiveUIDocument
         doc = uidoc.Document
-        cl = [doc.GetElement(el) for el in uidoc.Selection.GetElementIds()]
-        conns = []
-        for el in cl:
-            print(el)
-            cos = el.ConnectorManager.Connectors
-            for co in cos:
-                if not co.IsConnected:
-                    conns.append(co)
-                    
-        print(conns)
-        t = DB.Transaction(doc,'connect')
+        elem0 = PickElementOptionFactory.CreateCurrentDocumentOption(uidoc,lambda x:x.Category.Id.ToString() == '-2003600')
+        elem1 = PickElementOptionFactory.CreateCurrentDocumentOption(uidoc,lambda x:x.Category.Id.ToString() == '-2003600')
+        t = DB.Transaction(doc,'1')
         t.Start()
-
-        conns[0].ConnectTo(conns[1])
+        elem1.Number = elem0.Number
         t.Commit()
+        
 
     def GetName(self):
         return "connect"

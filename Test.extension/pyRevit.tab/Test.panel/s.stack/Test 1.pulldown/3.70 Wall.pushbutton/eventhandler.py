@@ -54,16 +54,16 @@ class CHANGEFAMILY(IExternalEventHandler):
 
 
         if self.class_GUI.modell.IsChecked:
-            elems = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_RoomSeparationLines).WhereElementIsNotElementType().ToElementIds()
+            elems = DB.FilteredElementCollector(doc).OfCategory(DB.BuiltInCategory.OST_MEPSpaceSeparationLines).WhereElementIsNotElementType().ToElementIds()
         elif self.class_GUI.ansicht.IsChecked:
-            elems = DB.FilteredElementCollector(doc,uidoc.ActiveView.Id).OfCategory(DB.BuiltInCategory.OST_RoomSeparationLines).WhereElementIsNotElementType().ToElementIds()
+            elems = DB.FilteredElementCollector(doc,uidoc.ActiveView.Id).OfCategory(DB.BuiltInCategory.OST_MEPSpaceSeparationLines).WhereElementIsNotElementType().ToElementIds()
         elif self.class_GUI.auswahl.IsChecked:
             Auswahl = uidoc.Selection.GetElementIds()
             Liste = []
             for el in Auswahl:
                 elem = doc.GetElement(el)
                 try:
-                    if elem.Category.Id.ToString() == '-2000066':
+                    if elem.Category.Id.ToString() == '-2000831':
                         Liste.append(el)
                 except:pass
             elems = Liste

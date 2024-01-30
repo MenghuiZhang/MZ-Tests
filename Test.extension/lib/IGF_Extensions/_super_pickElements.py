@@ -37,10 +37,10 @@ class ElementSectionFilter(BaseSelectionFilter):
 
 class SelectionFilterFactory:
     @staticmethod
-    def CreateElementSelectionFIlter(func):
+    def CreateElementSelectionFilter(func):
         return ElementSectionFilter(func)
     @staticmethod
-    def CreateLinkSelectionFIlter(doc,func):
+    def CreateElementSelectionFilter(doc,func):
         return LinkSelectionFilter(doc,func)
 
 # Interface in c# 

@@ -1,0 +1,1042 @@
+<Page 
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="White" IsVisibleChanged="IsShowed" Width="300">
+
+    <TabControl>
+        <TabControl.Resources>
+            <Style TargetType="TabItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Grid>
+                                <Border Name="Border" Background="Transparent" BorderThickness="1,1,1,0" BorderBrush="Black">
+                                    <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="10,2"/>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="LightBlue"/>
+                                    <!-- 鼠标悬停时的背景色 -->
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Border" Property="Background" Value="#FFFFBBBE"/>
+                                    <!-- 选中时的背景色 -->
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="Border" Property="Background" Value="LightGray"/>
+                                    <!-- 禁用时的背景色 -->
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </TabControl.Resources>
+        <TabItem x:Name="TI_Projekt" Width="100">
+            <TabItem.Header>
+                <TextBlock Text="Projekt" FontWeight="Bold" FontSize="14" TextAlignment="Center"/>
+            </TabItem.Header>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" x:Name="SV_Projekt">
+                <StackPanel >
+                    <Expander IsExpanded="False" >
+                        <Expander.Header>
+                            <TextBlock Text="Verbindung erstellen" FontWeight="Bold" Foreground="Red" />
+                        </Expander.Header>
+                        <StackPanel>
+                            <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                                <StackPanel Margin="5,5,5,5" >
+                                    <GroupBox Header="Einstellungen">
+                                        <StackPanel>
+                                            <GroupBox Header="Modus">
+                                                <StackPanel>
+                                                    <RadioButton x:Name="uebergang" Content="Übergang/Bogen" IsChecked="True" Checked="UebergangAktiv" Unchecked="UebergangInaktiv"></RadioButton>
+                                                    <RadioButton x:Name="versprung" Content="Bogensversprung">
+                                                    </RadioButton>
+                                                </StackPanel>
+                                            </GroupBox>
+
+                                            <GroupBox Header="Übergangslänge (in mm)" x:Name="GB_Ubergang">
+                                                <StackPanel>
+                                                    <RadioButton x:Name="auto" Content="automatische anpassen" IsChecked="True" Checked="Erstellen_Auto_Aktiv" Unchecked="Erstellen_Auto_inaktiv"></RadioButton>
+                                                    <RadioButton x:Name="manuell">
+                                                        <RadioButton.Content>
+                                                            <TextBox x:Name="RB_Maneull_length" Width="100" PreviewTextInput="textinput" Text="100" IsEnabled="False"></TextBox>
+                                                        </RadioButton.Content>
+                                                    </RadioButton>
+                                                </StackPanel>
+                                            </GroupBox>
+                                            <GroupBox Header="Bogensversprung" x:Name="GB_Versprung" IsEnabled="False">
+                                                <StackPanel>
+                                                    <DockPanel Margin="10,0,0,0">
+                                                        <TextBlock Text="Winkel: "/>
+                                                        <ComboBox x:Name="ComboBox_winkel" Width="80" HorizontalAlignment="Left" PreviewTextInput="textinput" Text="90" IsEditable="True"/>
+                                                        <TextBlock Text="°"/>
+                                                    </DockPanel>
+                                                    <GroupBox Header="Priorität">
+                                                        <StackPanel >
+                                                            <RadioButton Content="Horizontal" IsChecked="True" x:Name="radio_horizontal"/>
+                                                            <RadioButton Content="Vertikal"/>
+                                                        </StackPanel>
+                                                    </GroupBox>
+
+                                                </StackPanel>
+
+
+
+                                            </GroupBox>
+
+                                        </StackPanel>
+                                    </GroupBox>
+                                    <Button Content="Einstellungen übernehmen und Verbindung erstellen" Click="Verbindungerstellen" Height="24" Margin="10,10,10,10" />
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,0">
+                                        <StackPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Einstellungen ändern:" Margin="5,5,5,05" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="1. Esc drucken." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="2. Einstellungen ändern." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="3. Button klicken." Margin="5,5,5,5" Height="16" Foreground="Red"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Übergang anpassen" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <StackPanel>
+                                <StackPanel Margin="5,5,5,5">
+                                    <GroupBox Header="Übergangslänge (in mm)">
+                                        <StackPanel>
+                                            <RadioButton x:Name="Radio_auto" Content="automatische anpassen" IsChecked="True" Checked="Anpassen_Auto_Aktiv" Unchecked="Anpassen_Auto_Inaktiv"/>
+                                            <RadioButton x:Name="Radio_manuell">
+                                                <RadioButton.Content>
+                                                    <TextBox x:Name="RB_Maneull_length_anpassen" Width="100" PreviewTextInput="textinput" Text="100" IsEnabled="False"></TextBox>
+                                                </RadioButton.Content>
+                                            </RadioButton>
+                                        </StackPanel>
+
+
+
+                                    </GroupBox>
+
+                                    <Button Margin="10,10,10,10" Content="Einstellungen übernehmen und Übergang aktualisieren" Click="UebergangAnpassen" Height="24"/>
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1">
+                                        <StackPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Hinweis:" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                            <TextBlock Text="1. fixierten Luftkanal/Kanalteil auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                            <TextBlock Text="2. Übergangsstück auswählen" Margin="5,5,0,5" Height="16" Foreground="#FFCA0079"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,0">
+                                        <StackPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Einstellungen ändern:" Margin="5,5,5,05" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="1. Esc drucken." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="2. Einstellungen ändern." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="3. Button klicken." Margin="5,5,5,5" Height="16" Foreground="Red"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Abstand anpassen" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid >
+                                <StackPanel Margin="5,5,5,5">
+                                    <GroupBox Header="Einstellung">
+                                        <DockPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Länge: "/>
+                                            <TextBox x:Name="TextBox_Abstand" Width="80" HorizontalAlignment="Left" PreviewTextInput="textinput" Text="100"/>
+                                            <TextBlock Text="mm " Margin="5,0,0,0"/>
+                                        </DockPanel>
+                                    </GroupBox>
+                                    <Button Content="Einstellung übernehmen und Abstand aktualisieren" Click="AbstandAnpassen" Height="24" Margin="10,10,10,10" />
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1">
+                                        <StackPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Hinweis:" Margin="5,5,5,0" Height="16" Foreground="#FFCA0079"/>
+                                            <TextBlock Text="1. Fixes Kanalteil zuerst auswählen." Margin="5,5,5,0" Height="16" Foreground="#FFCA0079"/>
+                                            <TextBlock Text="2. Zu verschiebendes Teil als zweites auswählen. " Margin="5,5,5,5" Height="16" Foreground="#FFCA0079"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,0">
+                                        <StackPanel Margin="10,0,0,0">
+                                            <TextBlock Text="Abstand ändern:" Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="1. Esc drucken." Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="2. Abstand eingeben. " Margin="5,5,5,0" Height="16" Foreground="Red"/>
+                                            <TextBlock Text="3. Button klicken. " Margin="5,5,5,5" Height="16" Foreground="Red"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Suchen" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid Margin="5,5,5,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <GroupBox Header="Element">
+                                    <Grid Margin="5,0,5,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                        </Grid.RowDefinitions>
+                                        <DockPanel>
+                                            <TextBlock Text="Elem-ID:" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TB_ElementId" Height="20" Margin="5,0,0,0" PreviewTextInput="textinput1"/>
+
+                                        </DockPanel>
+                                        <Button Grid.Row="1" Height="20" Content="anzeigen" Click="ElemAnzeigen"/>
+                                        <Button Grid.Row="2" Height="20" Content="auswählen" Click="ElemAuswaehlen"/>
+                                    </Grid>
+
+                                </GroupBox>
+                                <GroupBox Header="Raum" Grid.Column="1">
+                                    <Grid Margin="5,0,5,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                            <RowDefinition Height="30"/>
+                                        </Grid.RowDefinitions>
+                                        <DockPanel>
+                                            <TextBlock Text="Raumnr.:" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="TB_Raumnr" Height="20" Margin="5,0,0,0"/>
+
+                                        </DockPanel>
+                                        <Button Grid.Row="1" Height="20" Content="anzeigen" Click="RaumAnzeigen"/>
+                                        <Button Grid.Row="2" Height="20" Content="auswählen" Click="RaumAuswaehlen"/>
+                                    </Grid>
+
+                                </GroupBox>
+                            </Grid>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Kanalrechner" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid Margin="5,5,5,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="50"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="24"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="100"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="135" MinWidth="135"/>
+                                    <ColumnDefinition MinWidth="80"/>
+                                    <ColumnDefinition Width="105"/>
+                                </Grid.ColumnDefinitions>
+
+                                <GridSplitter Width="1" Background="#FFAFAAAA" Grid.RowSpan="6"  IsEnabled="False" Grid.Row="1" Height="NaN" Margin="0,0,5,0"/>
+                                <GridSplitter Width="1" Background="#FFAFAAAA" Grid.RowSpan="6"  IsEnabled="False" Grid.Row="1" Grid.Column="2" Height="NaN" HorizontalAlignment="Left" Margin="5,0,0,0"/>
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"  IsEnabled="False" Width="NaN"/>
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="1" IsEnabled="False" Width="NaN"/>
+
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="4"  IsEnabled="False" Width="NaN"/>
+
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="6"  IsEnabled="False" Width="NaN"/>
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="7"  IsEnabled="False" Focusable="False" Width="NaN"/>
+                                <GridSplitter Background="#FFAFAAAA" Grid.ColumnSpan="3" Height="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="8"  IsEnabled="False" Focusable="False" Width="NaN"/>
+                                <Button Content="aus Kanal übernehmen" Click="KanaldatenAusRevit" Height="NaN" Margin="10,5,10,5" TabIndex="100" Grid.ColumnSpan="3" Width="NaN"/>
+
+                                <Grid Grid.Row="1" Grid.RowSpan="5" Margin="10,0,0,0" Height="NaN" Width="NaN">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <RadioButton KeyDown="Setkey3"  x:Name="RB_Volumenstrom" Content="Volumenstrom"  Checked="Modus_Vol_Actived" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" TabIndex="0" IsChecked="False"/>
+                                    <RadioButton KeyDown="Setkey3"  x:Name="RB_Tempo" Content="Geschwidigkeit" IsChecked="True" Checked="Modus_Tempo_Actived" VerticalAlignment="Center" VerticalContentAlignment="Center" Grid.Row="1" HorizontalContentAlignment="Stretch" TabIndex="2"/>
+                                    <RadioButton x:Name="RB_Bereite" Content="Breite:" VerticalAlignment="Center" Margin="0,0,0,0" Checked="Modus_Breite_Actived" KeyDown="Setkey3" TabIndex="4" Grid.Row="2"/>
+                                    <RadioButton x:Name="RB_Hoehe" Content="Höhe:" VerticalAlignment="Center" Margin="0,0,0,0" Checked="Modus_Hoehe_Actived" KeyDown="Setkey3" TabIndex="6" Grid.Row="3"/>
+                                    <RadioButton x:Name="RB_Durchmesser" Content="Durchmesser:" VerticalAlignment="Center" Margin="0,0,0,0" Checked="Modus_Durchmesser_Actived" KeyDown="Setkey3" TabIndex="9" Grid.Row="5"/>
+                                </Grid>
+
+                                <Grid Grid.Column="1" Grid.Row="1" Height="NaN" Margin="0,0,3,0" Width="NaN">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="35"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nichtnurganzzahl" TextChanged="KanalBerechnen" x:Name="TB_Volumenstrom" VerticalAlignment="Center" Height="20" VerticalContentAlignment="Center" TabIndex="1" IsEnabled="False"/>
+                                        <TextBlock Text="m³/h" VerticalAlignment="Center" Grid.Column="1" Margin="5,0,0,0" />
+
+                                    </Grid>
+                                    <Grid Grid.Row="1" VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="35"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nichtnurganzzahl" TextChanged="KanalBerechnen" x:Name="TB_Tempo" VerticalAlignment="Center" Height="20" VerticalContentAlignment="Center" TabIndex="3" IsEnabled="True"/>
+                                        <TextBlock Text="m/s" VerticalAlignment="Center" Grid.Column="1" Margin="5,0,0,0" />
+                                    </Grid>
+
+
+                                </Grid>
+
+                                <Grid Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Height="22" Margin="0,0,3,0" Width="NaN">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nurganzzahl" TextChanged="KanalBerechnen" x:Name="TB_Breite" VerticalAlignment="Center" Height="20" Margin="0,0,0,2" TabIndex="5"/>
+                                    <TextBlock Text="mm" VerticalAlignment="Center" Grid.Column="2" Margin="5,0,0,0"/>
+                                </Grid>
+
+                                <Grid  Grid.Row="3"  Grid.Column="1" Height="NaN" Margin="0,0,3,0" Width="NaN">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nurganzzahl" TextChanged="KanalBerechnen" x:Name="TB_Hoehe" VerticalAlignment="Center" Height="20" Margin="0,0,0,2" TabIndex="7"/>
+                                    <TextBlock Text="mm" VerticalAlignment="Center" Grid.Column="2" Margin="5,0,0,0"/>
+
+                                </Grid>
+
+                                <TextBlock x:Name="modus_eck_art" Text="eck Volumenstrom:" VerticalAlignment="Center" Margin="10,0,0,0"  Grid.Row="4" Height="16" Width="NaN"/>
+                                <Grid Grid.Column="1" Grid.Row="4" Height="NaN" Width="NaN" Margin="0,0,3,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox GotFocus="TextBox_GotFocus" x:Name="TB_ResulEck" VerticalAlignment="Center" Height="20" Margin="0,0,0,2" IsEnabled="False" IsReadOnly="True"/>
+                                    <TextBlock x:Name="modus_eck_einheit" Text="m³/h" VerticalAlignment="Center" Grid.Column="2" Margin="5,0,0,0"/>
+                                </Grid>
+
+
+                                <Grid Grid.Row="5" Grid.Column="1" Height="NaN" Margin="0,0,3,0" Width="NaN">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nurganzzahl" TextChanged="KanalBerechnen" x:Name="TB_Durchmesser" VerticalAlignment="Center" Height="20" Margin="0,0,0,2" TabIndex="10"/>
+                                    <TextBlock Text="mm" VerticalAlignment="Center" Grid.Column="2" Margin="5,0,0,0"/>
+                                </Grid>
+                                <ComboBox x:Name="CB_RundRohr" Grid.Row="5" Height="20" IsEditable="True" TabIndex="11" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,5,0" FontSize="10" />
+                                <Button Click="RundDimensionUebernehmen" Content="übertragen" Grid.Row="6" Height="20" Grid.Column="2" VerticalAlignment="Center" TabIndex="12" Margin="10,0,5,0"/>
+
+                                <TextBlock x:Name="modus_rund_art" Text="rund Volumenstrom:" VerticalAlignment="Center" Margin="10,0,0,0" Grid.Row="6" Height="16" Width="NaN"/>
+                                <Grid Grid.Row="6" Grid.Column="1" Height="NaN" Margin="0,0,3,0" Width="NaN">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TB_ResulRund" VerticalAlignment="Center" Height="20" Margin="0,0,0,2" IsEnabled="False" IsReadOnly="True"/>
+                                    <TextBlock x:Name="modus_rund_einheit" Text="m³/h" VerticalAlignment="Center" Grid.Column="2" Margin="5,0,0,0"/>
+                                </Grid>
+
+                                <CheckBox x:Name="CB_InkKanalfitting" Content="Inklusive Kanalformteile" Grid.Row="7" VerticalAlignment="Center" VerticalContentAlignment="Center" TabIndex="13" Grid.ColumnSpan="3" Height="16" Width="NaN" Margin="10,0,0,0"/>
+
+                                <Button Content="Kanalabmessung übertragen" Height="NaN" Margin="10,5,10,5" Grid.Row="8" TabIndex="14" Click="ChangeDimensionDuct" Grid.ColumnSpan="3" Width="NaN"/>
+                                <Grid Grid.Row="9" Grid.ColumnSpan="3" Height="NaN" Width="NaN">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition Height="30"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Margin="5,0,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Referenzebene" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Normal"/>
+                                        <ComboBox x:Name="CB_Reference" IsEditable="False" Grid.Row="1" VerticalAlignment="Top" TabIndex="18">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding name}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+
+                                    </Grid>
+                                    <Grid Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <RadioButton KeyDown="Setkey3" x:Name="RB_Oben" IsChecked="True" Content="oben" VerticalAlignment="Center" Checked="changetooben" TabIndex="19"/>
+                                        <RadioButton KeyDown="Setkey3" x:Name="RB_Mitte" Content="mitte" Grid.Row="1" VerticalAlignment="Center" Checked="changetomitte" TabIndex="22"/>
+                                        <RadioButton KeyDown="Setkey3" x:Name="RB_Unten" Content="unten" Grid.Row="2" VerticalAlignment="Center" Checked="changetounten" TabIndex="26"/>
+                                    </Grid>
+                                    <Grid Grid.Column="2">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition />
+                                            <ColumnDefinition Width="30"/>
+
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nichtnurganzzahl"  x:Name="TB_Oben" Height="20" TabIndex="20"/>
+                                        <TextBox  GotFocus="TextBox_GotFocus" PreviewTextInput="Nichtnurganzzahl"  x:Name="TB_Mitte" Grid.Row="1" Height="20" IsEnabled="False" TabIndex="24"/>
+                                        <TextBox GotFocus="TextBox_GotFocus" PreviewTextInput="Nichtnurganzzahl"  x:Name="TB_Unten" Grid.Row="2" Height="20" IsEnabled="False" TabIndex="28"/>
+                                        <TextBlock Text="mm" Grid.Column="1" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        <TextBlock Text="mm" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        <TextBlock Text="mm" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="5,0,0,0"/>
+
+                                    </Grid>
+                                    <Button Content="Höhe übertragen" Height="20" Margin="10,0,10,0" Grid.Row="7" Grid.ColumnSpan="3" TabIndex="30" Click="ChangeHeightDuct"/>
+                                </Grid>
+
+                                <TextBlock Text="Raster (mm)" VerticalAlignment="Center" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="2" Grid.Column="2" Height="16" Width="70" Margin="5,0,0,0"/>
+                                <TextBox GotFocus="TextBox_GotFocus" x:Name="RB_Raster" Text="" VerticalAlignment="Center" FontWeight="Normal" Grid.Row="3" TabIndex="8" PreviewTextInput="Nurganzzahl" TextChanged="KanalBerechnen" Grid.Column="2" Margin="10,0,5,0"/>
+
+                            </Grid>
+
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Elemente verbinden" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid Margin="5,5,5,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+                                <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1">
+                                    <StackPanel Margin="10,0,0,0">
+                                        <TextBlock Text="Hinweis:" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                        <TextBlock Text="1. Button klicken" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                        <TextBlock Text="2. fixierten Bauteil auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                        <TextBlock Text="3. zu verbundenes Teil auswählen" Margin="5,5,0,5" Height="16" Foreground="#FFCA0079"/>
+                                    </StackPanel>
+                                </Border>
+                                <Button Height="24" Content="verbinden" Grid.Row="1" Click="ElementVerbinden"/>
+                            </Grid>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Elemente trennen" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid Margin="5,5,5,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+                                <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1">
+                                    <StackPanel Margin="10,0,0,0">
+                                        <TextBlock Text="Hinweis:" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                        <TextBlock Text="1. Button klicken" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                        <TextBlock Text="2. Bauteile auswählen" Margin="5,5,0,0" Height="16" Foreground="#FFCA0079"/>
+                                    </StackPanel>
+                                </Border>
+                                <Button Height="24" Content="trennen" Grid.Row="1" Click="ElementTrennen"/>
+                            </Grid>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Luftkanal/Rohr einfügen" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <TabControl Margin="5,5,5,5">
+                                <TabItem Header="Luftkanal" Width="100">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition />
+                                            <ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Kanaltyp" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <ComboBox Grid.Column="1" Grid.ColumnSpan="2" Height="24" Margin="0,5,10,5" x:Name="CB_DuctType">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding familietyp}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Text="Länge" Grid.Row="1" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Height="24" x:Name="TB_KanalLaenge" PreviewTextInput="textinput" Margin="0,5,0,5"/>
+                                        <TextBlock Text="mm" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <Button Content="Start" Grid.Row="2" Grid.ColumnSpan="3" Height="20" Margin="10,5,10,5" Click="KanalstueckEinfuegen"/>
+                                    </Grid>
+
+                                </TabItem>
+                                <TabItem Header="Rohr" Width="100">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition />
+                                            <ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Rohrtyp" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <ComboBox Grid.Column="1" Grid.ColumnSpan="2" Height="24" Margin="0,5,10,5" x:Name="CB_PipeType">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding name}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Text="Länge" Grid.Row="1" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Height="24" x:Name="TB_RohrLaenge" PreviewTextInput="textinput" Margin="0,5,0,5"/>
+                                        <TextBlock Text="mm" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                        <Button Content="Start" Grid.Row="2" Grid.ColumnSpan="3" Height="20" Margin="10,5,10,5" Click="RohrstueckEinfuegen"/>
+                                    </Grid>
+
+                                </TabItem>
+                            </TabControl>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False" x:Name="Expander_Workschnitte">
+                        <Expander.Header>
+                            <TextBlock Text="Workschnitte zentrieren" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                            <Grid Margin="5,5,5,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+                                <ListBox x:Name="dg_Schnitte" PreviewMouseWheel="dg_mausewhell_Projekt">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding name}"  TextWrapping="Wrap"/>
+                                            </CheckBox>
+                                        </DataTemplate>
+                                        
+                                    </ListBox.ItemTemplate>
+                                    
+                                </ListBox>
+                                <CheckBox x:Name="Schnittetiefe" Content="Schnittstiefe automatische anpassen" Grid.Row="1" VerticalAlignment="Center"/>
+
+                                <Button Height="24" Content="Schnitte um Bauteile einordnen" Grid.Row="2" Click="SchnitteVerschieben"/>
+                            </Grid>
+                        </Border>
+
+                    </Expander>
+                    <Expander IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Familietyp ändern" FontWeight="Bold" Foreground="Red"/>
+                        </Expander.Header>
+                        <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Familietyp:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                <ComboBox Grid.Column="1" Grid.ColumnSpan="2" Margin="0,5,10,5" x:Name="CB_FamilieType" SelectionChanged="BT_ChangeFamilietyp_Aktive">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding familytypname}" TextWrapping="Wrap"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Content="Familietyp auswählen" Grid.Row="1" Grid.ColumnSpan="3" Height="20" Margin="10,5,10,5" Click="ReferenzFamilieAktualisieren"/>
+                                <Button x:Name="BT_ChangeFamilietyp" Content="ansgewählten Elemente anpassen" Grid.Row="2" Grid.ColumnSpan="3" Height="20" Margin="10,5,10,5" Click="ChangeFamilietyp" IsEnabled="False"/>
+                            </Grid>
+                        </Border>
+
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+        <TabItem x:Name="TI_Familie" Width="100">
+            <TabItem.Header>
+                <TextBlock Text="Familie" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </TabItem.Header>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" x:Name="SV_Familie">
+                <StackPanel>
+
+
+                    <Expander IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock Text="Parameter hinzufügen" FontWeight="Bold" Foreground="Red" />
+                        </Expander.Header>
+                        <StackPanel>
+                            <GroupBox Visibility ="Hidden" Height="0"/>
+                            <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                                <StackPanel Margin="5,5,5,5" >
+                                    <Border CornerRadius="3" BorderBrush="Gray" BorderThickness="1" Margin="2,2,2,2">
+                                        <StackPanel Margin="5,5,5,5">
+                                            <TextBlock Text="Shared Parameter:"/>
+                                            <TextBox x:Name="sharedparameter" Margin="0,5,0,5" IsReadOnly="True"/>
+                                            <Button Content="durchsuchen" Click="SharedParameterdurchsuchen"/>
+
+                                        </StackPanel>
+                                    </Border>
+                                    <Expander Header="DIN Parameter" Visibility="Hidden"  Height="0" IsExpanded="True">
+
+                                        <DataGrid ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="30">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*" Header="Parametername">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="100" >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exemplare Param" TextAlignment="Center" ToolTip="Parametertyp is ein Exemplarparameter oder Typparameter."/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+
+
+                                    </Expander>
+
+
+                                    <Expander Header="DIN Parameter" >
+
+                                        <DataGrid x:Name="din_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+
+
+                                    </Expander>
+
+                                    <Expander Header="LIN Parameter">
+                                        <DataGrid x:Name="lin_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                    </Expander>
+                                    <Expander Header="MC Eklimax Parameter" >
+                                        <DataGrid x:Name="mc_eklimax_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+
+                                    </Expander>
+                                    <Expander Header="MC Parameter" >
+                                        <DataGrid x:Name="mc_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                    </Expander>
+                                    <Expander Header="IGF Parameter" >
+                                        <DataGrid x:Name="igf_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel ="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                    </Expander>
+                                    <Expander Header="IGF GA Parameter" >
+                                        <DataGrid x:Name="igf_ga_Params" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="dg_mausewhell">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Gray">
+                                                            <Setter Property="Foreground" Value="DarkGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Red">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Blue">
+                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger  Binding="{Binding foreground}"  Value="Black">
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+
+                                                    <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn Width="20" MaxWidth="20" MinWidth="20">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = checked,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="*">
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Parametername" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </DataGridTemplateColumn.Header>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Path = name,UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Width="80" MinWidth="80" MaxWidth="80"  >
+                                                    <DataGridTemplateColumn.Header>
+                                                        <TextBlock Text="Exem.Param" TextAlignment="Center" HorizontalAlignment="Center" ToolTip="ist exemplare Parameter"/>
+                                                    </DataGridTemplateColumn.Header>
+
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding Path = isExemplar,UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding isenabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+
+                                    </Expander>
+                                    <Grid Margin="0,5,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Height="20" Margin="5,0,5,0" Content="Reset" Click="Familie_BT_Reset"/>
+
+                                        <Button Grid.Column="2" Height="20" Margin="5,0,5,0" Content="Params erstellen" Click="Familie_BT_Erstellen"/>
+
+                                    </Grid>
+
+
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                    </Expander>
+                </StackPanel>
+
+            </ScrollViewer>
+        </TabItem>
+
+    </TabControl>
+
+
+</Page>

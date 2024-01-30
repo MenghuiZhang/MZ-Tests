@@ -52,10 +52,9 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateEqualsRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateEqualsRule(self.Id,value,0.1**6))
-        except:
-            return None
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateEqualsRule(self.Id,value,0.1**9))
+        except:return
     
     def createBeginsWithFilter(self,value):
         if self.storygetype != 'Double':
@@ -77,8 +76,8 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterOrEqualRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterOrEqualRule(self.Id,value,0.1**6))
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterOrEqualRule(self.Id,value,0.1**9))
         except:
             return None
         
@@ -87,8 +86,8 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterRule(self.Id,value,0.1**6))
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateGreaterRule(self.Id,value,0.1**9))
         except:
             return None
     
@@ -103,8 +102,8 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessOrEqualRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessOrEqualRule(self.Id,value,0.1**6))
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessOrEqualRule(self.Id,value,0.1**9))
         except:
             return None
     
@@ -113,8 +112,8 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessRule(self.Id,value,0.1**6))
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateLessRule(self.Id,value,0.1**9))
         except:
             return None
     
@@ -138,8 +137,8 @@ class Category_Parameter:
             return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateNotEqualsRule(self.Id,value,True))
         try:
             value = float(value)
-            value = DB.ConvertToInternalUnits(value,self.storygetype)
-            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateNotEqualsRule(self.Id,value,0.1**6))
+            value = DB.UnitUtils.ConvertToInternalUnits(value,self.DisplayUnitType)
+            return DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateNotEqualsRule(self.Id,value,0.1**9))
         except:
             return None
     

@@ -2,7 +2,7 @@
 from pyrevit import forms
 from eventhandler import Verbinden,ExternalEvent
 
-__title__ = "Rohre Verbinden"
+__title__ = "Neues Bauteil Verbinden"
 __doc__ = """
 Rohre Verbinden
 

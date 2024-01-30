@@ -14,103 +14,6 @@ __authors__ = "Maximilian Prachtel"
 doc = revit.doc
 logger = script.get_logger()
 
-projectinfo = doc.ProjectInformation.Name + ' - '+ doc.ProjectInformation.Number
-config = script.get_config('Deckensegel' + projectinfo)
-
-adresse = ''
-
-try:
-    adresse = config.adresse
-    if not os.path.exists(config.adresse):
-        config.adresse = ''
-        adresse = ""
-except:
-    pass
-
-# excel = Excelerstellen(exceladresse = adresse)
-# try:
-#     excel.ShowDialog()
-# except Exception as e:
-#     logger.error(e)
-#     excel.Close()
-#     script.exit()
-
-# try:
-#     config.adresse = excel.Adresse.Text
-#     script.save_config()
-# except:
-#     logger.error('kein Excel gegeben')
-#     script.exit()
-
-
-projectinfo = doc.ProjectInformation.Name + ' - '+ doc.ProjectInformation.Number
-
-config = script.get_config('Schema-Deckensegel -' + projectinfo)
-adresse = 'Excel Adresse'
-
-try:
-    adresse = config.adresse
-    if not os.path.exists(config.adresse):
-        config.adresse = ''
-        adresse = "Excel Adresse"
-except:
-    pass
-
-ExcelWPF = ExcelSuche(exceladresse = adresse)
-ExcelWPF.Title = 'MEP-Räume Bauteilliste'
-ExcelWPF.ShowDialog()
-try:
-    config.adresse = ExcelWPF.Adresse.Text
-    script.save_config()
-except:
-    logger.error('kein Excel ausgewählt!')
-    script.exit()
-
-dict_regelventile_excel = {}
-
-dict_6_wege_ventile_excel = {}
-
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial
-fs = FileStream(ExcelWPF.Adresse.Text,FileMode.Open,FileAccess.Read)
-book = ExcelPackage(fs)
-
-try:
-    for sheet in book.Workbook.Worksheets:
-        if sheet.Name == 'IGF_L':
-            maxRowNum = sheet.Dimension.End.Row
-            for row in range(2, maxRowNum + 1):
-                liste = []
-                nummer = sheet.Cells[row, 3].Value
-                subnummer = sheet.Cells[row, 4].Value
-
-
-                dict_regelventile_excel[nummer] = subnummer
-        # else:
-        #     maxRowNum = sheet.Dimension.End.Row
-        #     for row in range(2, maxRowNum + 1):
-        #         liste = []
-        #         nummer = sheet.Cells[row, 1].Value
-        #         subnummer = sheet.Cells[row, 3].Value
-        #         dict_6_wege_ventile_excel[subnummer] = nummer
-           
-                
-            
-    book.Save()
-    book.Dispose()
-    fs.Close()
-    fs.Dispose()
-except Exception as e:
-    logger.error(e)
-    book.Save()
-    book.Dispose()
-    fs.Close()
-    fs.Dispose()
-    script.exit()
-
-print(dict_regelventile_excel)
-import sys
-sys.exit()
-
 class Endverbraucher:
     def __init__(self, elem, IstVorlauf = True, Regelventil = None, Wege_6 = None, BauteilId = None):
         self.elem = elem
@@ -177,7 +80,7 @@ class Endverbraucher:
             return 
         if self.sechswege:
             return
-        if len(self.list) > 300:
+        if len(self.list) > 1000:
             return
         elemid = elem.Id.ToString()
         self.list.append(elemid)
@@ -206,6 +109,7 @@ class Endverbraucher:
                 refs = conn.AllRefs
                 for ref in refs:
                     owner = ref.Owner
+                    if ref.ConnectorType.ToString() != 'End':continue
 
                     if not owner.Id.ToString() in self.list:
                         if owner.Category.Name == 'HLS-Bauteile':
@@ -233,14 +137,14 @@ class Regelkomponent:
     def Pruefen(self):
         return self.Subitem_aus_TGA == self.SubItemText
     
-    # @property
-    # def BauteilNummer(self):
-    #     if self.BauteilId and self.elem:
-    #         para = self.elem.LookupParameter(self.BauteilId)
-    #         if para:
-    #             return para.AsString()
-    #         return ''
-    #     return ''
+    @property
+    def BauteilNummer(self):
+        if self.BauteilId and self.elem:
+            para = self.elem.LookupParameter(self.BauteilId)
+            if para:
+                return para.AsString()
+            return ''
+        return ''
 
     # @property
     # def bauteilnummer_aus_TGA(self):
@@ -264,13 +168,18 @@ class Regelkomponent:
             text += el + ', '
         return text[:-2]
     
+
+    @property
+    def Ausgabe(self):
+        return [self.BauteilNummer,self.elem.Id.ToString(),self.SubItemText]
+    
     # @property
     # def Ausgabe(self):
     #     try:return [self.BauteilNummer,self.bauteilnummer_aus_TGA, self.elem.Id.ToString(),self.SubItemText,self.Subitem_aus_TGA,self.Pruefen]
     #     except:return [self.BauteilNummer,self.bauteilnummer_aus_TGA, '',self.SubItemText,self.Subitem_aus_TGA,self.Pruefen]
 
     def werte_schreiben(self):
-        self.elem.LookupParameter('IGF_X_Bauteilnummerierung').Set(self._bauteilnummer_aus_TGA)
+        self.elem.LookupParameter('IGF_X_Bauteil_ID_Text').Set(self._bauteilnummer_aus_TGA)
 ParamId = DB.ElementId(DB.BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM)
 
 
@@ -288,12 +197,12 @@ ParamId = DB.ElementId(DB.BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM)
 #             .WhereElementIsNotElementType()\
 #             .ToElements()
 
-# HK_Liste = [Endverbraucher(elem,True,'Regelventil','6_Wege','IGF_X_Bauteilnummerierung') for elem in HK_Segel]
-# H_Liste = [Endverbraucher(elem,True,'Regelventil',None,'IGF_X_Bauteilnummerierung') for elem in H_Segel]
+# HK_Liste = [Endverbraucher(elem,True,'Regelventil','6_Wege','IGF_X_Bauteil_ID_Text') for elem in HK_Segel]
+# H_Liste = [Endverbraucher(elem,True,'Regelventil',None,'IGF_X_Bauteil_ID_Text') for elem in H_Segel]
         
 Segel =   DB.FilteredElementCollector(doc)\
             .OfCategory(DB.BuiltInCategory.OST_MechanicalEquipment)\
-            .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel',False)))\
+            .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'Deckensegel',False)))\
             .WherePasses(DB.ElementParameterFilter(DB.ParameterFilterRuleFactory.CreateContainsRule(ParamId,'segel',False)))\
             .WhereElementIsNotElementType()\
             .ContainedInDesignOption(DB.ElementId(-1))\
@@ -303,9 +212,9 @@ HK_Segel = []
 H_Segel = []
 for el in Segel:
     sysname = el.LookupParameter('Systemname').AsString()
-    if sysname.find('KLD') != -1:
+    if sysname.find('K VL') != -1:
         HK_Segel.append(el)
-    elif sysname.find('HZD') != -1:
+    elif sysname.find('H VL') != -1:
         H_Segel.append(el)
     else:
         print(el.Id)
@@ -349,9 +258,9 @@ for el in Segel:
 #             .WhereElementIsNotElementType()\
 #             .ToElements()
 
-HK_Liste = [Endverbraucher(elem,True,'ABQM','DET_W_V3W_R3','IGF_X_Bauteilnummerierung') for elem in HK_Segel]
-H_Liste = [Endverbraucher(elem,True,'ABQM',None,'IGF_X_Bauteilnummerierung') for elem in H_Segel]
-
+HK_Liste = [Endverbraucher(elem,True,'Regelventil','Wege','IGF_X_Bauteil_ID_Text') for elem in HK_Segel]
+H_Liste = [Endverbraucher(elem,True,'Regelventil',None,'IGF_X_Bauteil_ID_Text') for elem in H_Segel]
+['5367686', '9982233', '9980647', '9980649', '13479897', '13479906', '13479900', '13480681', '13480316', '13480554', '13478743', '13480551', '13479891', '9980645', '9980659', '9982230', '13478740', '13480548', '13479921', '9980679', '9980681', '9982227', '13480313', '13480684', '13479912', '13479918', '13479909', '9980663', '9980661', '9982224']
 dict_regelventile = {}
 
 dict_6_wege_ventile = {}
@@ -372,94 +281,56 @@ for el in H_Liste:
             dict_regelventile[el.regelventil] = []
         dict_regelventile[el.regelventil].append(el)
 
-
 Liste_Regelventil = []
 Liste_6Wegeventil = []
 
 Ids_Regelventil = []
 Ids_6Wegeventil = []
+
 for elid in dict_regelventile.keys():
     elem = doc.GetElement(DB.ElementId(int(elid)))
-    regel = Regelkomponent(elem,dict_regelventile[elid],'IGF_X_Bauteilnummerierung')
-    if regel.SubItemText in dict_regelventile_excel.keys():
-        regel._bauteilnummer_aus_TGA = dict_regelventile_excel[regel.SubItemText]
+    regel = Regelkomponent(elem,dict_regelventile[elid],'IGF_X_Bauteil_ID_Text')
+    Liste_Regelventil.append(regel.Ausgabe)
+    if not regel.BauteilNummer:
+        print(regel.elem.Id.IntegerValue)
+    if regel.BauteilNummer not in Ids_Regelventil:
+        Ids_Regelventil.append(regel.BauteilNummer)
     else:
-        print(elid)
-
-    Liste_Regelventil.append(regel)
-
-
+        print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
+print('---')
 for elid in dict_6_wege_ventile.keys():
     elem = doc.GetElement(DB.ElementId(int(elid)))
-    regel = Regelkomponent(elem,dict_6_wege_ventile[elid],'IGF_X_Bauteilnummerierung')
-    if regel.SubItemText in dict_6_wege_ventile_excel.keys():
-        regel._bauteilnummer_aus_TGA = dict_6_wege_ventile_excel[regel.SubItemText]
-    Liste_6Wegeventil.append(regel)
+    regel = Regelkomponent(elem,dict_6_wege_ventile[elid],'IGF_X_Bauteil_ID_Text')
+    Liste_6Wegeventil.append(regel.Ausgabe)
+    if not regel.BauteilNummer:
+        print(regel.elem.Id.IntegerValue)
+    if regel.BauteilNummer not in Ids_6Wegeventil:
+        Ids_6Wegeventil.append(regel.BauteilNummer)
+    else:
+        print(regel.BauteilNummer,regel.elem.Id.IntegerValue)
 
-z = DB.Transaction(doc)
-z.Start('1')
-for el in Liste_Regelventil:
-    el.werte_schreiben()
-for el in Liste_6Wegeventil:
-    el.werte_schreiben()
-z.Commit()
-
-# for nummer in dict_regelventile_excel.keys():
-#     if nummer not in Ids_Regelventil:
-
-#         regel = Regelkomponent(None,[],'')
-#         regel.bauteilnummer_aus_TGA = nummer
-#         regel.Subitem_aus_TGA = dict_regelventile_excel[nummer]
-#         Liste_Regelventil.append(regel.Ausgabe)
-
-# for nummer in dict_6_wege_ventile_excel.keys():
-#     if nummer not in Ids_6Wegeventil:
-#         regel = Regelkomponent(None,[],'')
-#         regel.bauteilnummer_aus_TGA = nummer
-#         regel.Subitem_aus_TGA = dict_6_wege_ventile_excel[nummer]
-#         Liste_6Wegeventil.append(regel.Ausgabe)
+Liste_Regelventil.sort()
+Liste_6Wegeventil.sort()
+Liste_Regelventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
+Liste_6Wegeventil.insert(0,['Bauteilnummer','RevitId','DS_Nummer'])
 
 
-# Liste_Regelventil.sort()
-# Liste_6Wegeventil.sort()
-# Liste_Regelventil.insert(0,['Bauteilnummer','TGA_Nummer','RevitId','DS_Nummer','DS_TGA','Prüfen'])
-# Liste_6Wegeventil.insert(0,['Bauteilnummer','TGA_Nummer','RevitId','DS_Nummer','DS_TGA','Prüfen'])
+# Excel Export
+path = r"C:\Users\zhang\Desktop\1234567.xlsx"
+workbook = xlsxwriter.Workbook(path)
+worksheet = workbook.add_worksheet('Regelventil')
+worksheet2 = workbook.add_worksheet('6-Wege-Ventil')
 
+for row in range(len(Liste_Regelventil)):
+    worksheet.write(row, 0, Liste_Regelventil[row][0])
+    worksheet.write(row, 1, Liste_Regelventil[row][1])
+    worksheet.write(row, 2, Liste_Regelventil[row][2])
 
-# # Excel Export
-# path = excel.Adresse.Text
-# workbook = xlsxwriter.Workbook(path)
-# worksheet = workbook.add_worksheet('Regelventil')
-# worksheet2 = workbook.add_worksheet('6-Wege-Ventil')
+for row in range(len(Liste_6Wegeventil)):
+    worksheet2.write(row, 0, Liste_6Wegeventil[row][0])
+    worksheet2.write(row, 1, Liste_6Wegeventil[row][1])
+    worksheet2.write(row, 2, Liste_6Wegeventil[row][2])
 
-# for row in range(len(Liste_Regelventil)):
-#     try:worksheet.write(row, 0, Liste_Regelventil[row][0])
-#     except:pass
-#     try:worksheet.write(row, 1, Liste_Regelventil[row][1])
-#     except:pass
-#     try:worksheet.write(row, 2, Liste_Regelventil[row][2])
-#     except:pass
-#     try:worksheet.write(row, 3, Liste_Regelventil[row][3])
-#     except:pass
-#     try:worksheet.write(row, 4, Liste_Regelventil[row][4])
-#     except:pass
-#     try:worksheet.write(row, 5, Liste_Regelventil[row][5])
-#     except:pass
-
-# for row in range(len(Liste_6Wegeventil)):
-#     try:worksheet2.write(row, 0, Liste_6Wegeventil[row][0])
-#     except:pass
-#     try:worksheet2.write(row, 1, Liste_6Wegeventil[row][1])
-#     except:pass
-#     try:worksheet2.write(row, 2, Liste_6Wegeventil[row][2])
-#     except:pass
-#     try:worksheet2.write(row, 3, Liste_6Wegeventil[row][3])
-#     except:pass
-#     try:worksheet2.write(row, 4, Liste_6Wegeventil[row][4])
-#     except:pass
-#     try:worksheet2.write(row, 5, Liste_6Wegeventil[row][5])
-#     except:pass
-
-# worksheet.freeze_panes(1, 0)
-# worksheet2.freeze_panes(1, 0)
-# workbook.close()
+worksheet.freeze_panes(1, 0)
+worksheet2.freeze_panes(1, 0)
+workbook.close()
